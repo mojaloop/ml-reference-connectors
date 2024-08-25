@@ -92,7 +92,10 @@ jobs:
       - checkout
       - run: 
           name: Check PWD
-          command: pwd
+          command: |
+            pwd
+            ls 
+            
       - run:
           <<: *defaults_configure_nvm
       - run:
