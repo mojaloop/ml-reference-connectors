@@ -117,10 +117,11 @@ jobs:
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
               if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
                 echo "Building Docker image: local"
-                docker build -t $DOCKER_ORG/$dir:local .
-                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir:local
+                docker build -t $DOCKER_ORG/$dir_no_slash:local .
+                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir_no_slash:local
                 cd -
               fi
             done
