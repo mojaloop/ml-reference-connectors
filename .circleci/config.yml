@@ -94,10 +94,10 @@ jobs:
           name: Configure Defaults, NPM Install
           command: |
             source $(pwd)/.circleci/pipeline.sh
-            defaults_configure_nvm
             for dir in */; do
               if [[ $dir == *-core-connector/ ]]; then
                 cd $dir 
+                defaults_configure_nvm
                 npm ci 
                 cd -
               fi
