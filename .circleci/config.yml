@@ -91,12 +91,9 @@ jobs:
           command: *defaults_Dependencies
       - checkout
       - run: 
-          name: Load functions into BASH_ENV
+          name: Load functions
           command: |
             source $(pwd)/.circleci/pipeline.sh
-      - run: 
-          name: Run Hello World
-          command: |
             hello_world
       - run:
           <<: *defaults_configure_nvm
