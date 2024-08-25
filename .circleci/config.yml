@@ -137,13 +137,20 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute unit tests
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm run test:unit
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute unit tests
-          command: npm run test:unit
 
   test-functional:
     executor: default-machine
