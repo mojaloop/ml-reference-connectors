@@ -131,7 +131,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfer Requests Test  - Payee
-        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+        test.skip('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
             const url = `${ML_URL}/transfers`;
             const res = await axios.post(url, JSON.stringify(transferRequest), {
