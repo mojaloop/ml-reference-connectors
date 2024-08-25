@@ -313,10 +313,17 @@ jobs:
           name: Check the release changes
           command: |
             echo "Changes are: ${RELEASE_CHANGES}"
-      - run:
+      - run: 
           name: Create Release
           command: |
-            gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
+                cd -
+              fi
+            done
 
   publish:
     executor: default-machine
