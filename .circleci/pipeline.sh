@@ -18,4 +18,11 @@ defaults_configure_git() {
   git config user.name "$GIT_CI_USER"
 }
 
+defaults_export_version_from_package() {
+  git diff --no-indent-heuristic main~1 HEAD CHANGELOG.md | sed -n '/^+[^+]/ s/^+//p' > /tmp/changes
+  echo 'export RELEASE_CHANGES=$(cat /tmp/changes)' >> "$BASH_ENV"
+  echo 'export RELEASE_TAG=$(jq -r .version < package-lock.json)' >> "$BASH_ENV"
+}
+
+
 
