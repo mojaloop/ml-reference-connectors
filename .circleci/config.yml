@@ -162,21 +162,22 @@ jobs:
       - run:
           name: Load the pre-built docker local image from workspace
           command: docker load -i /tmp/docker-image-local.tar
-      - run:
-          name: Start docker-compose for this service and TTK
-          command: |
-            cd test/func
-            docker-compose up -d
-      - run:
-          name: Wait for some time
-          command: |
-            sleep 10
-      - run:
+      - run: 
           name: Execute Functional Tests
           command: |
-            cd test/func
-            docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
-            docker compose down
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                cd test/func
+                docker-compose up -d
+                sleep 10
+                cd test/func
+                docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
+                docker compose down
+                cd -
+              fi
+            done
       - store_artifacts:
           path: ./test/func/reports
           destination: test
@@ -188,13 +189,21 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute Dep Check
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                npm run dep:check
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute dependency tests
-          command: npm run dep:check
 
   test-func:
     executor: default-machine
