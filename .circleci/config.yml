@@ -347,18 +347,23 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Re-tag pre built image
+      - run: 
+          name: Tag and Publish Images
           command: |
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
-          command: |
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                cd -
+              fi
+            done
 
   publish-snapshot:
     executor: default-machine
@@ -382,18 +387,23 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Re-tag pre built image
+      - run: 
+          name: Tag and Publish Images
           command: |
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
-          command: |
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                cd -
+              fi
+            done
 
 
 ##
