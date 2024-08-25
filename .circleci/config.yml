@@ -259,16 +259,34 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                cd -
+              fi
+            done
       - restore_cache:
           keys:
           - dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           <<: *defaults_configure_git
-      - run:
+      - run: 
           name: Generate changelog and bump package version
-          command: npm run release -- --no-verify
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                npm run release -- --no-verify
+                cd -
+              fi
+            done
       - run:
           name: Push the release
           command: git push --follow-tags origin ${CIRCLE_BRANCH}
@@ -295,10 +313,17 @@ jobs:
           name: Check the release changes
           command: |
             echo "Changes are: ${RELEASE_CHANGES}"
-      - run:
+      - run: 
           name: Create Release
           command: |
-            gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
+                cd -
+              fi
+            done
 
   publish:
     executor: default-machine

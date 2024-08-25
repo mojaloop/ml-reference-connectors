@@ -12,3 +12,10 @@ defaults_configure_nvm() {
   nvm alias default "$node_version"
   nvm use "$node_version"
 }
+
+defaults_configure_git() {
+  git config user.email "$GIT_CI_EMAIL"
+  git config user.name "$GIT_CI_USER"
+}
+
+
