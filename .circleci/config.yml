@@ -90,23 +90,16 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          name: Identify core connector directories
-          command: |
-            dirs=$(find . -maxdepth 1 -type d -name '*-core-connector' -exec basename {} \;)
-            echo $dirs
-            for dir in $dirs; do
-              echo "export CORE_CONNECTOR_DIR_$dir=$dir" >> $BASH_ENV
+      - run: 
+          name: Check log directories name
+          command: | 
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                echo "${dir%/}"
+              fi
             done
       - run:
-          name: Configure NVM
-          command: |
-            for dir in $(env | grep CORE_CONNECTOR_DIR_ | cut -d '=' -f 2); do
-              echo "Configuring NVM in $dir"
-              cd $dir
-              <<: *defaults_configure_nvm
-              cd -
-            done
+          <<: *defaults_configure_nvm
       - run:
           name: Update NPM install
           command: npm ci
