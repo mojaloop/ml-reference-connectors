@@ -1,5 +1,5 @@
 import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { IdType, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
+import {TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
 
@@ -109,7 +109,7 @@ export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => 
 
 
 export const transferPatchNotificationRequestDto= (currentState: string, partyIdType:string, partyIdentifier:string, amount:string): TtransferPatchNotificationRequest =>({
-  //@ts-ignore
+  //@ts-expect-error currentState var to of type
   currentState: currentState,  
   direction: "INBOUND",
   finalNotification: {
@@ -161,7 +161,7 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
       transactionId: '47e8a9cd-3d89-55c5-a15a-b57a28ad763e',
       payee: {
         partyIdInfo: {
-          //@ts-ignore
+          //@ts-expect-error partyIdType var not of type IdType
           partyIdType: partyIdType,
           partyIdentifier: partyIdentifier,
           partySubIdOrType: undefined,
@@ -223,7 +223,7 @@ export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978
   initiatorType: "CONSUMER",
   quoteId: crypto.randomUUID(),
   to: {
-    //@ts-ignore
+    //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
     idValue: idValue
   },
@@ -237,7 +237,7 @@ amount: amount,
 amountType: "SEND",
 currency: "ZMW",
 from: {
-  //@ts-ignore
+  //@ts-expect-error partyIdType var not of type IdType
   idType: idType,
   idValue: idValue
 },
@@ -249,7 +249,7 @@ ilpPacket: {
     },
     payee: {
       partyIdInfo: {
-        //@ts-ignore
+        //@ts-expect-error partyIdType var not of type IdType
         partyIdType: idType,
         partyIdentifier: idValue,
         fspId: "airtel-123-qwerty",
@@ -266,7 +266,7 @@ ilpPacket: {
       supportedCurrencies: ["ZMW"],
     },
     payer: {
-      //@ts-ignore
+      //@ts-expect-error partyIdType var not of type IdType
       idType: idType,
       idValue: idValue
     },

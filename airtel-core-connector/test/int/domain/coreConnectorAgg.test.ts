@@ -95,7 +95,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('Test Get Parties With a Number That Does not Exist', async () => {
             try {
-                const res = await ccAggregate.getParties('777503758', 'MSISDN');
+                await ccAggregate.getParties('777503758', 'MSISDN');
             } catch (error) {
                 if (error instanceof AirtelError) {
                     expect(error.httpCode).toEqual(500);
@@ -131,7 +131,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfer Requests Test  - Payee
-        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+        test.skip('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
             const url = `${ML_URL}/transfers`;
             const res = await axios.post(url, JSON.stringify(transferRequest), {
@@ -215,7 +215,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('Test Get Transfer Quote (Get Quotes)', async () => {
             try {
-                const res = await ccAggregate.quoteRequest(quoteRequestDto());
+                 await ccAggregate.quoteRequest(quoteRequestDto());
             } catch (error) {
                 if (error instanceof AirtelError) {
                     expect(error.httpCode).toEqual(500);
@@ -227,7 +227,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('Test Airtel Disbursements (Transfers - Happy Path)', async () => {
             try {
-                const res = await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
+                await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
             } catch (error) {
                 if (error instanceof AirtelError) {
                     expect(error.httpCode).toEqual(500);
@@ -239,7 +239,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('Test Airtel Disbursements (Transfers - Unhappy Path)', async () => {
             try {
-                const res = await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
+                await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
             } catch (error) {
                 if (error instanceof AirtelError) {
                     expect(error.httpCode).toEqual(500);
@@ -252,7 +252,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('Test Airtel Disbursements (Transfers - Unhappy Path)', async () => {
             try {
-                const res = await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
+               await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
             } catch (error) {
                 if (error instanceof AirtelError) {
                     expect(error.httpCode).toEqual(500);

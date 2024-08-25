@@ -94,10 +94,10 @@ jobs:
           name: Configure Defaults, NPM Install
           command: |
             source $(pwd)/.circleci/pipeline.sh
-            defaults_configure_nvm
             for dir in */; do
               if [[ $dir == *-core-connector/ ]]; then
                 cd $dir 
+                defaults_configure_nvm
                 npm ci 
                 cd -
               fi
@@ -111,14 +111,20 @@ jobs:
     executor: default-machine
     steps:
       - checkout
-      - run:
-          name: Build Docker local image
-          command: |
-            echo "Building Docker image: local"
-            docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
-      - run:
-          name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+      - run: 
+         name: Build Docker Local Images
+         command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
+                echo "Building Docker image: local"
+                docker build -t $DOCKER_ORG/$dir_no_slash:local .
+                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir_no_slash:local
+                cd -
+              fi
+            done
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -131,13 +137,21 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute unit tests
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                npm run test:unit
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute unit tests
-          command: npm run test:unit
 
   test-functional:
     executor: default-machine
@@ -148,21 +162,22 @@ jobs:
       - run:
           name: Load the pre-built docker local image from workspace
           command: docker load -i /tmp/docker-image-local.tar
-      - run:
-          name: Start docker-compose for this service and TTK
-          command: |
-            cd test/func
-            docker-compose up -d
-      - run:
-          name: Wait for some time
-          command: |
-            sleep 10
-      - run:
+      - run: 
           name: Execute Functional Tests
           command: |
-            cd test/func
-            docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
-            docker compose down
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                cd test/func
+                docker-compose up -d
+                sleep 10
+                cd test/func
+                docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
+                docker compose down
+                cd -
+              fi
+            done
       - store_artifacts:
           path: ./test/func/reports
           destination: test
@@ -174,13 +189,21 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute Dep Check
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                npm run dep:check
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute dependency tests
-          command: npm run dep:check
 
   test-func:
     executor: default-machine
@@ -188,27 +211,23 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp
-      - run:
-          name: Start Mock SDK Scheme Adapter API
+      - run: 
+          name: Configure Defaults, Execute integration tests
           command: |
-            docker-compose -f ./test/func/sdk-docker-compose.yml up -d
-      - run:
-          name: Wait for some time
-          command: |
-            sleep 10
-      - run:
-          name: Install dependencies
-          command: |
-            nvm install
-            nvm use
-            npm install
-      - run:
-          name: Execute Functional Tests
-          command: npm run test:functional
-      - run:
-          name: Stop docker-compose TTK backend
-          command: |
-            docker-compose -f ./test/func/sdk-docker-compose.yml down
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                docker-compose -f ./test/func/sdk-docker-compose.yml up -d
+                sleep 10
+                nvm install
+                nvm use
+                npm install
+                npm run test:int
+                docker-compose -f ./test/func/sdk-docker-compose.yml down
+                cd -
+              fi
+            done
 
   test-lint:
     executor: default-docker
@@ -217,13 +236,21 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute Dep Check
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                npm run lint
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute lint tests
-          command: npm run lint
 
   release:
     executor: default-docker
