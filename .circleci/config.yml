@@ -259,8 +259,18 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute Dep Check
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                cd -
+              fi
+            done
       - restore_cache:
           keys:
           - dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
