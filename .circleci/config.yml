@@ -92,7 +92,7 @@ jobs:
       - checkout
       - run: 
           name: Check Bash Script
-          command: ./circleci/pipeline.sh
+          command: ./.circleci/pipeline.sh
       - run:
           <<: *defaults_configure_nvm
       - run:
