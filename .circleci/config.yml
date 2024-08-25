@@ -90,6 +90,12 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
+      - run: | 
+          for dir in */; do
+            if [[ $dir == *-core-connector/ ]]; then
+              echo "${dir%/}"
+            fi
+          done
       - run:
           <<: *defaults_configure_nvm
       - run:
