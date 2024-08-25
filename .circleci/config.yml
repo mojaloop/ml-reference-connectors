@@ -91,11 +91,8 @@ jobs:
           command: *defaults_Dependencies
       - checkout
       - run: 
-          name: Check PWD
-          command: |
-            pwd
-            ls 
-            
+          name: Check Bash Script
+          command: ./circleci/pipeline.sh
       - run:
           <<: *defaults_configure_nvm
       - run:
