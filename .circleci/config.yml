@@ -111,14 +111,19 @@ jobs:
     executor: default-machine
     steps:
       - checkout
-      - run:
-          name: Build Docker local image
-          command: |
-            echo "Building Docker image: local"
-            docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
-      - run:
-          name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+      - run: 
+         name: Build Docker Local Images
+         command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                echo "Building Docker image: local"
+                docker build -t $DOCKER_ORG/$dir:local .
+                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir:local
+                cd -
+              fi
+            done
       - persist_to_workspace:
           root: /tmp
           paths:
