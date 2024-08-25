@@ -5,13 +5,23 @@ networks:
 
 
 services:
-  mifosCoreConnector:
-    image: mojaloop/mifos-core-connector:local
+  aitel-core-connector:
+    image: mojaloop/airtel-core-connector:local
     build:
       context: ../..
     networks:
       - mojaloop-net
     environment:
+      - AIRTEL_BASE_URL=openapiuat.airtel.africa
+      - CLIENT_ID=61d4070a-77d8-4287-a8f5-7574ef41fffa
+      - CLIENT_SECRET=3dbeec92-2ea9-4eb4-9bde-b4d5125d8870
+      - GRANT_TYPE=client_credentials
+      - X_COUNTRY=ZM
+      - X_CURRENCY=ZMW
+      - SUPPORTED_ID_TYPE=MSISDN
+      - SERVICE_CHARGE=0
+      - EXPIRATION_DURATION=1
+      - AIRTEL_PIN=1234rtgbnkjhgf
       - FINERACT_TENANT_ID=default
       - FINERACT_AUTH_MODE=basic
       - FINERACT_USERNAME=mifos
@@ -35,7 +45,7 @@ services:
     image: stoplight/prism:4
     networks:
       - mojaloop-net
-    command: mock -h sdkSchemeAdapterOutbound "/tmp/api.oas2.yml"
+    command: mock -h sdkSchemeAdapterOutbound "/tmp/api.oas2.ym/[]l"
     volumes:
       - ../../src/api-spec:/tmp
     ports:

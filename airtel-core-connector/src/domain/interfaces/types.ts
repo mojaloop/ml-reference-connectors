@@ -126,3 +126,4 @@ export type TtransferPatchNotificationRequest = {
     };
     transferId?: components['schemas']['transferId'];
 };
+

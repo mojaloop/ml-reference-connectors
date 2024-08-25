@@ -51,7 +51,7 @@ export class SDKClient implements ISDKClient {
     async initiateTransfer(
         transfer: TSDKOutboundTransferRequest,
     ): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
-        this.logger.info('SDKClient initiate receiveTransfer', transfer);
+        this.logger.info('SDKClient initiate Transfer', transfer);
         try {
             const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
                 `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,

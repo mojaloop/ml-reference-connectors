@@ -104,9 +104,10 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
+        const transferId = params["transferId"] as string;
         const transferAccept = request.payload as TAirtelUpdateSendMoneyRequest;
         try {
-            const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept, params["transferId"] as string);
+            const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept, transferId );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
             return this.handleError(error, h);

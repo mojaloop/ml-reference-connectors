@@ -34,7 +34,7 @@ export const AIRTEL_ROUTES = Object.freeze({
     getToken: '/auth/oauth2/token',
     getKyc: '/standard/v1/users/',
     sendMoney: '/standard/v3/disbursements',
-    collectMoney: 'merchant/v2/payments/',
+    collectMoney: '/merchant/v2/payments/',
     refundMoney: '/standard/v2/payments/refund',
 });
 

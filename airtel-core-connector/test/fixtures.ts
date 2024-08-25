@@ -1,13 +1,14 @@
 import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
+import { IdType, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
-import { TtransferPatchNotificationRequest } from 'src/domain/interfaces/types';
+import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
 
 type TransferAcceptInputDto = {
     fineractAccountId?: number;
     totalAmount?: number;
     sdkTransferId?: number;
 };
+
 
 export const transferAcceptDto = ({
     fineractAccountId = 1,
@@ -107,9 +108,9 @@ export const sdkInitiateTransferResponseDto = (
 export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
 
 
-
-export const transferPatchNotificationRequestDto: TtransferPatchNotificationRequest = {
-  currentState: "COMPLETED", 
+export const transferPatchNotificationRequestDto= (currentState: string, partyIdType:string, partyIdentifier:string, amount:string): TtransferPatchNotificationRequest =>({
+  //@ts-ignore
+  currentState: currentState,  
   direction: "INBOUND",
   finalNotification: {
     completedTimestamp: "6966-12-29T00:03:24.449Z", 
@@ -160,8 +161,9 @@ export const transferPatchNotificationRequestDto: TtransferPatchNotificationRequ
       transactionId: '47e8a9cd-3d89-55c5-a15a-b57a28ad763e',
       payee: {
         partyIdInfo: {
-          partyIdType: 'MSISDN',
-          partyIdentifier: '978034884',
+          //@ts-ignore
+          partyIdType: partyIdType,
+          partyIdentifier: partyIdentifier,
           partySubIdOrType: undefined,
           fspId: undefined,
           extensionList: undefined
@@ -185,11 +187,11 @@ export const transferPatchNotificationRequestDto: TtransferPatchNotificationRequ
         supportedCurrencies: undefined
       },
       amountType: 'SEND',
-      amount: {
-        amount: '10',
-        currency:'KES'
+      amount:{
+        amount: amount,
+        currency :"ZMW"
       },
-      transactionType: {
+      transactionType: { 
         scenario: 'TRANSFER',
         subScenario: undefined,
         initiator: 'PAYER',
@@ -205,6 +207,102 @@ export const transferPatchNotificationRequestDto: TtransferPatchNotificationRequ
     headers: {}
   },
   transferId: "47e8a9cd-3d89-55c5-a15a-b57a28ad763e"
-};
+});
 
-  
+
+export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978980797", amount: string = "100"): TQuoteRequest => ({
+  amount: amount,
+  amountType: "SEND",
+
+  currency: "ZMW",
+  from: {
+    idType: "MSISDN",
+    idValue: "978034884"
+  },
+  initiator: "PAYER",
+  initiatorType: "CONSUMER",
+  quoteId: crypto.randomUUID(),
+  to: {
+    //@ts-ignore
+    idType: idType,
+    idValue: idValue
+  },
+  transactionId: crypto.randomUUID(),
+  transactionType: "TRANSFER"
+});
+
+
+export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
+amount: amount,
+amountType: "SEND",
+currency: "ZMW",
+from: {
+  //@ts-ignore
+  idType: idType,
+  idValue: idValue
+},
+ilpPacket: {
+  data: {
+    amount: {
+      amount: amount,
+      currency: "ZMW",
+    },
+    payee: {
+      partyIdInfo: {
+        //@ts-ignore
+        partyIdType: idType,
+        partyIdentifier: idValue,
+        fspId: "airtel-123-qwerty",
+      },
+      merchantClassificationCode: "1234",
+      name: "Payee Name",
+      personalInfo: {
+        complexName: {
+          firstName: "PayeeFirstName", 
+          lastName: "PayeeLastName",  
+        },
+        dateOfBirth: "YYYY-MM-DD", 
+      },
+      supportedCurrencies: ["ZMW"],
+    },
+    payer: {
+      //@ts-ignore
+      idType: idType,
+      idValue: idValue
+    },
+    quoteId: crypto.randomUUID(), 
+    transactionId: crypto.randomUUID(),
+    transactionType: {
+      initiator: "PAYER",
+      initiatorType: "CONSUMER",
+      scenario: "TRANSFER",
+      subScenario: "LOCALLY_DEFINED_SUBSCENARIO",
+    },
+  },
+},
+note: "Transfer Quote Request",
+});
+
+
+// Send Money DTO
+
+export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyRequest => ( {
+  "homeTransactionId": "HTX123456789",
+  "payeeId": "07676767676",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType":"TRANSFER",
+  "payer": "Elikah Okello",
+  "payerAccount": idValue,
+  "dateOfBirth": "1985-04-12"
+});
+
+
+export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
+  "acceptQuote": acceptQuote,
+  "msisdn": idValue,
+  "amount": amount
+});

@@ -75,12 +75,12 @@ paths:
         '504':
           description: >-
             Response for a timed out transfer 
-  /send-money/{id}:
+  /send-money/{transferId}:
     put:
       summary: Confirm send money
       operationId: updateSendMoney
       parameters:
-        - name: id
+        - name: transferId
           in: path
           required: true
           description: The ID of the transaction

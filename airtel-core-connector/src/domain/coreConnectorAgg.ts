@@ -79,7 +79,7 @@ export class CoreConnectorAggregate {
         private readonly airtelClient: IAirtelClient,
         logger: ILogger,
     ) {
-        this.IdType = fineractConfig.FINERACT_ID_TYPE;
+        this.IdType = airtelConfig.SUPPORTED_ID_TYPE;
         this.logger = logger;
     }
 
