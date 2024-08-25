@@ -260,7 +260,7 @@ jobs:
           command: *defaults_Dependencies
       - checkout
       - run: 
-          name: Configure Defaults, Execute Dep Check
+          name: Configure Defaults
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
@@ -276,9 +276,17 @@ jobs:
           - dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           <<: *defaults_configure_git
-      - run:
+      - run: 
           name: Generate changelog and bump package version
-          command: npm run release -- --no-verify
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                npm run release -- --no-verify
+                cd -
+              fi
+            done
       - run:
           name: Push the release
           command: git push --follow-tags origin ${CIRCLE_BRANCH}
