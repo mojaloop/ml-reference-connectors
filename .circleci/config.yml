@@ -61,6 +61,22 @@ defaults_configure_nvm: &defaults_configure_nvm
     nvm alias default $(cat .nvmrc)
     nvm use $(cat .nvmrc)
 
+commands:
+  defaults_configure_nvm_cmd: 
+    description: "Configure NVM"
+    steps:
+      - run: 
+          name: Configure NVM
+          command: |
+              touch $HOME/.profile
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              echo "Installing Node version: $(cat .nvmrc)"
+              nvm install $(cat .nvmrc)
+              nvm alias default $(cat .nvmrc)
+              nvm use $(cat .nvmrc)
+        
 ##
 # Executors
 #
@@ -96,6 +112,16 @@ jobs:
             for dir in */; do
               if [[ $dir == *-core-connector/ ]]; then
                 echo "${dir%/}"
+              fi
+            done
+      - run: 
+          name: Configure NVM and install deps for all connectors
+          command: | 
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir
+                defaults_configure_nvm_cmd
+                cd -
               fi
             done
       - run:
