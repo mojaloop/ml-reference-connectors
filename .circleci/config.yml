@@ -307,12 +307,18 @@ jobs:
           command: |
             git fetch origin
             git checkout origin/${CIRCLE_BRANCH}
-      - run:
-          <<: *defaults_export_version_from_package
-      - run:
-          name: Check the release changes
+      - run: 
+          name: Format the changelog into the github release body and get release tag
           command: |
-            echo "Changes are: ${RELEASE_CHANGES}"
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_export_version_from_package
+                echo "Changes are: ${RELEASE_CHANGES}"
+                cd -
+              fi
+            done
       - run: 
           name: Create Release
           command: |
@@ -329,15 +335,6 @@ jobs:
     executor: default-machine
     steps:
       - checkout
-      - run:
-          name: Setup for LATEST release
-          command: |
-            echo "export RELEASE_TAG=$RELEASE_TAG_PROD" >> $BASH_ENV
-            echo "RELEASE_TAG=$RELEASE_TAG_PROD"
-
-            PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
-            echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
-            echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
       - attach_workspace:
           at: /tmp
       - run:
@@ -347,32 +344,34 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Re-tag pre built image
+      - run: 
+          name: Tag and Publish Images
           command: |
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
-          command: |
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
+                echo "export RELEASE_TAG=$RELEASE_TAG_PROD" >> $BASH_ENV
+                echo "RELEASE_TAG=$RELEASE_TAG_PROD"
+
+                PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
+                echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
+                echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                cd -
+              fi
+            done
 
   publish-snapshot:
     executor: default-machine
     steps:
       - checkout
-      - run:
-          name: Setup for SNAPSHOT release
-          command: |
-            echo "export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT" >> $BASH_ENV
-            echo "RELEASE_TAG=$RELEASE_TAG_SNAPSHOT"
-
-            PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
-            echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
-            echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
       - attach_workspace:
           at: /tmp
       - run:
@@ -382,18 +381,29 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run:
-          name: Re-tag pre built image
+      - run: 
+          name: Tag and Publish Images
           command: |
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
-      - run:
-          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
-          command: |
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
-            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                dir_no_slash="${dir%/}"  # Remove trailing slash
+                cd "$dir_no_slash" 
+                echo "export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT" >> $BASH_ENV
+                echo "RELEASE_TAG=$RELEASE_TAG_SNAPSHOT"
+
+                PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
+                echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
+                echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
+                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
+                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
+                cd -
+              fi
+            done
 
 
 ##
