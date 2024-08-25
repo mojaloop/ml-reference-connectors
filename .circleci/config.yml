@@ -145,6 +145,7 @@ jobs:
               if [[ $dir == *-core-connector/ ]]; then
                 cd $dir 
                 defaults_configure_nvm
+                npm ci
                 npm run test:unit
                 cd -
               fi
