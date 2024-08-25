@@ -211,27 +211,23 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp
-      - run:
-          name: Start Mock SDK Scheme Adapter API
+      - run: 
+          name: Configure Defaults, Execute integration tests
           command: |
-            docker-compose -f ./test/func/sdk-docker-compose.yml up -d
-      - run:
-          name: Wait for some time
-          command: |
-            sleep 10
-      - run:
-          name: Install dependencies
-          command: |
-            nvm install
-            nvm use
-            npm install
-      - run:
-          name: Execute Functional Tests
-          command: npm run test:functional
-      - run:
-          name: Stop docker-compose TTK backend
-          command: |
-            docker-compose -f ./test/func/sdk-docker-compose.yml down
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                docker-compose -f ./test/func/sdk-docker-compose.yml up -d
+                sleep 10
+                nvm install
+                nvm use
+                npm install
+                npm run test:int
+                docker-compose -f ./test/func/sdk-docker-compose.yml down
+                cd -
+              fi
+            done
 
   test-lint:
     executor: default-docker
@@ -240,13 +236,21 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run:
-          <<: *defaults_configure_nvm
+      - run: 
+          name: Configure Defaults, Execute Dep Check
+          command: |
+            source $(pwd)/.circleci/pipeline.sh
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                defaults_configure_nvm
+                npm ci
+                npm run lint
+                cd -
+              fi
+            done
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
-      - run:
-          name: Execute lint tests
-          command: npm run lint
 
   release:
     executor: default-docker
