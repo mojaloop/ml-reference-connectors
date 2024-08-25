@@ -488,7 +488,6 @@ workflows:
               only:
                 - main
                 - /release\/v.*/
-                - chore/pipeline
       - github-release:
           context: org-global
           requires:
@@ -498,7 +497,6 @@ workflows:
               only:
                 - main
                 - /release\/v.*/
-                - chore/pipeline
       - publish:
           context: org-global
           requires:
