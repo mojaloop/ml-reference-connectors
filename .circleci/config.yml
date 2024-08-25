@@ -91,15 +91,17 @@ jobs:
           command: *defaults_Dependencies
       - checkout
       - run: 
-          name: Load functions
+          name: Configure Defaults, NPM Install
           command: |
             source $(pwd)/.circleci/pipeline.sh
-            hello_world
-      - run:
-          <<: *defaults_configure_nvm
-      - run:
-          name: Update NPM install
-          command: npm ci
+            defaults_configure_nvm
+            for dir in */; do
+              if [[ $dir == *-core-connector/ ]]; then
+                cd $dir 
+                npm ci 
+                cd -
+              fi
+            done
       - save_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
           paths:
