@@ -41,6 +41,8 @@ import {
     TAirtelUpdateSendMoneyRequest,
     TAirtelCollectMoneyRequest,
     AirtelError,
+    TAirtelTransactionEnquiryRequest,
+    ETransactionStatus,
 } from './CBSClient';
 import {
     ILogger,
@@ -317,9 +319,40 @@ export class CoreConnectorAggregate {
         }
 
         const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
-        const sdkRes = await this.sdkClient.updateTransfer({
-            acceptQuote: transferAccept.acceptQuote
-        }, transferId);
+
+        // Transaction id from response 
+        let transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+            transactionId: airtelRes.data.transaction.id
+        });
+
+        
+        let sdkRes:THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+        
+        while(transactionEnquiry.data.transaction.status === ETransactionStatus.TIP){
+            this.logger.info(`Waiting for transaction status`)
+            // todo: make the number of seconds configurable
+            await new Promise(r => setTimeout(r, 2000));
+            transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                transactionId: airtelRes.data.transaction.id
+            });
+
+            if(transactionEnquiry.data.transaction.status === ETransactionStatus.TS){
+                this.logger.info(`Responding with false`)
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: transferAccept.acceptQuote
+                }, transferId);
+                break;
+            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TF){
+                this.logger.info(`Responding with false`)
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote:false,
+                }, transferId);
+                break;
+            }
+        }
+        if(!sdkRes){
+            throw SDKClientError.updateTransferRequestNotDefinedError();
+        }
 
         if(!(sdkRes.data.currentState === "COMPLETED")){
             await this.airtelClient.refundMoney({
@@ -333,6 +366,7 @@ export class CoreConnectorAggregate {
 
         return sdkRes.data;
     }
+
 
     private getTAirtelCollectMoneyRequest(collection: TAirtelUpdateSendMoneyRequest, transferId: string): TAirtelCollectMoneyRequest {
         return {

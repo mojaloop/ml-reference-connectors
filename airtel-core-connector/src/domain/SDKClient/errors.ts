@@ -52,4 +52,11 @@ export class SDKClientError extends BasicError {
             mlCode: '3200',
         });
     }
+
+    static updateTransferRequestNotDefinedError() {
+        return new SDKClientError('Update Transfer Request not defined', {
+            httpCode: 500,
+            mlCode: '4000',
+        });
+    }
 }
