@@ -15,7 +15,7 @@ End
 CC->>CC:Calculate Charge
 CC->> Airtel:GET /standard/v2/users/{msisdn}
 Airtel -->> CC:Response
-CC->>CC: Check Respomse
+CC->>CC: Check Response
 Alt if Response not Successful
 CC-->>ML Connector: Response 500 ML Code: 5000
 End
