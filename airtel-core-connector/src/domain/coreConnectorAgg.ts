@@ -108,7 +108,7 @@ export class CoreConnectorAggregate {
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
-        this.logger.info(`Get Parties for ${this.IdType} ${quoteRequest.to.idValue}`);
+        this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
