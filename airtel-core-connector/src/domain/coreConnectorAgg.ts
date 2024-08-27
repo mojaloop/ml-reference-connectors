@@ -315,6 +315,7 @@ export class CoreConnectorAggregate {
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
+        // todo: currency type and idtype checks
 
         const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
         const sdkRes = await this.sdkClient.updateTransfer({
