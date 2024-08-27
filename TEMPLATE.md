@@ -1,0 +1,99 @@
+# Core Connector Template
+This is a template that can be adapted as a starting point to develop DFSP
+core connectors for Mojaloop Payment Manager For Mojaloop
+
+> For full forms check the glossary section
+
+# Introduction
+A core connector is a middleware that facilitates a connection between the DFSP and the mojaloop connector.
+
+![Core Connector Overiew](./assets/Overview.png)
+
+# Prerequisites
+Before you start building a core connector, there are some requirements that need to be in place before implementation starts. These are important because they affect the success of the integration
+
+- CBS Sandbox API
+- Access credentials 
+- Typescript knowledge
+- Beginner docker knowledge 
+- Git knowledge
+- Mojaloop Knowledge
+- For Windows users you will need WSL (Ubuntu)
+
+If you need to get knowledge on how Mojaloop works, consider taking the [Mojaloop Training Program](https://mojaloop.io/mojaloop-training-program/).
+
+# Getting Started
+Clone this repository.
+
+For linux and Mac Os
+```bash
+git clone https://github.com/mojaloop/ml-reference-connectors.git
+```
+
+For windows.
+
+Install WSL
+```powershell
+wsl --install -d Ubuntu
+```
+
+Connect to the WSL machine.
+```powershell
+wsl -d ubuntu
+```
+
+Clone the repository
+```bash
+git clone https://github.com/mojaloop/ml-reference-connectors.git
+```
+
+To understand the code structure and how to refactor this code base for a new connector, please refer to the section for [code structure](#core-structure-and-architecture)
+
+# Core structure and Architecture
+```bash
+.
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── commitlint.config.js
+├── docker-compose.yml
+├── docs
+│   └── Overview.png
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── src
+│   ├── api-spec
+│   ├── config.ts
+│   ├── constants.ts
+│   ├── core-connector-svc
+│   ├── domain
+│   ├── index.ts
+│   ├── infra
+│   └── plugins
+├── test
+│   ├── fixtures.ts
+│   ├── func
+│   ├── mocks
+│   ├── setup.ts
+│   └── unit
+└── tsconfig.json
+
+12 directories, 15 files
+```
+<!-- todo: add code structure -->
+
+# Configuration.
+All configuration for any core connector should be put in environment variables.
+
+Environment variables are configured through the .env.example file in the root of this folder.
+
+Before using the .env.example file, you should create a .env file from it so that it can be used by the executing core connector.
+
+Convict is the tool that is used in this repository for configuration management.
+
+# Glossary
+- DFSP : Digital Financial Service Provider
+- CBS: Core Banking Solution
+- API: Application Programming Interface
+- WSL: Windows Sub-System For Linux

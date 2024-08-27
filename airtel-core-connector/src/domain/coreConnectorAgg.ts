@@ -310,13 +310,13 @@ export class CoreConnectorAggregate {
     }
 
     async updateSentTransfer(transferAccept: TAirtelUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
-        this.logger.info(`Updating transfer for id ${transferAccept.msisdn}`);
+        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
 
-        const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
+        const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
         const sdkRes = await this.sdkClient.updateTransfer({
             acceptQuote: transferAccept.acceptQuote
         }, transferId);
