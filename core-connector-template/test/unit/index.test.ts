@@ -27,7 +27,7 @@
 import { randomUUID } from 'crypto';
 import { AxiosClientFactory } from '../../src/infra/axiosHttpClient';
 import config from '../../src/config';
-import { FineractClientFactory } from '../../src/domain/CBSClient';
+import { CBSClientFactory } from '../../src/domain/CBSClient';
 import { TFineractConfig } from '../../src/domain/CBSClient';
 import { loggerFactory } from '../../src/infra/logger';
 import { CoreConnectorAggregate, TQuoteRequest, TtransferRequest } from '../../src/domain';
@@ -37,7 +37,7 @@ const logger = loggerFactory({ context: 'Mifos Core Connector Tests' });
 const fineractConfig = config.get('fineract') as TFineractConfig;
 
 const httpClient = AxiosClientFactory.createAxiosClientInstance();
-const fineractClient = FineractClientFactory.createClient({
+const fineractClient = CBSClientFactory.createClient({
     fineractConfig,
     httpClient,
     logger,

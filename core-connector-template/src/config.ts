@@ -1,3 +1,4 @@
+import "dotenv/config";
 import Convict from 'convict';
 import { IdType, TFineractConfig } from './domain/CBSClient';
 import { TSDKSchemeAdapterConfig } from './domain/SDKClient';

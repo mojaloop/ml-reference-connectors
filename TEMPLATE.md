@@ -50,6 +50,11 @@ git clone https://github.com/mojaloop/ml-reference-connectors.git
 To understand the code structure and how to refactor this code base for a new connector, please refer to the section for [code structure](#core-structure-and-architecture)
 
 # Core structure and Architecture
+
+Below is an output of the directory structure of the core connector template.
+
+To use this template, you will need to understand it's structure, the changing components and the static components which you should not worry about.
+
 ```bash
 .
 ├── Dockerfile
@@ -81,7 +86,8 @@ To understand the code structure and how to refactor this code base for a new co
 
 12 directories, 15 files
 ```
-<!-- todo: add code structure -->
+# Components 
+The template contains the
 
 # Configuration.
 All configuration for any core connector should be put in environment variables.
