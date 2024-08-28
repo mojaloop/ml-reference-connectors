@@ -42,8 +42,6 @@ import {
     TAirtelCollectMoneyRequest,
     AirtelError,
     ETransactionStatus,
-    TAirtelTransactionEnquiryResponse,
-    TAirtelCollectMoneyResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -288,6 +286,7 @@ export class CoreConnectorAggregate {
     }
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
+        this.logger.info(`Getting response for transfer with Id ${transfer.homeTransactionId}`);
         // }; //todo: fix this part after demo
         return {
                 "payeeDetails": "Paul Johnson",
@@ -320,7 +319,7 @@ export class CoreConnectorAggregate {
         const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
       
         // Transaction id from response 
-        let transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+        const transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
             transactionId: airtelRes.data.transaction.id
         });
 
@@ -388,7 +387,7 @@ export class CoreConnectorAggregate {
         if (!sdkRes) {
             throw SDKClientError.updateTransferRequestNotDefinedError();
         }
-        return sdkRes
+        return sdkRes;
     }
 
 

@@ -41,6 +41,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { randomUUID } from 'crypto';
 
 
+jest.setTimeout(20000)
 const logger = loggerFactory({ context: 'ccAgg tests' });
 const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');
@@ -199,7 +200,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Confirm Send Money - Payer
-        test.skip('Test Put/ send-money{id}: response should be 200', async()=>{
+        test('Test Put/ send-money{id}: response should be 200', async()=>{
             const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 

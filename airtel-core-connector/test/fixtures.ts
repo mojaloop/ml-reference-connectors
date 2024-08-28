@@ -309,5 +309,5 @@ export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyReq
 export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
-  "amount": amount
+  "amount": amount.toString()
 });
