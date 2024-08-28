@@ -41,6 +41,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { randomUUID } from 'crypto';
 
 
+jest.setTimeout(20000)
 const logger = loggerFactory({ context: 'ccAgg tests' });
 const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');

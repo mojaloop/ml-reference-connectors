@@ -447,7 +447,7 @@ export type TAirtelSendMoneyRequest = {
 export type TAirtelUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
-    "amount": number;
+    "amount": string;
 }
 
 export type TAirtelCollectMoneyRequest = {
