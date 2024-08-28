@@ -528,9 +528,11 @@ export type TAirtelTransactionEnquiryResponse = {
 }
 
 export enum ETransactionStatus {
-    TIP = "TIP",
-    TS = "TS",
-    TF = "TF"
+    TransactionInProgress = "TIP",
+    TransactionSuccess = "TS",
+    TransactionFailed = "TF",
+    TransactionAmbiguous="TA",
+    TransactionExpired="TE"
 }
 
 

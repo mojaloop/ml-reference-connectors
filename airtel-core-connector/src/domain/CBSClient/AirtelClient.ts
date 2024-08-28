@@ -36,6 +36,7 @@ export const AIRTEL_ROUTES = Object.freeze({
     sendMoney: '/standard/v3/disbursements',
     collectMoney: '/merchant/v2/payments/',
     refundMoney: '/standard/v2/payments/refund',
+    transactionEnquiry: '/standard/v1/payments/'
 });
 
 
@@ -125,11 +126,16 @@ export class AirtelClient implements IAirtelClient {
     
     async getTransactionEnquiry(deps: TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse> {
         this.logger.info("Getting Transaction Status Enquiry from Airtel");
-        const url = `https://${this.airtelConfig.AIRTEL_BASE_URL}${AIRTEL_ROUTES.collectMoney}${deps.transactionId}`
+        const url = `https://${this.airtelConfig.AIRTEL_BASE_URL}${AIRTEL_ROUTES.transactionEnquiry}${deps.transactionId}`
         this.logger.info(url);
         try {
-            const res = await this.httpClient.get<TAirtelTransactionEnquiryResponse>(url, {headers: this.getDefaultHeader()});
-            if (res.statusCode !== 200) {
+            const res = await this.httpClient.get<TAirtelTransactionEnquiryResponse>(url, {
+                headers: {
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`
+                }
+            });
+            if (res.data.status.code !== '200') {
                 this.logger.error(`Failed to get token: ${res.statusCode} - ${res.data}`);
                 throw AirtelError.getTokenFailedError();
             }

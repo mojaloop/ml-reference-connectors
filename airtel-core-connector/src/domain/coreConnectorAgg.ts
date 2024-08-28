@@ -328,22 +328,28 @@ export class CoreConnectorAggregate {
         
         let sdkRes:THttpResponse<TtransferContinuationResponse> | undefined = undefined;
         
-        while(transactionEnquiry.data.transaction.status === ETransactionStatus.TIP){
+        while(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous){
             this.logger.info(`Waiting for transaction status`)
             // todo: make the number of seconds configurable
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 4000));
             transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
                 transactionId: airtelRes.data.transaction.id
             });
 
-            if(transactionEnquiry.data.transaction.status === ETransactionStatus.TS){
-                this.logger.info(`Responding with false`)
+            if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess){
+                this.logger.info(`Transaction is successful, Responding with true`)
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: transferAccept.acceptQuote
                 }, transferId);
                 break;
-            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TF){
-                this.logger.info(`Responding with false`)
+            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed){
+                this.logger.info(`Transaction is unsuccessful,Responding with false`)
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote:false,
+                }, transferId);
+                break;
+            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired){
+                this.logger.info(`Transaction is unsuccessful,Transaction has expired`)
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote:false,
                 }, transferId);
@@ -374,7 +380,7 @@ export class CoreConnectorAggregate {
             "subscriber": {
                 "country": this.airtelConfig.X_COUNTRY,
                 "currency": this.airtelConfig.X_CURRENCY,
-                "msisdn": collection.msisdn,
+                "msisdn": "971938765",
             },
             "transaction": {
                 "amount": collection.amount,

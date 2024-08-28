@@ -200,7 +200,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         // Confirm Send Money - Payer
         test('Test Put/ send-money{id}: response should be 200', async()=>{
-            const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(500, true, MSISDN);
+            const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(10, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 
             const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
