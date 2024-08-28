@@ -53,7 +53,7 @@ export const ROUTES = Object.freeze({
     charges: 'charges',
 });
 
-export class FineractClient implements IFineractClient {
+export class CBSClient implements IFineractClient {
     fineractConfig: TFineractConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
