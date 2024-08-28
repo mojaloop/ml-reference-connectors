@@ -27,7 +27,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 import { CoreConnectorAggregate, TtransferRequest, ValidationError } from '../../../src/domain';
-import { FineractClientFactory, FineractError, IFineractClient } from '../../../src/domain/CBSClient';
+import { CBSClientFactory, FineractError, IFineractClient } from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientError,
@@ -61,7 +61,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        fineractClient = FineractClientFactory.createClient({
+        fineractClient = CBSClientFactory.createClient({
             fineractConfig,
             httpClient,
             logger,

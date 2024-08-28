@@ -241,6 +241,11 @@ from: {
   idType: idType,
   idValue: idValue
 },
+to:{
+  //@ts-expect-error partyIdType var not of type IdType
+  idType: idType,
+  idValue: idValue
+},
 ilpPacket: {
   data: {
     amount: {
