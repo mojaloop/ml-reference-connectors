@@ -341,6 +341,7 @@ export type TAirtelConfig = {
     SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
+    TRANSACTION_ENQUIRY_WAIT_TIME: number
 }
 
 export type TGetKycArgs = {

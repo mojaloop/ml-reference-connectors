@@ -331,18 +331,10 @@ export class CoreConnectorAggregate {
         while (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
             this.logger.info(`Waiting for transaction status`);
             // todo: make the number of seconds configurable
-            await new Promise(r => setTimeout(r, 10000));
-            try {
-                transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
-                    transactionId: airtelRes.data.transaction.id
-                });
-            } catch (error) {
-                if (error instanceof Error) {
-                    if(error.message === "Cannot read properties of undefined (reading 'code')")
-                    continue
-                }
-            }
-
+            await new Promise(r => setTimeout(r, this.airtelConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
+            transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                transactionId: airtelRes.data.transaction.id
+            });
 
             if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
                 this.logger.info(`Transaction is successful, Responding with true`)

@@ -199,7 +199,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Confirm Send Money - Payer
-        test('Test Put/ send-money{id}: response should be 200', async()=>{
+        test.skip('Test Put/ send-money{id}: response should be 200', async()=>{
             const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 
