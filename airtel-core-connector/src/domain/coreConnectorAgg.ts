@@ -317,9 +317,6 @@ export class CoreConnectorAggregate {
             throw ValidationError.quoteNotAcceptedError();
         }
         const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
-        const sdkRes = await this.sdkClient.updateTransfer({
-            acceptQuote: transferAccept.acceptQuote
-        }, transferId);
       
         // Transaction id from response 
         let transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
