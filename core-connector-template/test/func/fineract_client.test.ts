@@ -26,7 +26,7 @@
  ******/
 'use strict';
 
-import { FineractClientFactory, TFineractConfig } from '../../src/domain/CBSClient';
+import { CBSClientFactory, TFineractConfig } from '../../src/domain/CBSClient';
 import { loggerFactory } from '../../src/infra/logger';
 import config from '../../src/config';
 import { AxiosClientFactory } from '../../src/infra/axiosHttpClient';
@@ -35,7 +35,7 @@ const logger = loggerFactory({ context: 'Mifos Core Connector Tests' });
 const fineractConfig = config.get('fineract') as TFineractConfig;
 
 const httpClient = AxiosClientFactory.createAxiosClientInstance();
-const fineractClient = FineractClientFactory.createClient({
+const fineractClient = CBSClientFactory.createClient({
     fineractConfig,
     httpClient,
     logger,
