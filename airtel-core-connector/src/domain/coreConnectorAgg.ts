@@ -121,10 +121,10 @@ export class CoreConnectorAggregate {
 
         const res = await this.airtelClient.getKyc({
             msisdn: quoteRequest.to.idValue,
-        
+
         });
 
-        if(res.data.is_barred){
+        if (res.data.is_barred) {
             throw AirtelError.payeeBlockedError("Account is barred", 500, "5400");
         }
 
@@ -325,42 +325,50 @@ export class CoreConnectorAggregate {
             transactionId: airtelRes.data.transaction.id
         });
 
-        
-        let sdkRes:THttpResponse<TtransferContinuationResponse> | undefined = undefined;
-        
-        while(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous){
-            this.logger.info(`Waiting for transaction status`)
-            // todo: make the number of seconds configurable
-            await new Promise(r => setTimeout(r, 4000));
-            transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
-                transactionId: airtelRes.data.transaction.id
-            });
 
-            if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess){
+        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+
+        while (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
+            this.logger.info(`Waiting for transaction status`);
+            // todo: make the number of seconds configurable
+            await new Promise(r => setTimeout(r, 10000));
+            try {
+                transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                    transactionId: airtelRes.data.transaction.id
+                });
+            } catch (error) {
+                if (error instanceof Error) {
+                    if(error.message === "Cannot read properties of undefined (reading 'code')")
+                    continue
+                }
+            }
+
+
+            if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
                 this.logger.info(`Transaction is successful, Responding with true`)
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: transferAccept.acceptQuote
                 }, transferId);
                 break;
-            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed){
+            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
                 this.logger.info(`Transaction is unsuccessful,Responding with false`)
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote:false,
+                    acceptQuote: false,
                 }, transferId);
                 break;
-            }else if(transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired){
+            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
                 this.logger.info(`Transaction is unsuccessful,Transaction has expired`)
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote:false,
+                    acceptQuote: false,
                 }, transferId);
                 break;
             }
         }
-        if(!sdkRes){
+        if (!sdkRes) {
             throw SDKClientError.updateTransferRequestNotDefinedError();
         }
 
-        if(!(sdkRes.data.currentState === "COMPLETED")){
+        if (!(sdkRes.data.currentState === "COMPLETED")) {
             await this.airtelClient.refundMoney({
                 "transaction": {
                     "airtel_money_id": airtelRes.data.transaction.id,
@@ -380,7 +388,7 @@ export class CoreConnectorAggregate {
             "subscriber": {
                 "country": this.airtelConfig.X_COUNTRY,
                 "currency": this.airtelConfig.X_CURRENCY,
-                "msisdn": "971938765",
+                "msisdn": collection.msisdn,
             },
             "transaction": {
                 "amount": collection.amount,

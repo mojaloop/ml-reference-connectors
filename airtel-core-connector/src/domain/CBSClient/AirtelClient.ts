@@ -28,7 +28,7 @@
 
 import { IHTTPClient, ILogger } from "../interfaces";
 import { AirtelError } from "./errors";
-import { IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TAirtelTransactionEnquiryRequest, TAirtelTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
+import { ETransactionStatus, IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TAirtelTransactionEnquiryRequest, TAirtelTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
 
 export const AIRTEL_ROUTES = Object.freeze({
     getToken: '/auth/oauth2/token',
@@ -135,6 +135,7 @@ export class AirtelClient implements IAirtelClient {
                     'Authorization': `Bearer ${await this.getAuthHeader()}`
                 }
             });
+            
             if (res.data.status.code !== '200') {
                 this.logger.error(`Failed to get token: ${res.statusCode} - ${res.data}`);
                 throw AirtelError.getTokenFailedError();
