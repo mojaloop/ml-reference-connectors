@@ -41,7 +41,6 @@ import {
     TAirtelUpdateSendMoneyRequest,
     TAirtelCollectMoneyRequest,
     AirtelError,
-    TAirtelTransactionEnquiryRequest,
     ETransactionStatus,
 } from './CBSClient';
 import {
@@ -337,19 +336,19 @@ export class CoreConnectorAggregate {
             });
 
             if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
-                this.logger.info(`Transaction is successful, Responding with true`)
+                this.logger.info(`Transaction is successful, Responding with true`);
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: transferAccept.acceptQuote
                 }, transferId);
                 break;
             } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
-                this.logger.info(`Transaction is unsuccessful,Responding with false`)
+                this.logger.info(`Transaction is unsuccessful,Responding with false`);
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: false,
                 }, transferId);
                 break;
             } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
-                this.logger.info(`Transaction is unsuccessful,Transaction has expired`)
+                this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: false,
                 }, transferId);

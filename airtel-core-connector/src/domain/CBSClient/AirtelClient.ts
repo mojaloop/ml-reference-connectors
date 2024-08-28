@@ -28,7 +28,7 @@
 
 import { IHTTPClient, ILogger } from "../interfaces";
 import { AirtelError } from "./errors";
-import { ETransactionStatus, IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TAirtelTransactionEnquiryRequest, TAirtelTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
+import {IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TAirtelTransactionEnquiryRequest, TAirtelTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
 
 export const AIRTEL_ROUTES = Object.freeze({
     getToken: '/auth/oauth2/token',
@@ -126,7 +126,7 @@ export class AirtelClient implements IAirtelClient {
     
     async getTransactionEnquiry(deps: TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse> {
         this.logger.info("Getting Transaction Status Enquiry from Airtel");
-        const url = `https://${this.airtelConfig.AIRTEL_BASE_URL}${AIRTEL_ROUTES.transactionEnquiry}${deps.transactionId}`
+        const url = `https://${this.airtelConfig.AIRTEL_BASE_URL}${AIRTEL_ROUTES.transactionEnquiry}${deps.transactionId}`;
         this.logger.info(url);
         try {
             const res = await this.httpClient.get<TAirtelTransactionEnquiryResponse>(url, {
