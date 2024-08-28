@@ -50,7 +50,7 @@ import {
     TQuoteRequest,
     TtransferResponse,
     TtransferRequest,
-    ValidationError,
+    ValidationError, 
     TtransferPatchNotificationRequest,
     THttpResponse,
 } from './interfaces';
@@ -124,7 +124,7 @@ export class CoreConnectorAggregate {
         });
 
         if (res.data.is_barred) {
-            throw AirtelError.payeeBlockedError("Account is barred", 500, "5400");
+            throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
         const serviceCharge = config.get("airtel.SERVICE_CHARGE");
