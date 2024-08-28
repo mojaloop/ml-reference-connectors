@@ -92,6 +92,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         return this.routes;
     }
 
+    // Send Money - Payer
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TAirtelSendMoneyRequest;
         try {

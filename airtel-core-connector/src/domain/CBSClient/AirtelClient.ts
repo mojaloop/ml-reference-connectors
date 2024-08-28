@@ -28,7 +28,7 @@
 
 import { IHTTPClient, ILogger } from "../interfaces";
 import { AirtelError } from "./errors";
-import { IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
+import {IAirtelClient, TAirtelCollectMoneyRequest, TAirtelCollectMoneyResponse, TAirtelConfig, TAirtelDisbursementRequestBody, TAirtelDisbursementResponse, TAirtelKycResponse, TAirtelRefundMoneyRequest, TAirtelRefundMoneyResponse, TAirtelTransactionEnquiryRequest, TAirtelTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
 
 export const AIRTEL_ROUTES = Object.freeze({
     getToken: '/auth/oauth2/token',
@@ -36,6 +36,7 @@ export const AIRTEL_ROUTES = Object.freeze({
     sendMoney: '/standard/v3/disbursements',
     collectMoney: '/merchant/v2/payments/',
     refundMoney: '/standard/v2/payments/refund',
+    transactionEnquiry: '/standard/v1/payments/'
 });
 
 
@@ -95,6 +96,8 @@ export class AirtelClient implements IAirtelClient {
         }
     }
 
+    
+
 
     async sendMoney(deps: TAirtelDisbursementRequestBody): Promise<TAirtelDisbursementResponse> {
         this.logger.info("Sending Disbursement Body To Airtel");
@@ -119,6 +122,31 @@ export class AirtelClient implements IAirtelClient {
         }
     }
 
+    //  Get transaction Enquiry 
+    
+    async getTransactionEnquiry(deps: TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse> {
+        this.logger.info("Getting Transaction Status Enquiry from Airtel");
+        const url = `https://${this.airtelConfig.AIRTEL_BASE_URL}${AIRTEL_ROUTES.transactionEnquiry}${deps.transactionId}`;
+        this.logger.info(url);
+        try {
+            const res = await this.httpClient.get<TAirtelTransactionEnquiryResponse>(url, {
+                headers: {
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`
+                }
+            });
+            
+            if (res.data.status.code !== '200') {
+                this.logger.error(`Failed to get token: ${res.statusCode} - ${res.data}`);
+                throw AirtelError.getTokenFailedError();
+            }
+            return res.data;
+        } catch (error) {
+            this.logger.error(`Error getting token: ${error}`, { url, data: deps });
+            throw error;
+        }
+
+    }
 
     async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
         this.logger.info("Getting Access Token from Airtel");

@@ -12,7 +12,16 @@ sequenceDiagram
   Alt If Couldnt make reservation
   CC-->>ML Integration Service: Response 500
   End
-  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = true}
+  CC->>Airtel: GET  /merchant/v2/payments/{id}
+  Loop While transaction status is TIP
+  CC->>CC: Delay for 2 seconds
+  CC->>Airtel: GET  /merchant/v2/payments/{id}
+  Alt if status == TS
+  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = true} and Break
+  else if status == TF
+  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = false} and Break
+  End
+  End
   ML Connector -->> CC: Response
   CC->>CC: Check Response
   Alt if http error code 500 or 504 or currentState = ERROR_OCCURED

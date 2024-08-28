@@ -341,6 +341,7 @@ export type TAirtelConfig = {
     SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
+    TRANSACTION_ENQUIRY_WAIT_TIME: number
 }
 
 export type TGetKycArgs = {
@@ -501,6 +502,42 @@ export type TAirtelRefundMoneyResponse = {
     }
 }
 
+// Transaction Enquiry Request
+export type TAirtelTransactionEnquiryRequest = {
+    transactionId : string;
+}
+
+
+// Transaction Enquiry Response
+
+export type TAirtelTransactionEnquiryResponse = {
+    "data": {
+        "transaction": {
+            "airtel_money_id": string,
+            "id": string,
+            "message": string,
+            "status": ETransactionStatus
+        }
+    },
+    "status": {
+        "code": string,
+        "message": string,
+        "result_code": string,
+        "response_code": string,
+        "success": boolean
+    }
+}
+
+export enum ETransactionStatus {
+    TransactionInProgress = "TIP",
+    TransactionSuccess = "TS",
+    TransactionFailed = "TF",
+    TransactionAmbiguous="TA",
+    TransactionExpired="TE"
+}
+
+
+// Interface for IAirtelClient with methods to be implemented in IAirtel
 export interface IAirtelClient {
     airtelConfig: TAirtelConfig;
     httpClient: IHTTPClient;
@@ -509,6 +546,7 @@ export interface IAirtelClient {
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
     sendMoney(deps: TAirtelDisbursementRequestBody): Promise<TAirtelDisbursementResponse>;
     collectMoney(deps: TAirtelCollectMoneyRequest): Promise<TAirtelCollectMoneyResponse>;
-    refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>
+    refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>;
+    getTransactionEnquiry(deps:TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse>;
 }
 

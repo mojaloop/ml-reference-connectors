@@ -41,6 +41,7 @@ import {
     TAirtelUpdateSendMoneyRequest,
     TAirtelCollectMoneyRequest,
     AirtelError,
+    ETransactionStatus,
 } from './CBSClient';
 import {
     ILogger,
@@ -49,7 +50,7 @@ import {
     TQuoteRequest,
     TtransferResponse,
     TtransferRequest,
-    ValidationError,
+    ValidationError, 
     TtransferPatchNotificationRequest,
     THttpResponse,
 } from './interfaces';
@@ -119,11 +120,11 @@ export class CoreConnectorAggregate {
 
         const res = await this.airtelClient.getKyc({
             msisdn: quoteRequest.to.idValue,
-        
+
         });
 
-        if(res.data.is_barred){
-            throw AirtelError.payeeBlockedError("Account is barred", 500, "5400");
+        if (res.data.is_barred) {
+            throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
         const serviceCharge = config.get("airtel.SERVICE_CHARGE");
@@ -315,13 +316,49 @@ export class CoreConnectorAggregate {
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-
         const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
-        const sdkRes = await this.sdkClient.updateTransfer({
-            acceptQuote: transferAccept.acceptQuote
-        }, transferId);
+      
+        // Transaction id from response 
+        let transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+            transactionId: airtelRes.data.transaction.id
+        });
 
-        if(!(sdkRes.data.currentState === "COMPLETED")){
+
+        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+
+        while (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
+            this.logger.info(`Waiting for transaction status`);
+            // todo: make the number of seconds configurable
+            await new Promise(r => setTimeout(r, this.airtelConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
+            transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                transactionId: airtelRes.data.transaction.id
+            });
+
+            if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
+                this.logger.info(`Transaction is successful, Responding with true`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: transferAccept.acceptQuote
+                }, transferId);
+                break;
+            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
+                this.logger.info(`Transaction is unsuccessful,Responding with false`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: false,
+                }, transferId);
+                break;
+            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
+                this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: false,
+                }, transferId);
+                break;
+            }
+        }
+        if (!sdkRes) {
+            throw SDKClientError.updateTransferRequestNotDefinedError();
+        }
+
+        if (!(sdkRes.data.currentState === "COMPLETED")) {
             await this.airtelClient.refundMoney({
                 "transaction": {
                     "airtel_money_id": airtelRes.data.transaction.id,
@@ -333,6 +370,7 @@ export class CoreConnectorAggregate {
 
         return sdkRes.data;
     }
+
 
     private getTAirtelCollectMoneyRequest(collection: TAirtelUpdateSendMoneyRequest, transferId: string): TAirtelCollectMoneyRequest {
         return {

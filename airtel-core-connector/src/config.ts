@@ -177,13 +177,20 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null, // required
             env: 'EXPIRATION_DURATION',
-        },
+        }, 
 
         AIRTEL_PIN: {
             doc: 'Airtel Pin for Disbursements',
             format: String,
             default: null, // required
             env: 'AIRTEL_PIN',
+        },
+
+        TRANSACTION_ENQUIRY_WAIT_TIME: {
+            doc: 'Airtel check transaction interval',
+            format: String,
+            default: null, // required
+            env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
     },
 });
