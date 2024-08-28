@@ -319,6 +319,6 @@ components:
           type: string
           example: "777503758"
         amount:
-          type: number
-          example: 500
+          type: string
+          example: "500"
         

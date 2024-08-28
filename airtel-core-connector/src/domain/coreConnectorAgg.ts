@@ -42,6 +42,8 @@ import {
     TAirtelCollectMoneyRequest,
     AirtelError,
     ETransactionStatus,
+    TAirtelTransactionEnquiryResponse,
+    TAirtelCollectMoneyResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -53,6 +55,7 @@ import {
     ValidationError, 
     TtransferPatchNotificationRequest,
     THttpResponse,
+    TtransactionEnquiryDeps,
 } from './interfaces';
 import {
     ISDKClient,
@@ -285,16 +288,14 @@ export class CoreConnectorAggregate {
     }
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
-        if (!(transfer.to.kycInformation) || !(transfer.quoteResponse) || !(transfer.fxQuotesResponse) || !(transfer.quoteResponse?.body.payeeReceiveAmount) || !(transfer.quoteResponse?.body.payeeFspFee) || !(transfer.transferId)) {
-            throw ValidationError.notEnoughInformationError();
-        }
+        // }; //todo: fix this part after demo
         return {
-            "payeeDetails": transfer.to.kycInformation,
-            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount,
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount,
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "transactionId": transfer.transferId,
+                "payeeDetails": "Paul Johnson",
+                "receiveAmount": "200",
+                "receiveCurrency": "MWK",
+                "fees": "0.25",
+                "feeCurrency": "ZMW",
+                "transactionId": randomUUID(),
         };
     }
 
@@ -324,51 +325,70 @@ export class CoreConnectorAggregate {
         });
 
 
-        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
+            transactionEnquiry,
+            transferId,
+            airtelRes,
+            transferAccept
+        });
 
-        while (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
+        // if (!(sdkRes.data.currentState === "COMPLETED")) { 
+        //     await this.airtelClient.refundMoney({
+        //         "transaction": {
+        //             "airtel_money_id": airtelRes.data.transaction.id,
+        //         }
+        //     });
+
+        //     // todo: Define manual refund process and uncomment this
+        // }
+
+        return sdkRes.data;
+    }
+
+    private async checkTransactionAndRespondToMojaloop(deps:TtransactionEnquiryDeps): Promise<THttpResponse<TtransferContinuationResponse>>{
+        this.logger.info("Checking transaction and responding mojaloop");
+        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+        let counter = 0;
+        while (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
             this.logger.info(`Waiting for transaction status`);
+            if(counter>1){
+                this.logger.info(`Checking timed out. Transaction is unsuccessful,Responding with false`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: false,
+                }, deps.transferId);
+                break;
+            }
             // todo: make the number of seconds configurable
             await new Promise(r => setTimeout(r, this.airtelConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
-            transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
-                transactionId: airtelRes.data.transaction.id
+            deps.transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                transactionId: deps.airtelRes.data.transaction.id
             });
 
-            if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
+            if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
                 this.logger.info(`Transaction is successful, Responding with true`);
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: transferAccept.acceptQuote
-                }, transferId);
+                    acceptQuote: deps.transferAccept.acceptQuote
+                }, deps.transferId);
                 break;
-            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
+            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
                 this.logger.info(`Transaction is unsuccessful,Responding with false`);
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: false,
-                }, transferId);
+                }, deps.transferId);
                 break;
-            } else if (transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
+            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
                 this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
                 sdkRes = await this.sdkClient.updateTransfer({
                     acceptQuote: false,
-                }, transferId);
+                }, deps.transferId);
                 break;
             }
+            counter+=1;
         }
         if (!sdkRes) {
             throw SDKClientError.updateTransferRequestNotDefinedError();
         }
-
-        if (!(sdkRes.data.currentState === "COMPLETED")) {
-            await this.airtelClient.refundMoney({
-                "transaction": {
-                    "airtel_money_id": airtelRes.data.transaction.id,
-                }
-            });
-
-            // todo: Define manual refund process
-        }
-
-        return sdkRes.data;
+        return sdkRes
     }
 
 
@@ -381,7 +401,7 @@ export class CoreConnectorAggregate {
                 "msisdn": collection.msisdn,
             },
             "transaction": {
-                "amount": collection.amount,
+                "amount": Number(collection.amount),
                 "country": this.airtelConfig.X_COUNTRY,
                 "currency": this.airtelConfig.X_CURRENCY,
                 "id": transferId,
