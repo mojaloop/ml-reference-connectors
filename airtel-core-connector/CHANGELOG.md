@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/mojaloop/airtel-core-connector/compare/v1.0.3...v1.1.0) (2024-08-28)
+
+
+### Features
+
+* implemented get transaction enquirey ([a043d6f](https://github.com/mojaloop/airtel-core-connector/commit/a043d6f1d88c5871da7338e030063f2e59a88cb6))
+
+
+### Bug Fixes
+
+* added changes from update-payer send money ([a5cc399](https://github.com/mojaloop/airtel-core-connector/commit/a5cc3991164d491edb9c5d1f6f3c4243c175b594))
+
 ### [1.0.3](https://github.com/mojaloop/airtel-core-connector/compare/v1.0.2...v1.0.3) (2024-08-28)
 
 ### [1.0.2](https://github.com/mojaloop/airtel-core-connector/compare/v1.0.1...v1.0.2) (2024-08-26)
