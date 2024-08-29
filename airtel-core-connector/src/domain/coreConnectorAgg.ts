@@ -290,7 +290,7 @@ export class CoreConnectorAggregate {
     }
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
-        this.logger.info(`Getting response for transfer with Id ${transfer.homeTransactionId}`);
+        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         if (!(transfer.to.kycInformation) || !(transfer.quoteResponse) || !(transfer.fxQuotesResponse) || !(transfer.quoteResponse?.body.payeeReceiveAmount) || !(transfer.quoteResponse?.body.payeeFspFee) || !(transfer.transferId)) {
             throw ValidationError.notEnoughInformationError();
         }
