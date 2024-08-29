@@ -20,12 +20,13 @@
  - Name Surname <name.surname@gatesfoundation.com>
 
  * Niza Tembo <mcwayzj@gmail.com>
+ * Elijah Okello <elijahokello90@gmail.com>
  --------------
  **********/
 
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { AirtelClientFactory, AirtelError, FineractClientFactory, IAirtelClient, IFineractClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -41,9 +42,8 @@ import MockAdapter from 'axios-mock-adapter';
 import { randomUUID } from 'crypto';
 
 
-jest.setTimeout(20000)
+jest.setTimeout(20000);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');
 const SDK_URL = 'http://localhost:4010';
 const ML_URL = 'http://0.0.0.0:3003';
@@ -56,7 +56,6 @@ const idType = "MSISDN";
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let fineractClient: IFineractClient;
     let airtelClient: IAirtelClient;
     let sdkClient: ISDKClient;
 
@@ -78,13 +77,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             httpClient,
             logger,
         });
-
-        fineractClient = FineractClientFactory.createClient({
-            fineractConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, airtelConfig, airtelClient, logger);
+        ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
     });
 
     describe('Airtel Test', () => {

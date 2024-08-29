@@ -31,10 +31,7 @@
 
 import { randomUUID } from 'crypto';
 import {
-    IFineractClient,
     PartyType,
-    TFineractConfig,
-    TFineractTransferDeps,
     IAirtelClient,
     TAirtelDisbursementRequestBody,
     TAirtelConfig,
@@ -74,8 +71,6 @@ export class CoreConnectorAggregate {
     DATE_FORMAT = 'dd MM yy';
 
     constructor(
-        private readonly fineractConfig: TFineractConfig,
-        private readonly fineractClient: IFineractClient,
         private readonly sdkClient: ISDKClient,
         private readonly airtelConfig: TAirtelConfig,
         private readonly airtelClient: IAirtelClient,
@@ -406,36 +401,5 @@ export class CoreConnectorAggregate {
                 "id": transferId,
             }
         };
-    }
-
-
-
-    // think of better way to handle refunding
-    private async processUpdateSentTransferError(error: unknown, transaction: TFineractTransferDeps): Promise<never> {
-        let needRefund = error instanceof SDKClientError;
-        try {
-            const errMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.logger.error(`error in updateSentTransfer: ${errMessage}`, { error, needRefund, transaction });
-            if (!needRefund) throw error;
-            //Refund the money
-            const depositRes = await this.fineractClient.receiveTransfer(transaction);
-            if (depositRes.statusCode != 200) {
-                const logMessage = `Invalid statusCode from fineractClient.receiveTransfer: ${depositRes.statusCode}`;
-                this.logger.warn(logMessage);
-                throw new Error(logMessage);
-            }
-            needRefund = false;
-            this.logger.info('Refund successful', { needRefund });
-            throw error;
-        } catch (err: unknown) {
-            if (!needRefund) throw error;
-
-            const details = {
-                amount: parseFloat(transaction.transaction.transactionAmount),
-                fineractAccountId: transaction.accountId,
-            };
-            this.logger.error('refundFailedError', { details, transaction });
-            throw ValidationError.refundFailedError(details);
-        }
     }
 }

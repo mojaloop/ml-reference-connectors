@@ -27,7 +27,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 import { CoreConnectorAggregate, } from '../../../src/domain';
-import { AirtelClientFactory, FineractClientFactory, IAirtelClient, IFineractClient } from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, IAirtelClient } from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -39,7 +39,6 @@ import config from '../../../src/config';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');
 const SDK_URL = 'http://localhost:4040';
 
@@ -47,7 +46,6 @@ const SDK_URL = 'http://localhost:4040';
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let fineractClient: IFineractClient;
     let airtelClient: IAirtelClient;
     let sdkClient: ISDKClient;
 
@@ -60,13 +58,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             httpClient,
             logger,
         });
-
-        fineractClient = FineractClientFactory.createClient({
-            fineractConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, airtelConfig, airtelClient, logger);
+        ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
     });
 
     describe('Airtel Test', () => {
