@@ -224,7 +224,7 @@ export class CoreConnectorAggregate {
     async sendTransfer(transfer: TAirtelSendMoneyRequest): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
 
-        const transferRequest: TSDKOutboundTransferRequest = this.getTSDKOutboundTransferRequest(transfer);
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
@@ -262,12 +262,21 @@ export class CoreConnectorAggregate {
 
     }
 
-    private getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): TSDKOutboundTransferRequest {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+        const res = await this.airtelClient.getKyc({
+            msisdn: transfer.payerAccount
+        });
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.airtelConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount
+                'idValue': transfer.payerAccount,
+                'fspId': this.airtelConfig.FSP_ID,
+                "displayName": `${res.data.first_name} ${res.data.last_name}`,
+                "firstName": res.data.first_name,
+                "middleName": res.data.first_name,
+                "lastName": res.data.last_name,
+                "merchantClassificationCode": "123",
             },
             'to': {
                 'idType': transfer.payeeIdType,

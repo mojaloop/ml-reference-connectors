@@ -342,6 +342,7 @@ export type TAirtelConfig = {
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number
+    FSP_ID:string
 }
 
 export type TGetKycArgs = {

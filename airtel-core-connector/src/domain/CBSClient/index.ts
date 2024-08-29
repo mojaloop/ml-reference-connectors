@@ -25,8 +25,6 @@
  --------------
  ******/
 'use strict';
-export * from './FineractClientFactory';
-export * from './FineractClient';
 export * from './AirtelClientFactory';
 export * from './AirtelClient';
 export * from './errors';
