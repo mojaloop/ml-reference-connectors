@@ -27,7 +27,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 import { CoreConnectorAggregate, } from '../../../src/domain';
-import { AirtelClientFactory, FineractClientFactory, IAirtelClient, IFineractClient } from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, IAirtelClient } from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -46,7 +46,6 @@ const SDK_URL = 'http://localhost:4040';
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let fineractClient: IFineractClient;
     let airtelClient: IAirtelClient;
     let sdkClient: ISDKClient;
 

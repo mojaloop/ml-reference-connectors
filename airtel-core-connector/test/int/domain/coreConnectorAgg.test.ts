@@ -25,7 +25,7 @@
 
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { AirtelClientFactory, AirtelError, FineractClientFactory, IAirtelClient, IFineractClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -55,7 +55,6 @@ const idType = "MSISDN";
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let fineractClient: IFineractClient;
     let airtelClient: IAirtelClient;
     let sdkClient: ISDKClient;
 

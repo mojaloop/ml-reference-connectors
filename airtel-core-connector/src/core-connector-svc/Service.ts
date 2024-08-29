@@ -37,7 +37,7 @@ import config from '../config';
 import { CoreConnectorRoutes } from './sdkCoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { AirtelClientFactory, FineractClientFactory} from '../domain/CBSClient';
+import { AirtelClientFactory} from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
 

@@ -31,10 +31,7 @@
 
 import { randomUUID } from 'crypto';
 import {
-    IFineractClient,
     PartyType,
-    TFineractConfig,
-    TFineractTransferDeps,
     IAirtelClient,
     TAirtelDisbursementRequestBody,
     TAirtelConfig,
