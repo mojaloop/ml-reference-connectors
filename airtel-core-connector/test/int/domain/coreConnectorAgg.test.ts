@@ -41,9 +41,8 @@ import MockAdapter from 'axios-mock-adapter';
 import { randomUUID } from 'crypto';
 
 
-jest.setTimeout(20000)
+jest.setTimeout(20000);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');
 const SDK_URL = 'http://localhost:4010';
 const ML_URL = 'http://0.0.0.0:3003';
@@ -78,13 +77,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             httpClient,
             logger,
         });
-
-        fineractClient = FineractClientFactory.createClient({
-            fineractConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, airtelConfig, airtelClient, logger);
+        ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
     });
 
     describe('Airtel Test', () => {
