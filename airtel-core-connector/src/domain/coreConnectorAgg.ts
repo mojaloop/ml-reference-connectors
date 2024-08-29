@@ -291,14 +291,16 @@ export class CoreConnectorAggregate {
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.homeTransactionId}`);
-        // }; //todo: fix this part after demo
+        if (!(transfer.to.kycInformation) || !(transfer.quoteResponse) || !(transfer.fxQuotesResponse) || !(transfer.quoteResponse?.body.payeeReceiveAmount) || !(transfer.quoteResponse?.body.payeeFspFee) || !(transfer.transferId)) {
+            throw ValidationError.notEnoughInformationError();
+        }
         return {
-                "payeeDetails": "Paul Johnson",
-                "receiveAmount": "200",
-                "receiveCurrency": "MWK",
-                "fees": "0.25",
-                "feeCurrency": "ZMW",
-                "transactionId": randomUUID(),
+            "payeeDetails": transfer.to.kycInformation,
+            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount,
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
+            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount,
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
+            "transactionId": transfer.transferId,
         };
     }
 
