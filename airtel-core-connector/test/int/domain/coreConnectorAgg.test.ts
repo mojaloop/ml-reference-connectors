@@ -20,6 +20,7 @@
  - Name Surname <name.surname@gatesfoundation.com>
 
  * Niza Tembo <mcwayzj@gmail.com>
+ * Elijah Okello <elijahokello90@gmail.com>
  --------------
  **********/
 
