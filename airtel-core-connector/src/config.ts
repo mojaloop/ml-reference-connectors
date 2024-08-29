@@ -118,6 +118,13 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
+        
+        FSP_ID: {
+            doc: 'Mojaloop FSP Is',
+            format: String,
+            default: null, // required
+            env: 'FSP_ID',
+        },
     },
 });
 
