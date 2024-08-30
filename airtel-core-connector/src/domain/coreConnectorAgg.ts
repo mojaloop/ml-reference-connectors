@@ -291,16 +291,13 @@ export class CoreConnectorAggregate {
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
-        if (!(transfer.to.kycInformation) || !(transfer.quoteResponse) || !(transfer.fxQuotesResponse) || !(transfer.quoteResponse?.body.payeeReceiveAmount) || !(transfer.quoteResponse?.body.payeeFspFee) || !(transfer.transferId)) {
-            throw ValidationError.notEnoughInformationError();
-        }
         return {
-            "payeeDetails": transfer.to.kycInformation,
-            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount,
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount,
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "transactionId": transfer.transferId,
+            "payeeDetails": transfer.to?.kycInformation !== undefined ? transfer.to?.kycInformation : "No data returned from Mojaloop Connector",
+            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse?.body.payeeReceiveAmount?.amount : "No Amount returned from Mojaloop Connector",
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
+            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
 
