@@ -257,8 +257,27 @@ components:
       type: object
       properties:
         payeeDetails:
-          type: string
-          example: "{\"name\":\"Jane Smith\",\"accountNumber\":\"1234567890\",\"bankName\":\"Example Bank\",\"address\":\"456 Elm Street, Somecity, Country\"}"
+         type: object
+         properties:
+           idType: 
+               type: string
+               example: "MSISDN"
+           idValue: 
+               type: string
+               example: "990454454"
+           fspId: 
+               type: string
+               example: "airtelzambia"
+           firstName: 
+               type: string
+               example: "Niza"
+           lastName: 
+               type: string
+               example: "Tembo"
+           dateOfBirth: 
+               type: string
+               example: "1997/09/04"
+        
         receiveAmount:
           type: string
           example: "140.00"
