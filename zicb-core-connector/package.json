@@ -1,5 +1,5 @@
 {
-  "name": "@mojaloop/mifos-core-connector",
+  "name": "@mojaloop/zicb-core-connector",
   "version": "1.3.0",
   "description": "A connector that facilitates payments between a Mojaloop Connector (SDK Scheme Adapter) and a Core Banking system",
   "main": "dist/index.js",
@@ -15,8 +15,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
-    "build:docker": "docker build -t mifos-core-connector:local .",
-    "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp mifos-core-connector:local",
+    "build:docker": "docker build -t zicb-core-connector:local .",
+    "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp zicb-core-connector:local",
     "watch": "tsc -w",
     "start": "npm run start:no-build",
     "start:no-build": "node dist/src/index.js",
@@ -30,7 +30,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mojaloop/mifos-core-connector.git"
+    "url": "https://github.com/mojaloop/zicb-core-connector.git"
   },
   "keywords": [
     "g2p"
@@ -38,9 +38,9 @@
   "author": "Elijah Okello",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/mojaloop/mifos-core-connector/issues"
+    "url": "https://github.com/mojaloop/zicb-core-connector/issues"
   },
-  "homepage": "https://github.com/mojaloop/mifos-core-connector#readme",
+  "homepage": "https://github.com/mojaloop/zicb-core-connector#readme",
   "devDependencies": {
     "@commitlint/cli": "^18.6.1",
     "@commitlint/config-conventional": "^18.6.3",
@@ -78,6 +78,7 @@
     "convict": "^6.2.4",
     "dotenv": "^16.4.5",
     "fast-safe-stringify": "^2.1.1",
+    "i": "^0.3.7",
     "openapi-backend": "^5.10.6",
     "tslib": "^2.6.3"
   },

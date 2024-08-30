@@ -65,6 +65,20 @@ export class ValidationError extends BasicError {
         });
     }
 
+    static unsupportedCurrencyError(){
+        return new ValidationError("Incorrect Currency", {
+            mlCode: '5106',
+            httpCode: 400,
+        }); 
+    }
+
+    static invalidQuoteError(){
+        return new ValidationError("Invalid Quote Error", {
+            mlCode: '5101',
+            httpCode: 400,
+        });
+    }
+
     static accountVerificationError() {
         return new ValidationError('Funds Source Account is not active in Fineract', {
             mlCode: '3200',
@@ -85,6 +99,20 @@ export class ValidationError extends BasicError {
             mlCode: '2001',
             httpCode: 500,
             details, // object returned to allow for reconciliation later
+        });
+    }
+
+    static transferNotCompletedError(){
+        return new ValidationError("Transfer Not Completed Error", {
+            mlCode: '5000',
+            httpCode: 500,
+        });
+    }
+
+    static quoteNotDefinedError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
         });
     }
 }

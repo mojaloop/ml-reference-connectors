@@ -36,6 +36,11 @@ import {
     TFineractTransactionPayload,
     TFineractTransferDeps,
     TFineractGetAccountResponse,
+    TZicbConfig,
+    TGetCustomerRequest,
+    IZicbClient,
+    ZicbError,
+    TInternalFundsTransferRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -45,6 +50,7 @@ import {
     TtransferResponse,
     TtransferRequest,
     ValidationError,
+    TtransferPatchNotificationRequest,
 } from './interfaces';
 import {
     ISDKClient,
@@ -56,6 +62,9 @@ import {
     TUpdateTransferDeps,
 } from './SDKClient';
 import { FineractError } from './CBSClient';
+import config from '../config';
+import { ZicbClient } from './CBSClient/ZicbClient';
+import { readdirSync } from 'fs';
 
 export class CoreConnectorAggregate {
     public IdType: string;
@@ -67,25 +76,30 @@ export class CoreConnectorAggregate {
         private readonly fineractClient: IFineractClient,
         private readonly sdkClient: ISDKClient,
         logger: ILogger,
+        private readonly zicbConfig: TZicbConfig,
+        private readonly zicbClient: IZicbClient,
     ) {
-        this.IdType = fineractConfig.FINERACT_ID_TYPE;
+        this.IdType = zicbConfig.SUPPORTED_ID_TYPE;
         this.logger = logger;
     }
 
-    async getParties(IBAN: string): Promise<TLookupPartyInfoResponse> {
-        this.logger.info(`Get Parties for IBAN ${IBAN}`);
-        const accountNo = this.extractAccountFromIBAN(IBAN);
-        const lookupRes = await this.fineractClient.lookupPartyInfo(accountNo);
+    async getParties(id: string, idType: string): Promise<TLookupPartyInfoResponse> {
+        this.logger.info(`Get Parties for ${id}`);
+        if (!(idType === config.get("zicb.SUPPORTED_ID_TYPE"))) {
+            throw ValidationError.unsupportedIdTypeError();
+        }
+        const customerRequest: TGetCustomerRequest = this.getTGetCustomerRequest(id)
+        const lookupRes = await this.zicbClient.verifyCustomerByAccountNumber(customerRequest);
         const party = {
             data: {
-                displayName: lookupRes.data.displayName,
-                firstName: lookupRes.data.firstname,
-                idType: IdType.IBAN,
-                idValue: accountNo,
-                lastName: lookupRes.data.lastname,
-                middleName: lookupRes.data.firstname,
+                displayName: lookupRes.response.accountList[0].accDesc,
+                firstName: lookupRes.response.accountList[0].accDesc,
+                idType: config.get("zicb.SUPPORTED_ID_TYPE"),
+                idValue: id,
+                lastName: lookupRes.response.accountList[0].accDesc,
+                middleName: lookupRes.response.accountList[0].accDesc,
                 type: PartyType.CONSUMER,
-                kycInformation: `${JSON.stringify(lookupRes.data)}`,
+                kycInformation: `${JSON.stringify(lookupRes)}`,
             },
             statusCode: lookupRes.status,
         };
@@ -93,19 +107,50 @@ export class CoreConnectorAggregate {
         return party;
     }
 
+    // Get Customer DTO 
+    private getTGetCustomerRequest(accountNo: string): TGetCustomerRequest {
+        return {
+            "service": this.zicbConfig.SERVICE_REQUEST,
+            "request": {
+                "accountNos": accountNo,
+                "getByCustNo": false,
+                "getByAccType": false,
+            }
+        }
+    }
+
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Get Parties for ${this.IdType} ${quoteRequest.to.idValue}`);
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        const accountNo = this.extractAccountFromIBAN(quoteRequest.to.idValue);
-        await this.fineractClient.verifyBeneficiary(accountNo);
+
+        // Getting Customer Request data 
+        const customerRequest: TGetCustomerRequest = this.getTGetCustomerRequest(quoteRequest.to.idValue);
+        const res = await this.zicbClient.verifyCustomerByAccountNumber(customerRequest);
+
+
+        if (quoteRequest.currency !== config.get("zicb.ZICB_CURRENCY")) {
+            throw ValidationError.unsupportedCurrencyError();
+        }
+
+        // TODO: Find out what the frozen statuses are and which one is barred
+        if (res.response.accountList[0].frozenStatus == "N") {
+            throw ZicbError.payeeBlockedError("Account is frozen", 500, "5400");
+        }
+
+        const serviceCharge = config.get("zicb.SERVICE_CHARGE");
+        const quoteExpiration = config.get("zicb.EXPIRATION_DURATION")
+        const expiration = new Date();
+        expiration.setHours(expiration.getHours() + Number(quoteExpiration));
+        const expirationJSON = expiration.toJSON();
+
 
         return {
-            expiration: new Date().toJSON(),
+            expiration: expirationJSON,
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
-            payeeFspFeeAmount: '0',
+            payeeFspFeeAmount: serviceCharge,
             payeeFspFeeAmountCurrency: quoteRequest.currency,
             payeeReceiveAmount: quoteRequest.amount,
             payeeReceiveAmountCurrency: quoteRequest.currency,
@@ -121,31 +166,74 @@ export class CoreConnectorAggregate {
         if (transfer.to.idType != this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
+        if (transfer.currency !== config.get("zicb.ZICB_CURRENCY")) {
+            throw ValidationError.unsupportedCurrencyError();
+        }
 
-        const accountNo = this.extractAccountFromIBAN(transfer.to.idValue);
-        const res = await this.fineractClient.getAccountId(accountNo);
-        const date = new Date();
-        const transaction: TFineractTransactionPayload = {
-            locale: this.fineractConfig.FINERACT_LOCALE,
-            dateFormat: this.DATE_FORMAT,
-            transactionDate: `${date.getDate()} ${date.getMonth() + 1} ${date.getFullYear()}`,
-            transactionAmount: transfer.amount,
-            paymentTypeId: this.fineractConfig.FINERACT_PAYMENT_TYPE_ID,
-            accountNumber: accountNo,
-            routingCode: randomUUID(),
-            receiptNumber: randomUUID(),
-            bankNumber: this.fineractConfig.FINERACT_BANK_ID,
-        };
+        if (!this.validateQuote(transfer)) {
+            throw ValidationError.invalidQuoteError();
+        }
 
-        await this.fineractClient.receiveTransfer({
-            accountId: res.accountId as number,
-            transaction: transaction,
-        });
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'COMMITTED',
+            transferState: 'RECEIVED',
         };
+    }
+
+    //Validating Quote 
+    private validateQuote(transfer: TtransferRequest): boolean {
+        // todo define implmentation
+        this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
+        return true;
+    }
+
+    // Update transfer for put /
+
+    async patchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise <void>{
+        this.logger.info(`Committing The Transfer with id ${transferId}`);
+        if (updateTransferPayload.currentState !== 'COMPLETED') {
+            throw ValidationError.transferNotCompletedError();
+        }
+
+        if (!this.validatePatchQuote(updateTransferPayload)) {
+            throw ValidationError.invalidQuoteError();
+        }
+
+        const recieveTransfer: TInternalFundsTransferRequest = this.getInternalFundsTransferRequestBody(updateTransferPayload)
+        await this.zicbClient.walletToWalletInternalFundsTransfer(recieveTransfer);
+        
+    }
+
+    // Get internal Funds transfer request body from mojaloop to zicb
+
+    private getInternalFundsTransferRequestBody(requestBody: TtransferPatchNotificationRequest) :TInternalFundsTransferRequest{
+        if (!requestBody.quoteRequest) {
+            throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
+        }
+
+        return {
+            "service":this.zicbConfig.SERVICE_REQUEST,
+            "request":{
+                "amount": requestBody.quoteRequest.body.amount.amount,
+                "destAcc": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
+                "destBranch": this.zicbConfig.ZICB_DESTINATION_BRANCH,
+                "payCurrency": this.zicbConfig.ZICB_CURRENCY,
+                "payDate": new Date().toLocaleDateString(),
+                "referenceNo": new Date().toLocaleTimeString(),
+                "remarks": requestBody.quoteRequest.body.note !== undefined  ? requestBody.quoteRequest.body.note  : "No note sent",
+                "srcAcc": this.zicbConfig.DFSP_DISBURSEMENT_ACCOUNT,
+                "srcBranch": this.zicbConfig.ZICB_SOURCE_BRANCH,
+                "srcCurrency": this.zicbConfig.ZICB_CURRENCY,
+                "transferTyp": "INTERNAL"
+            }
+        }
+    }
+
+    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
+        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
+        // todo define implmentation
+        return true;
     }
 
     async sendTransfer(transfer: TFineractOutboundTransferRequest): Promise<TFineractOutboundTransferResponse> {
@@ -212,9 +300,9 @@ export class CoreConnectorAggregate {
         // todo: think how to validate account numbers
         const accountNo = IBAN.slice(
             this.fineractConfig.FINERACT_BANK_COUNTRY_CODE.length +
-                this.fineractConfig.FINERACT_CHECK_DIGITS.length +
-                this.fineractConfig.FINERACT_BANK_ID.length +
-                this.fineractConfig.FINERACT_ACCOUNT_PREFIX.length,
+            this.fineractConfig.FINERACT_CHECK_DIGITS.length +
+            this.fineractConfig.FINERACT_BANK_ID.length +
+            this.fineractConfig.FINERACT_ACCOUNT_PREFIX.length,
         );
         this.logger.debug('extracted account number from IBAN:', { accountNo, IBAN });
         if (accountNo.length < 1) {

@@ -92,3 +92,21 @@ export class FineractError extends BasicError {
         });
     }
 }
+
+//  Zicb Error
+
+export class ZicbError extends BasicError{
+    static genericConnectionError(message: string, httpCode:number, mlCode:string) {
+        return new ZicbError(message, {
+            httpCode: httpCode,
+            mlCode: mlCode, 
+        });
+    }
+
+    static payeeBlockedError(message: string, httpCode:number, mlCode:string) {
+        return new ZicbError(message, {
+            httpCode: httpCode,
+            mlCode: mlCode,
+        });
+    }
+}

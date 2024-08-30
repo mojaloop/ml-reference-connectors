@@ -26,11 +26,12 @@
  ******/
 
 'use strict';
-
 import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { ILogger } from './infrastructure';
-
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
+import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
+import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
 
 export type THttpRequestOptions = Omit<AxiosRequestConfig, 'url' | 'method'>;
@@ -86,3 +87,41 @@ export type Transfer = {
 };
 
 export type TLookupPartyInfoResponse = THttpResponse<Payee>;
+
+export type TtransferPatchNotificationRequest = {
+    currentState?: OutboundComponents['schemas']['transferStatus'];
+    /** @enum {string} */
+    direction?: 'INBOUND';
+    finalNotification?: {
+        completedTimestamp: components['schemas']['timestamp'];
+        extensionList?: components['schemas']['extensionList'];
+        transferState: components['schemas']['transferState'];
+    };
+    fulfil?: {
+        body?: Record<string, never>;
+        headers?: Record<string, never>;
+    };
+    initiatedTimestamp?: components['schemas']['timestamp'];
+    lastError?: components['schemas']['transferError'];
+    prepare?: {
+        body?: Record<string, never>;
+        headers?: Record<string, never>;
+    };
+    quote?: {
+        fulfilment?: string;
+        internalRequest?: Record<string, never>;
+        mojaloopResponse?: Record<string, never>;
+        request?: Record<string, never>;
+        response?: Record<string, never>;
+    };
+    quoteRequest?: {
+        body: fspiopComponents['schemas']['QuotesPostRequest'];
+        headers?: Record<string, never>;
+    };
+    quoteResponse?: {
+        body?: Record<string, never>;
+        headers?: Record<string, never>;
+    };
+    transferId?: components['schemas']['transferId'];
+};
+

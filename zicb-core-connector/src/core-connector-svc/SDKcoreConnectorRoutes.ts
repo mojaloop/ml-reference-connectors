@@ -95,8 +95,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
-            const IBAN = params['ID'] as string;
-            const result = await this.aggregate.getParties(IBAN);
+            const id = params['ID'] as string;
+            const idType = params['IdType'] as string; 
+
+            const result = await this.aggregate.getParties(id, idType);
             return this.handleResponse(result.data, h);
         } catch (error) {
             return this.handleError(error, h);

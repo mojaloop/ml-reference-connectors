@@ -32,14 +32,16 @@ import { IHTTPClient } from '../domain';
 import { CoreConnectorAggregate } from '../domain';
 import { AxiosClientFactory } from '../infra/axiosHttpClient';
 import config from '../config';
-import { CoreConnectorRoutes } from './coreConnectorRoutes';
+import { CoreConnectorRoutes } from './SDKcoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
 import { FineractClientFactory } from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
+import { ZicbClientFactory } from '../domain/CBSClient/ZicbClientFactory';
 
-export const logger = loggerFactory({ context: 'MifosCC' });
+// logger 
+export const logger = loggerFactory({ context: 'ZicbCC' });
 
 export class Service {
     static coreConnectorAggregate: CoreConnectorAggregate;
@@ -56,12 +58,19 @@ export class Service {
             logger: logger,
         });
 
+        const zicbConfig = config.get('zicb')
+        const zicbClient = ZicbClientFactory.createClient({
+            zicbConfig: zicbConfig,
+            httpClient: this.httpClient,
+            logger: logger,
+        });
+
         const sdkClient = SDKClientFactory.getSDKClientInstance(
             logger,
             httpClient,
             config.get('sdkSchemeAdapter.SDK_BASE_URL'),
         );
-        this.coreConnectorAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, logger);
+        this.coreConnectorAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, logger, zicbConfig, zicbClient);
 
         await this.setupAndStartUpServer();
         logger.info('Core Connector Server started');

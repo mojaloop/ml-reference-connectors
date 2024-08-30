@@ -1,5 +1,6 @@
+import "dotenv/config";
 import Convict from 'convict';
-import { IdType, TFineractConfig } from './domain/CBSClient';
+import { IdType, TFineractConfig, TZicbConfig } from './domain/CBSClient';
 import { TSDKSchemeAdapterConfig } from './domain/SDKClient';
 
 interface IConfigSchema {
@@ -11,6 +12,7 @@ interface IConfigSchema {
         DFSP_SERVER_PORT: number;
     };
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
+    zicb: TZicbConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -121,8 +123,77 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-});
 
+    zicb :{
+        ZICB_BASE_URL:{
+            doc: 'Base Url for Zicb Environment',
+            format: String,
+            default: null, // required
+            env: 'ZICB_BASE_URL',
+        },
+        ZICB_AUTH_KEY:{
+            doc: 'Authentication key for Zicb Environment',
+            format: String,
+            default: null, // required
+            env: 'ZICB_AUTH_KEY',
+        },
+        SUPPORTED_ID_TYPE:{
+            doc: 'Supported Id Type for Zicb',
+            format: String,
+            default: null, // required
+            env: 'SUPPORTED_ID_TYPE',
+        },
+        SERVICE_REQUEST:{
+            doc: 'Service Identifier in Request Body',
+            format: String,
+            default: null, // required
+            env: 'SERVICE_REQUEST',
+        },
+        ZICB_CURRENCY:{
+            doc: 'Supported Currency',
+            format: String,
+            default: null, // required
+            env: 'ZICB_CURRENCY',
+        },
+        SERVICE_CHARGE:{
+            doc: 'Service Charge for quotes',
+            format: String,
+            default: null, // required
+            env: 'SERVICE_CHARGE',
+        },
+        EXPIRATION_DURATION:{
+            doc: 'Quote Expiration Duration',
+            format: String,
+            default: null, // required
+            env: 'EXPIRATION_DURATION',
+        },
+        ZICB_DESTINATION_BRANCH:{
+            doc: 'Destination Branch for recieving funds',
+            format: String,
+            default: null, // required
+            env: 'ZICB_DESTINATION_BRANCH',
+        },
+        ZICB_SOURCE_BRANCH:{
+            doc: 'Source Branch for sending funds',
+            format: String,
+            default: null, // required
+            env: 'ZICB_SOURCE_BRANCH',
+        },
+        DFSP_DISBURSEMENT_ACCOUNT:{
+            doc: 'Account for Disbursing funds',
+            format: String,
+            default: null, // required
+            env: 'DFSP_DISBURSEMENT_ACCOUNT',
+        },
+        DFSP_COLLECTION_ACCOUNT:{
+            doc: 'Account for Collecting funds',
+            format: String,
+            default: null, // required
+            env: 'DFSP_COLLECTION_ACCOUNT',
+        },
+    }
+});
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 config.validate({ allowed: 'strict' });
 
 export type TConfig = Convict.Config<IConfigSchema>;

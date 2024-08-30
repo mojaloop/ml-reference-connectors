@@ -11,7 +11,7 @@ info:
         url: http://www.apache.org/licenses/
 
 paths:
-    /parties/IBAN/{ID}:
+    /parties/{IdType}/{ID}:
         get:
             tags:
                 - Get Parties
@@ -20,6 +20,11 @@ paths:
             operationId: getParties
             parameters:
                 - name: ID
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                - name: IdType
                   in: path
                   required: true
                   schema:

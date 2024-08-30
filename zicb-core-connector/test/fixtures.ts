@@ -1,106 +1,81 @@
 import { TUpdateTransferDeps } from '../src/domain/SDKClient';
 import { TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
+import { TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
 
-type TransferAcceptInputDto = {
-    fineractAccountId?: number;
-    totalAmount?: number;
-    sdkTransferId?: number;
-};
 
-export const transferAcceptDto = ({
-    fineractAccountId = 1,
-    totalAmount = 123.45,
-    sdkTransferId = 999,
-}: TransferAcceptInputDto = {}): TUpdateTransferDeps =>
-    ({
-        fineractTransaction: {
-            fineractAccountId,
-            totalAmount,
-            routingCode: 'routingCode',
-            receiptNumber: 'receiptNumber',
-            bankNumber: 'bankNumber',
+// Quote Request DTO
+
+export const quoteRequestDto =(idType: string = "ACCOUNT_NO", idValue: string = "1019000001703", amount: string = "100"): TQuoteRequest => ({
+    amount: amount,
+    amountType: "SEND",
+  
+    currency: "ZMW",
+    from: {
+      idType: "MSISDN",
+      idValue: "978034884"
+    },
+    initiator: "PAYER",
+    initiatorType: "CONSUMER",
+    quoteId: crypto.randomUUID(),
+    to: {
+      //@ts-expect-error partyIdType var not of type IdType
+      idType: idType,
+      idValue: idValue
+    },
+    transactionId: crypto.randomUUID(),
+    transactionType: "TRANSFER"
+  });
+  
+  
+  export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
+    amount: amount,
+    amountType: "SEND",
+    currency: "ZMW",
+    from: {
+      //@ts-expect-error partyIdType var not of type IdType
+      idType: idType,
+      idValue: idValue
+    },
+    ilpPacket: {
+      data: {
+        amount: {
+          amount: amount,
+          currency: "ZMW",
         },
-        sdkTransferId,
-    }) as const;
-
-// todo: make it configurable, add all required fields
-export const fineractGetAccountResponseDto = (): Partial<TFineractGetAccountResponse> =>
-    ({
-        id: 'id',
-        accountNo: 'accountNo',
-        clientId: 123,
-        clientName: 'clientName',
-    }) as const;
-
-// todo: make it configurable,
-export const fineractTransactionResponseDto = (): TFineractTransactionResponse =>
-    ({
-        officeId: 1,
-        clientId: 2,
-        savingsId: 3,
-        resourceId: 4,
-        changes: {
-            accountNumber: 'accountNumber',
-            routingCode: 'routingCode',
-            receiptNumber: 'receiptNumber',
-            bankNumber: 'bankNumber',
+        payee: {
+          partyIdInfo: {
+            //@ts-expect-error partyIdType var not of type IdType
+            partyIdType: idType,
+            partyIdentifier: idValue,
+            fspId: "airtel-123-qwerty",
+          },
+          merchantClassificationCode: "1234",
+          name: "Payee Name",
+          personalInfo: {
+            complexName: {
+              firstName: "PayeeFirstName", 
+              lastName: "PayeeLastName",  
+            },
+            dateOfBirth: "YYYY-MM-DD", 
+          },
+          supportedCurrencies: ["ZMW"],
         },
-    }) as const;
-
-export const fineractLookUpPartyResponseDto = () =>
-    ({
-        displayName: 'Dove Love',
-        firstname: 'Dove',
-        lastname: 'Love',
-    }) as const;
-
-export const fineractVerifyBeneficiaryResponseDto = () =>
-    ({
-        currency: 'UGX',
-        amount: '100',
-        quoteId: crypto.randomUUID(),
+        payer: {
+          //@ts-expect-error partyIdType var not of type IdType
+          idType: idType,
+          idValue: idValue
+        },
+        quoteId: crypto.randomUUID(), 
         transactionId: crypto.randomUUID(),
-    }) as const;
-
-export const fineractGetAccountIdResponseDto = () => ({
-    accountId: 1,
-});
-
-export const fineractReceiveTransferResponseDto = () => true;
-
-export const fineractGetSavingsAccountResponseDto = (
-    credit: boolean,
-    debit: boolean,
-    balance: number,
-    active: boolean,
-) => ({
-    status: {
-        active: active,
-    },
-    subStatus: {
-        blockCredit: credit,
-        blockDebit: debit,
-    },
-    summary: {
-        availableBalance: balance,
-    },
-});
-
-export const sdkInitiateTransferResponseDto = (
-    payeeFspCommissionAmount: string | undefined,
-    payeeFspFeeAmount: string | undefined,
-) => ({
-    quoteResponse: {
-        body: {
-            payeeFspCommission: {
-                amount: payeeFspCommissionAmount,
-            },
-            payeeFspFee: {
-                amount: payeeFspFeeAmount,
-            },
+        transactionType: {
+          initiator: "PAYER",
+          initiatorType: "CONSUMER",
+          scenario: "TRANSFER",
+          subScenario: "LOCALLY_DEFINED_SUBSCENARIO",
         },
+      },
     },
-});
-
-export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
+    note: "Transfer Quote Request",
+    });
+    

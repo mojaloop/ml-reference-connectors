@@ -20,15 +20,22 @@
  optionally within square brackets <email>.
 
 
- - Okello Ivan Elijah <elijahokello90@gmail.com>
+ - Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
 
  --------------
  ******/
-'use strict';
+ 'use strict';
 
-export * from './FineractClientFactory';
-export * from './FineractClient';
-export * from './errors';
-export * from './types';
-export * from './ZicbClientFactory';
-export * from './ZicbClient';
+import { TZicbClientFactoryDeps } from "./types";
+import { ZicbClient } from "./ZicbClient";
+
+ 
+ export class ZicbClientFactory{
+    static createClient(zicbClientfactoryDeps: TZicbClientFactoryDeps){
+        return new ZicbClient(
+            zicbClientfactoryDeps.zicbConfig,
+            zicbClientfactoryDeps.httpClient,
+            zicbClientfactoryDeps.logger,
+        )
+    }
+ }

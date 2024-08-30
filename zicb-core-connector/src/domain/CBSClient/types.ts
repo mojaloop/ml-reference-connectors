@@ -1,4 +1,5 @@
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 export enum IdType {
     MSISDN = 'MSISDN',
@@ -290,3 +291,220 @@ export type TFineractCharge = {
 };
 
 export type TFineractGetChargeResponse = TFineractCharge[];
+
+// ZICB types
+
+// ZICB config type
+
+export type TZicbConfig = {
+    ZICB_BASE_URL: string,
+    ZICB_AUTH_KEY: string,
+    SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"],
+    SERVICE_REQUEST: string,
+    ZICB_CURRENCY: string,
+    SERVICE_CHARGE: string,
+    EXPIRATION_DURATION: string,
+    ZICB_DESTINATION_BRANCH: string,
+    ZICB_SOURCE_BRANCH: string,
+    DFSP_DISBURSEMENT_ACCOUNT : string,
+    DFSP_COLLECTION_ACCOUNT : string
+
+}
+
+// Client Factory Client Dependacies
+
+export type TZicbClientFactoryDeps = {
+    zicbConfig: TZicbConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+};
+
+
+// verifyCustomerByAccountNumber Request
+
+export type TGetCustomerRequest = {
+    "service": string,
+    "request": {
+        "accountNos": string,
+        "customerNos"?: string,
+        "getByCustNo": boolean,
+        "getByAccType": boolean,
+        "accountType"?: string
+    }
+}
+
+// verifyCustomerByAccountNumber Response
+
+export type TGetCustomerResponse = {
+    "errorList": {},
+    "operation_status": string,
+    "preauthUUID": string,
+    "request": {
+        "accountNos": string,
+        "accountType"?: string,
+        "customerNos"?: string,
+        "getByAccType": boolean,
+        "getByCustNo": boolean
+    },
+    "request-reference": string,
+    "response": {
+        "accountList": [
+            {
+                "frozenStatus": frozenStatusTypes,
+                "accDesc": string,
+                "loanStatus"?: string,
+                "accTypeDesc": string,
+                "accOpeningDate"?: string,
+                "loanMaturityDate"?: string,
+                "chequeBookFlag": string,
+                "lastCreditActivity"?: string,
+                "loanRate"?: string,
+                "overdftUtilizedAmt": number,
+                "accATMFacility"?: string,
+                "overdftAllowed": string,
+                "loanLastPaidDate"?: string,
+                "maturityAmount"?: string,
+                "accPassBookFacility"?: string,
+                "currency": string,
+                "loanNextDueDate"?: string,
+                "creditAccountOnMaturity"?: string,
+                "loanAmountFinanced"?: string,
+                "loanAmountDisbursed"?: string,
+                "userLcRef"?: string,
+                "expiryDate"?: string,
+                "loanTotalAmountDue"?: string,
+                "overdftLmt": number,
+                "loanEMI": number,
+                "loanAmountDue": number,
+                "loanAmount": number,
+                "address2": string,
+                "dealRef": string,
+                "loanType"?: string,
+                "dealType"?: string,
+                "actualAmount": number,
+                "loanTotalAmountPaid": number,
+                "address4": string,
+                "accStatus": string,
+                "accountOpenDate": number,
+                "address3": string,
+                "overdftAvailableAmt"?: string,
+                "loanStartDate": string,
+                "coreBankingDate": string,
+                "accNo": string,
+                "lastDebitActivity"?: string,
+                "customerName"?: string,
+                "curBal": number,
+                "issueDate"?: string,
+                "loanTenure": number,
+                "jointAccount": string,
+                "accType": string,
+                "closureDate"?: string,
+                "address1": string,
+                "accName"?: string,
+                "branchCode": string,
+                "prodCode": string,
+                "totalAmountAvailable": number,
+                "avlBal": number,
+                "idCustomer": string,
+                "loanAmountOverdue"?: string,
+                "unclearFunds": number
+            }
+        ],
+        "tekHeader": {
+            "errList": {},
+            "hostrefno"?: string,
+            "msgList": {},
+            "status": string,
+            "tekesbrefno": string,
+            "username": string,
+            "warnList": {}
+        }
+    },
+    "status": number,
+    "timestamp": number
+}
+// Froezen Status types for TGetCustomerResponse
+export enum frozenStatusTypes {
+    A = "A",
+    N = "N"
+}
+
+export type TInternalFundsTransferRequest = {
+    "service": string,
+    "request": {
+        "amount": string,
+        "destAcc": string,
+        "destBranch": string,
+        "payCurrency": string,
+        "payDate": string,
+        "referenceNo": string,
+        "remarks": string,
+        "srcAcc": string,
+        "srcBranch": string,
+        "srcCurrency": string,
+        "transferTyp": string
+    }
+}
+
+
+// TInternalFundsTransferResponse 
+export type TInternalFundsTransferResponse = {
+    "errorList": {
+        "AC-VAC05": string,
+        "ST-SAVE-054": string,
+        "UP-PMT-90": string,
+    },
+    "operation_status": string,
+    "preauthUUID": string,
+    "request": {
+        "amount": string,
+        "destAcc": string,
+        "destBranch": string,
+        "payCurrency": string,
+        "payDate": string,
+        "referenceNo": string,
+        "remarks": string,
+        "srcAcc": string,
+        "srcBranch": string,
+        "srcCurrency": string,
+        "transferTyp": string
+    },
+    "request-reference": string,
+    "response": {
+        "amountCredit"?: string,
+        "amountDebit"?: string,
+        "destAcc"?: string,
+        "destBranch"?: string,
+        "exchangeRate"?: string,
+        "payCurrency"?: string,
+        "payDate"?: string,
+        "srcAcc"?: string,
+        "srcBranch"?: string,
+        "srcCurrency"?: string,
+        "tekHeader": {
+            "errList": {
+                "AC-VAC05": string,
+                "ST-SAVE-054": string,
+                "UP-PMT-90": string
+            },
+            "hostrefno"?: string,
+            "msgList": {},
+            "status"?: string,
+            "tekesbrefno"?: string,
+            "username"?: string,
+            "warnList": {}
+        }
+    },
+    "status": number,
+    "timestamp": number
+}
+
+// Interface for IZicbClient with methods to be implemented in IZicb
+export interface IZicbClient {
+    zicbConfig: TZicbConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+
+    verifyCustomerByAccountNumber(deps: TGetCustomerRequest): Promise<TGetCustomerResponse>;
+    walletToWalletInternalFundsTransfer(deps: TInternalFundsTransferRequest): Promise<TInternalFundsTransferResponse>;
+}

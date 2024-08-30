@@ -5,8 +5,8 @@ networks:
 
 
 services:
-  mifos-core-connector:
-    image: mojaloop/mifos-core-connector:latest
+  zicb-core-connector:
+    image: mojaloop/zicb-core-connector:latest
     build:
       context: .
     networks:
