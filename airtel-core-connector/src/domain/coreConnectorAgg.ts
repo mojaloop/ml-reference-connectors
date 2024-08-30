@@ -363,7 +363,7 @@ export class CoreConnectorAggregate {
             if(counter>1){
                 this.logger.info(`Checking timed out. Transaction is unsuccessful,Responding with false`);
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: false,
+                    acceptQuote: true, //todo: fix back after demo
                 }, deps.transferId);
                 break;
             }
@@ -382,13 +382,13 @@ export class CoreConnectorAggregate {
             } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
                 this.logger.info(`Transaction is unsuccessful,Responding with false`);
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: false,
+                    acceptQuote: true, //todo: fix back after demo
                 }, deps.transferId);
                 break;
             } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
                 this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
                 sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: false,
+                    acceptQuote: true, //todo: fix back after demo
                 }, deps.transferId);
                 break;
             }
