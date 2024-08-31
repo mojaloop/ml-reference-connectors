@@ -2,7 +2,7 @@
 sequenceDiagram
   autoNumber
   Bank App ->> CC: POST /send-money/ {}
-  CC->>CC: Check Request
+  CC->>CC: Check Currency
   Alt if Checks fail
   CC-->>Bank App: Response 400
   End
