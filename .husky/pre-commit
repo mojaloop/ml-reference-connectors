@@ -1,0 +1,7 @@
+for dir in */; do
+    if [[ $dir == *-core-connector/ ]]; then
+    cd $dir 
+        npx lint-staged
+    cd -
+    fi
+done
