@@ -8,6 +8,24 @@ This is a collection of all reference core connectors from COMESA Digital Retail
 # Core Connectors in this Collection
 - Airtel Core Connector Zambia
 
+# Creating a new Connector
+Clone this repository or fork it.
+
+```bash
+git clone https://github.com/mojaloop/ml-reference-connectors.git
+```
+
+Change into the cloned directory
+```bash
+cd ml-reference-connectors
+```
+
+Create a new core connector by running this command
+
+```bash
+./create.sh -c zm -n airtel
+```
+
 # Building a core connector
 To build a new core connector refer to the core connector template guide [here](./TEMPLATE.md)
 
