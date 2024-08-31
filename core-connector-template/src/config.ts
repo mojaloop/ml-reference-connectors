@@ -1,6 +1,7 @@
 import "dotenv/config";
 import Convict from 'convict';
 import { TSDKSchemeAdapterConfig } from './domain/SDKClient';
+import { TCBSConfig } from "./domain/CBSClient";
 
 interface IConfigSchema {
     server: {
@@ -10,6 +11,7 @@ interface IConfigSchema {
         DFSP_SERVER_PORT: number;
     };
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
+    cbs:TCBSConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -47,6 +49,14 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
+    cbs:{
+        CBS_NAME: {
+            doc: 'Name of the DFSP',
+            format: String,
+            default: null, // required
+            env: 'CBS_NAME',
+        },
+    }
 });
 
 config.validate({ allowed: 'strict' });

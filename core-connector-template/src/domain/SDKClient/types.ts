@@ -34,26 +34,6 @@ export type TSDKSchemeAdapterConfig = {
     SDK_BASE_URL: string;
 };
 
-export type TFineractTransferParty = {
-    fineractAccountId: number;
-    payer: components['schemas']['transferParty'];
-};
-
-export type TFineractOutboundTransferRequest = {
-    homeTransactionId: string;
-    from: TFineractTransferParty;
-    to: components['schemas']['transferParty'];
-    amountType: components['schemas']['AmountType'];
-    currency: components['schemas']['Currency'];
-    amount: components['schemas']['Amount'];
-    transactionType: components['schemas']['transferTransactionType'];
-    subScenario?: components['schemas']['TransactionSubScenario'];
-    note?: components['schemas']['Note'];
-    quoteRequestExtensions?: components['schemas']['extensionListEmptiable'];
-    transferRequestExtensions?: components['schemas']['extensionListEmptiable'];
-    skipPartyLookup?: boolean;
-};
-
 export type TSDKOutboundTransferRequest = {
     /** @description Transaction ID from the DFSP backend, used to reconcile transactions between the Switch and DFSP backend systems. */
     homeTransactionId: string;
@@ -73,38 +53,11 @@ export type TSDKOutboundTransferRequest = {
 
 export type TSDKOutboundTransferResponse = SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
 
-export type TFineractOutboundTransferResponse = {
-    totalAmountFromFineract: number;
-    transferResponse: SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
-};
-
-export type TFineractTransferContinuationRequest = {
-    transferContinuationAccept:
-        | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
-        | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote;
-    fineractTransaction: {
-        fineractAccountId: number;
-        totalAmount: number;
-        routingCode: string;
-        receiptNumber: string;
-        bankNumber: string;
-    };
-};
 
 export type TSDKTransferContinuationRequest =
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote;
 
-export type TUpdateTransferDeps = {
-    fineractTransaction: {
-        fineractAccountId: number;
-        totalAmount: number;
-        routingCode: string;
-        receiptNumber: string;
-        bankNumber: string;
-    };
-    sdkTransferId: number | string;
-};
 
 export type TtransferContinuationResponse =
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse

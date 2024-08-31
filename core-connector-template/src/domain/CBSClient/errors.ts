@@ -28,65 +28,65 @@
 
 import { BasicError } from '../interfaces';
 
-export class FineractError extends BasicError {
+export class CBSError extends BasicError {
     static withdrawFailedError(message: string) {
-        return new FineractError(message, {
+        return new CBSError(message, {
             httpCode: 500,
             mlCode: '4000',
         });
     }
 
     static searchAccountError(message: string) {
-        return new FineractError(message, {
+        return new CBSError(message, {
             httpCode: 500,
             mlCode: '3200',
         });
     }
 
     static noAccountFoundError() {
-        return new FineractError('Fineract Account Not Found', {
+        return new CBSError('CBS Account Not Found', {
             httpCode: 404,
             mlCode: '3200',
         });
     }
 
     static accountNotActiveError() {
-        return new FineractError('Fineract Account not active', {
+        return new CBSError('CBS Account not active', {
             httpCode: 500,
             mlCode: '4000',
         });
     }
 
     static getClientWithIdError() {
-        return new FineractError('Failed to get client by clientId ', {
+        return new CBSError('Failed to get client by clientId ', {
             httpCode: 500,
             mlCode: '4000',
         });
     }
 
     static depositFailedError() {
-        return new FineractError('Fineract Deposit Failed', {
+        return new CBSError('CBS Deposit Failed', {
             httpCode: 500,
             mlCode: '4000',
         });
     }
 
     static getChargesError() {
-        return new FineractError('Fineract Get charges error', {
+        return new CBSError('CBS Get charges error', {
             httpCode: 500,
             mlCode: '4000',
         });
     }
 
     static accountInsufficientBalanceError() {
-        return new FineractError('Fineract Account Insufficient Balance', {
+        return new CBSError('CBS Account Insufficient Balance', {
             httpCode: 500,
             mlCode: '4001',
         });
     }
 
     static accountDebitOrCreditBlockedError(message: string) {
-        return new FineractError(message, {
+        return new CBSError(message, {
             httpCode: 500,
             mlCode: '4400', // todo: or 5400
         });
