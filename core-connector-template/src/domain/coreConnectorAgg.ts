@@ -64,6 +64,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.IdType = "MSISDN";
         this.logger = logger;
     }
+
+    //Payee
     getParties(id: string, IdType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Getting party info ${id} ${IdType}`);
         this.cbsClient.getCustomer({
@@ -83,6 +85,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         throw new Error('Method not implemented.');
     }
+
+    // Payer
     sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`${transfer.property}`);
         throw new Error('Method not implemented.');
