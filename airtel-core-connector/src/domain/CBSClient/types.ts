@@ -27,7 +27,7 @@
  --------------
  ******/
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 export enum IdType {
@@ -227,18 +227,6 @@ export type TFineractGetClientResponse = {
     };
 };
 
-export interface IFineractClient {
-    fineractConfig: TFineractConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-    lookupPartyInfo(accountNo: string): Promise<TLookupResponseInfo>;
-    verifyBeneficiary(accountNo: string): Promise<TLookupResponseInfo>;
-    receiveTransfer(transferDeps: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
-    getAccountId(accountNo: string): Promise<TLookupResponseInfo>;
-    calculateWithdrawQuote(quoteDeps: TCalculateQuoteDeps): Promise<TCalculateQuoteResponse>;
-    getSavingsAccount(accountId: number): Promise<THttpResponse<TFineractGetAccountResponse>>;
-    sendTransfer(transactionPayload: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
-}
 
 export type TFineractClientFactoryDeps = {
     fineractConfig: TFineractConfig;
@@ -420,12 +408,20 @@ export type TAirtelDisbursementResponse = {
 }
 
 export type TAirtelSendMoneyResponse = {
-    "payeeDetails": string;
+    "payeeDetails": {
+        "idType": string;
+        "idValue": string;
+        "fspId": string;
+        "firstName": string;
+        "lastName": string;
+        "dateOfBirth": string;
+      };
     "receiveAmount": string;
     "receiveCurrency": string;
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
+
 }
 
 
