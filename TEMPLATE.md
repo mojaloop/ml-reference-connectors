@@ -22,34 +22,7 @@ Before you start building a core connector, there are some requirements that nee
 
 If you need to get knowledge on how Mojaloop works, consider taking the [Mojaloop Training Program](https://mojaloop.io/mojaloop-training-program/).
 
-# Getting Started
-Clone this repository.
-
-For linux and Mac Os
-```bash
-git clone https://github.com/mojaloop/ml-reference-connectors.git
-```
-
-For windows.
-
-Install WSL
-```powershell
-wsl --install -d Ubuntu
-```
-
-Connect to the WSL machine.
-```powershell
-wsl -d ubuntu
-```
-
-Clone the repository
-```bash
-git clone https://github.com/mojaloop/ml-reference-connectors.git
-```
-
-To understand the code structure and how to refactor this code base for a new connector, please refer to the section for [code structure](#core-structure-and-architecture)
-
-# Core structure and Architecture
+# Code structure and Architecture
 
 Below is an output of the directory structure of the core connector template.
 
