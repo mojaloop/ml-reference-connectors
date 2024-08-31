@@ -1,0 +1,31 @@
+{
+  "name": "ml-reference-connectors",
+  "version": "1.0.0",
+  "description": "Collection of reference mojaloop connectors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mojaloop/ml-reference-connectors.git"
+  },
+  "author": "Elijah Okello",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mojaloop/ml-reference-connectors/issues"
+  },
+  "homepage": "https://github.com/mojaloop/ml-reference-connectors#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^19.4.1",
+    "@commitlint/config-conventional": "^19.4.1",
+    "husky": "^9.1.5",
+    "prettier": "3.3.3",
+    "eslint": "^8.56.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1"
+  }
+}
