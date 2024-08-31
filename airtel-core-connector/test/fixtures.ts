@@ -241,6 +241,11 @@ from: {
   idType: idType,
   idValue: idValue
 },
+to:{
+  //@ts-expect-error partyIdType var not of type IdType
+  idType: idType,
+  idValue: idValue
+},
 ilpPacket: {
   data: {
     amount: {
@@ -304,5 +309,5 @@ export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyReq
 export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
-  "amount": amount
+  "amount": amount.toString()
 });

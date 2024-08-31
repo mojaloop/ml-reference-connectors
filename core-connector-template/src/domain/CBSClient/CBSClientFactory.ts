@@ -26,12 +26,12 @@
  ******/
 'use strict';
 
-import { FineractClient } from './FineractClient';
+import { CBSClient } from './CBSClient';
 import { TFineractClientFactoryDeps } from './types';
 
-export class FineractClientFactory {
+export class CBSClientFactory {
     static createClient(finClientfactoryDeps: TFineractClientFactoryDeps) {
-        return new FineractClient(
+        return new CBSClient(
             finClientfactoryDeps.fineractConfig,
             finClientfactoryDeps.httpClient,
             finClientfactoryDeps.logger,

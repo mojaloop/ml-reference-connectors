@@ -26,7 +26,7 @@
  ******/
 'use strict';
 
-export * from './FineractClientFactory';
-export * from './FineractClient';
+export * from './CBSClientFactory';
+export * from './CBSClient';
 export * from './errors';
 export * from './types';

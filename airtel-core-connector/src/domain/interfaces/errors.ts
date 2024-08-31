@@ -148,7 +148,7 @@ export class ValidationError extends BasicError {
     }
 
     static notEnoughInformationError(){
-        return new ValidationError("Transfer Not Completed Error", {
+        return new ValidationError("Not enough information returned by mojaloop connector. fxQuotesResponse and quotesResponse", {
             mlCode: '4000',
             httpCode: 500,
         });

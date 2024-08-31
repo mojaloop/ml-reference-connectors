@@ -27,7 +27,7 @@
  --------------
  ******/
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 export enum IdType {
@@ -227,18 +227,6 @@ export type TFineractGetClientResponse = {
     };
 };
 
-export interface IFineractClient {
-    fineractConfig: TFineractConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-    lookupPartyInfo(accountNo: string): Promise<TLookupResponseInfo>;
-    verifyBeneficiary(accountNo: string): Promise<TLookupResponseInfo>;
-    receiveTransfer(transferDeps: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
-    getAccountId(accountNo: string): Promise<TLookupResponseInfo>;
-    calculateWithdrawQuote(quoteDeps: TCalculateQuoteDeps): Promise<TCalculateQuoteResponse>;
-    getSavingsAccount(accountId: number): Promise<THttpResponse<TFineractGetAccountResponse>>;
-    sendTransfer(transactionPayload: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
-}
 
 export type TFineractClientFactoryDeps = {
     fineractConfig: TFineractConfig;
@@ -341,6 +329,8 @@ export type TAirtelConfig = {
     SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
+    TRANSACTION_ENQUIRY_WAIT_TIME: number
+    FSP_ID:string
 }
 
 export type TGetKycArgs = {
@@ -418,12 +408,20 @@ export type TAirtelDisbursementResponse = {
 }
 
 export type TAirtelSendMoneyResponse = {
-    "payeeDetails": string;
+    "payeeDetails": {
+        "idType": string;
+        "idValue": string;
+        "fspId": string;
+        "firstName": string;
+        "lastName": string;
+        "dateOfBirth": string;
+      };
     "receiveAmount": string;
     "receiveCurrency": string;
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
+
 }
 
 
@@ -446,7 +444,7 @@ export type TAirtelSendMoneyRequest = {
 export type TAirtelUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
-    "amount": number;
+    "amount": string;
 }
 
 export type TAirtelCollectMoneyRequest = {
@@ -501,6 +499,42 @@ export type TAirtelRefundMoneyResponse = {
     }
 }
 
+// Transaction Enquiry Request
+export type TAirtelTransactionEnquiryRequest = {
+    transactionId : string;
+}
+
+
+// Transaction Enquiry Response
+
+export type TAirtelTransactionEnquiryResponse = {
+    "data": {
+        "transaction": {
+            "airtel_money_id": string,
+            "id": string,
+            "message": string,
+            "status": ETransactionStatus
+        }
+    },
+    "status": {
+        "code": string,
+        "message": string,
+        "result_code": string,
+        "response_code": string,
+        "success": boolean
+    }
+}
+
+export enum ETransactionStatus {
+    TransactionInProgress = "TIP",
+    TransactionSuccess = "TS",
+    TransactionFailed = "TF",
+    TransactionAmbiguous="TA",
+    TransactionExpired="TE"
+}
+
+
+// Interface for IAirtelClient with methods to be implemented in IAirtel
 export interface IAirtelClient {
     airtelConfig: TAirtelConfig;
     httpClient: IHTTPClient;
@@ -509,6 +543,7 @@ export interface IAirtelClient {
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
     sendMoney(deps: TAirtelDisbursementRequestBody): Promise<TAirtelDisbursementResponse>;
     collectMoney(deps: TAirtelCollectMoneyRequest): Promise<TAirtelCollectMoneyResponse>;
-    refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>
+    refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>;
+    getTransactionEnquiry(deps:TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse>;
 }
 

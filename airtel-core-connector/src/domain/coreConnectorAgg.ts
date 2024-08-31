@@ -31,16 +31,14 @@
 
 import { randomUUID } from 'crypto';
 import {
-    IFineractClient,
     PartyType,
-    TFineractConfig,
-    TFineractTransferDeps,
     IAirtelClient,
     TAirtelDisbursementRequestBody,
     TAirtelConfig,
     TAirtelUpdateSendMoneyRequest,
     TAirtelCollectMoneyRequest,
     AirtelError,
+    ETransactionStatus,
 } from './CBSClient';
 import {
     ILogger,
@@ -49,9 +47,10 @@ import {
     TQuoteRequest,
     TtransferResponse,
     TtransferRequest,
-    ValidationError,
+    ValidationError, 
     TtransferPatchNotificationRequest,
     THttpResponse,
+    TtransactionEnquiryDeps,
 } from './interfaces';
 import {
     ISDKClient,
@@ -72,8 +71,6 @@ export class CoreConnectorAggregate {
     DATE_FORMAT = 'dd MM yy';
 
     constructor(
-        private readonly fineractConfig: TFineractConfig,
-        private readonly fineractClient: IFineractClient,
         private readonly sdkClient: ISDKClient,
         private readonly airtelConfig: TAirtelConfig,
         private readonly airtelClient: IAirtelClient,
@@ -108,7 +105,7 @@ export class CoreConnectorAggregate {
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
-        this.logger.info(`Get Parties for ${this.IdType} ${quoteRequest.to.idValue}`);
+        this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
@@ -119,11 +116,11 @@ export class CoreConnectorAggregate {
 
         const res = await this.airtelClient.getKyc({
             msisdn: quoteRequest.to.idValue,
-        
+
         });
 
-        if(res.data.is_barred){
-            throw AirtelError.payeeBlockedError("Account is barred", 500, "5400");
+        if (res.data.is_barred) {
+            throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
         const serviceCharge = config.get("airtel.SERVICE_CHARGE");
@@ -227,7 +224,7 @@ export class CoreConnectorAggregate {
     async sendTransfer(transfer: TAirtelSendMoneyRequest): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
 
-        const transferRequest: TSDKOutboundTransferRequest = this.getTSDKOutboundTransferRequest(transfer);
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
@@ -265,12 +262,21 @@ export class CoreConnectorAggregate {
 
     }
 
-    private getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): TSDKOutboundTransferRequest {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+        const res = await this.airtelClient.getKyc({
+            msisdn: transfer.payerAccount
+        });
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.airtelConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount
+                'idValue': transfer.payerAccount,
+                'fspId': this.airtelConfig.FSP_ID,
+                "displayName": `${res.data.first_name} ${res.data.last_name}`,
+                "firstName": res.data.first_name,
+                "middleName": res.data.first_name,
+                "lastName": res.data.last_name,
+                "merchantClassificationCode": "123",
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -284,16 +290,21 @@ export class CoreConnectorAggregate {
     }
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
-        if (!(transfer.to.kycInformation) || !(transfer.quoteResponse) || !(transfer.fxQuotesResponse) || !(transfer.quoteResponse?.body.payeeReceiveAmount) || !(transfer.quoteResponse?.body.payeeFspFee) || !(transfer.transferId)) {
-            throw ValidationError.notEnoughInformationError();
-        }
+        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
-            "payeeDetails": transfer.to.kycInformation,
-            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount,
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount,
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency,
-            "transactionId": transfer.transferId,
+            "payeeDetails": {
+                "idType": transfer.to.idType,
+                "idValue":transfer.to.idValue,
+                "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
+                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
+                "lastName":transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "dateOfBirth":transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+            },
+            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
+            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
 
@@ -310,30 +321,85 @@ export class CoreConnectorAggregate {
     }
 
     async updateSentTransfer(transferAccept: TAirtelUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
-        this.logger.info(`Updating transfer for id ${transferAccept.msisdn}`);
+        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        // todo: currency type and idtype checks
+        const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
+      
+        // Transaction id from response 
+        const transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+            transactionId: airtelRes.data.transaction.id
+        });
 
-        const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
-        const sdkRes = await this.sdkClient.updateTransfer({
-            acceptQuote: transferAccept.acceptQuote
-        }, transferId);
 
-        if(!(sdkRes.data.currentState === "COMPLETED")){
-            await this.airtelClient.refundMoney({
-                "transaction": {
-                    "airtel_money_id": airtelRes.data.transaction.id,
-                }
-            });
+        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
+            transactionEnquiry,
+            transferId,
+            airtelRes,
+            transferAccept
+        });
 
-            // todo: Define manual refund process
-        }
+        // if (!(sdkRes.data.currentState === "COMPLETED")) { 
+        //     await this.airtelClient.refundMoney({
+        //         "transaction": {
+        //             "airtel_money_id": airtelRes.data.transaction.id,
+        //         }
+        //     });
+
+        //     // todo: Define manual refund process and uncomment this
+        // }
 
         return sdkRes.data;
     }
+
+    private async checkTransactionAndRespondToMojaloop(deps:TtransactionEnquiryDeps): Promise<THttpResponse<TtransferContinuationResponse>>{
+        this.logger.info("Checking transaction and responding mojaloop");
+        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
+        let counter = 0;
+        while (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
+            this.logger.info(`Waiting for transaction status`);
+            if(counter>1){
+                this.logger.info(`Checking timed out. Transaction is unsuccessful,Responding with false`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: true, //todo: fix back after demo
+                }, deps.transferId);
+                break;
+            }
+            // todo: make the number of seconds configurable
+            await new Promise(r => setTimeout(r, this.airtelConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
+            deps.transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
+                transactionId: deps.airtelRes.data.transaction.id
+            });
+
+            if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
+                this.logger.info(`Transaction is successful, Responding with true`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: deps.transferAccept.acceptQuote
+                }, deps.transferId);
+                break;
+            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
+                this.logger.info(`Transaction is unsuccessful,Responding with false`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: true, //todo: fix back after demo
+                }, deps.transferId);
+                break;
+            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
+                this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
+                sdkRes = await this.sdkClient.updateTransfer({
+                    acceptQuote: true, //todo: fix back after demo
+                }, deps.transferId);
+                break;
+            }
+            counter+=1;
+        }
+        if (!sdkRes) {
+            throw SDKClientError.updateTransferRequestNotDefinedError();
+        }
+        return sdkRes;
+    }
+
 
     private getTAirtelCollectMoneyRequest(collection: TAirtelUpdateSendMoneyRequest, transferId: string): TAirtelCollectMoneyRequest {
         return {
@@ -344,42 +410,11 @@ export class CoreConnectorAggregate {
                 "msisdn": collection.msisdn,
             },
             "transaction": {
-                "amount": collection.amount,
+                "amount": Number(collection.amount),
                 "country": this.airtelConfig.X_COUNTRY,
                 "currency": this.airtelConfig.X_CURRENCY,
                 "id": transferId,
             }
         };
-    }
-
-
-
-    // think of better way to handle refunding
-    private async processUpdateSentTransferError(error: unknown, transaction: TFineractTransferDeps): Promise<never> {
-        let needRefund = error instanceof SDKClientError;
-        try {
-            const errMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.logger.error(`error in updateSentTransfer: ${errMessage}`, { error, needRefund, transaction });
-            if (!needRefund) throw error;
-            //Refund the money
-            const depositRes = await this.fineractClient.receiveTransfer(transaction);
-            if (depositRes.statusCode != 200) {
-                const logMessage = `Invalid statusCode from fineractClient.receiveTransfer: ${depositRes.statusCode}`;
-                this.logger.warn(logMessage);
-                throw new Error(logMessage);
-            }
-            needRefund = false;
-            this.logger.info('Refund successful', { needRefund });
-            throw error;
-        } catch (err: unknown) {
-            if (!needRefund) throw error;
-
-            const details = {
-                amount: parseFloat(transaction.transaction.transactionAmount),
-                fineractAccountId: transaction.accountId,
-            };
-            this.logger.error('refundFailedError', { details, transaction });
-            throw ValidationError.refundFailedError(details);
-        }
     }
 }

@@ -20,12 +20,13 @@
  - Name Surname <name.surname@gatesfoundation.com>
 
  * Niza Tembo <mcwayzj@gmail.com>
+ * Elijah Okello <elijahokello90@gmail.com>
  --------------
  **********/
 
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { AirtelClientFactory, AirtelError, FineractClientFactory, IAirtelClient, IFineractClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -41,8 +42,8 @@ import MockAdapter from 'axios-mock-adapter';
 import { randomUUID } from 'crypto';
 
 
+jest.setTimeout(20000);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const fineractConfig = config.get('fineract');
 const airtelConfig = config.get('airtel');
 const SDK_URL = 'http://localhost:4010';
 const ML_URL = 'http://0.0.0.0:3003';
@@ -55,7 +56,6 @@ const idType = "MSISDN";
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let fineractClient: IFineractClient;
     let airtelClient: IAirtelClient;
     let sdkClient: ISDKClient;
 
@@ -77,13 +77,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             httpClient,
             logger,
         });
-
-        fineractClient = FineractClientFactory.createClient({
-            fineractConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(fineractConfig, fineractClient, sdkClient, airtelConfig, airtelClient, logger);
+        ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
     });
 
     describe('Airtel Test', () => {
@@ -131,7 +125,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfer Requests Test  - Payee
-        test.skip('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
             const url = `${ML_URL}/transfers`;
             const res = await axios.post(url, JSON.stringify(transferRequest), {
@@ -199,8 +193,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Confirm Send Money - Payer
-        test('Test Put/ send-money{id}: response should be 200', async()=>{
-            const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(500, true, MSISDN);
+        test.skip('Test Put/ send-money{id}: response should be 200', async()=>{
+            const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 
             const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {

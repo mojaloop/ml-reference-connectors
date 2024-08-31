@@ -24,7 +24,7 @@
  **********/
 
 
-import { CoreConnectorAggregate, TQuoteRequest, TtransferRequest } from '../../../src/domain';
+import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
 import { ZicbClientFactory, ZicbError, FineractClientFactory, IZicbClient, IFineractClient, } from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
@@ -34,7 +34,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { quoteRequestDto, transferRequestDto } from '../../fixtures';
+import { quoteRequestDto, transferPatchNotificationRequestDto, transferRequestDto } from '../../fixtures';
 import { Service } from '../../../src/core-connector-svc';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -118,15 +118,86 @@ describe('CoreConnectorAgrregate Test -->', () => {
         test('POST /transfers: sdk-server - Should return receiveTransfer if party in zicb', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, ACCOUNT_NO , "500");
             const url = `${ML_URL}/transfers`;
+
             const res = await axios.post(url, JSON.stringify(transferRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(201);
+          
+
+        });
+
+
+        
+        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
+            const mockAxios = new MockAdapter(axios);
+            mockAxios.onPut().reply(200, {
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
+                    }
+                },
+                "status": 200,
+                "timestamp": 1720015166319
+            });
+
+            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, ACCOUNT_NO, "500");
+            const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
+            const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
 
             logger.info(JSON.stringify(res.data));
+            mockAxios.restore();
             expect(res.status).toEqual(200);
         });
+
 
     });
 }); 

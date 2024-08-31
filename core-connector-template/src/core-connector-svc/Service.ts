@@ -35,7 +35,7 @@ import config from '../config';
 import { CoreConnectorRoutes } from './coreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { FineractClientFactory } from '../domain/CBSClient';
+import { CBSClientFactory } from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
 
@@ -50,7 +50,7 @@ export class Service {
     static async start(httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance()) {
         this.httpClient = httpClient;
         const fineractConfig = config.get('fineract');
-        const fineractClient = FineractClientFactory.createClient({
+        const fineractClient = CBSClientFactory.createClient({
             fineractConfig: fineractConfig,
             httpClient: this.httpClient,
             logger: logger,
