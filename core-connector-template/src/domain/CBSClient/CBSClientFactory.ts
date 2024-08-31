@@ -27,14 +27,14 @@
 'use strict';
 
 import { CBSClient } from './CBSClient';
-import { TFineractClientFactoryDeps } from './types';
+import { TCBSClientFactoryDeps } from './types';
 
 export class CBSClientFactory {
-    static createClient(finClientfactoryDeps: TFineractClientFactoryDeps) {
+    static createClient(cbsClientfactoryDeps: TCBSClientFactoryDeps) {
         return new CBSClient(
-            finClientfactoryDeps.fineractConfig,
-            finClientfactoryDeps.httpClient,
-            finClientfactoryDeps.logger,
+            cbsClientfactoryDeps.cbsConfig,
+            cbsClientfactoryDeps.httpClient,
+            cbsClientfactoryDeps.logger
         );
     }
 }
