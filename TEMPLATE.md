@@ -1,6 +1,6 @@
 # Core Connector Template
 This is a template that can be adapted as a starting point to develop DFSP
-core connectors for Mojaloop Payment Manager For Mojaloop
+core connectors for Payment Manager For Mojaloop
 
 > For full forms check the glossary section
 
@@ -24,43 +24,59 @@ If you need to get knowledge on how Mojaloop works, consider taking the [Mojaloo
 
 # Code structure and Architecture
 
-Below is an output of the directory structure of the core connector template.
+Below is the directory structure of the core connector template.
 
 To use this template, you will need to understand it's structure, the changing components and the static components which you should not worry about.
 
 ```bash
 .
+├── .circleci
+│   └── config.yml
+├── .env
+├── .env.example
+├── .eslintrc.js
+├── .gitignore
+├── .husky
+│   ├── _
+│   ├── commit-msg
+│   ├── pre-commit
+│   └── pre-push
+├── .ncurc.json
+├── .nvmrc
+├── .prettierrc.js
 ├── Dockerfile
 ├── LICENSE
 ├── README.md
 ├── commitlint.config.js
 ├── docker-compose.yml
-├── docs
-│   └── Overview.png
 ├── jest.config.js
 ├── package-lock.json
 ├── package.json
 ├── src
-│   ├── api-spec
-│   ├── config.ts
-│   ├── constants.ts
-│   ├── core-connector-svc
-│   ├── domain
-│   ├── index.ts
-│   ├── infra
-│   └── plugins
+│   ├── api-spec
+│   ├── config.ts
+│   ├── constants.ts
+│   ├── core-connector-svc
+│   ├── domain
+│   ├── index.ts
+│   ├── infra
+│   └── plugins
 ├── test
-│   ├── fixtures.ts
-│   ├── func
-│   ├── mocks
-│   ├── setup.ts
-│   └── unit
+│   ├── fixtures.ts
+│   ├── func
+│   ├── int
+│   ├── setup.ts
+│   └── unit
 └── tsconfig.json
 
-12 directories, 15 files
+17 directories, 32 files
 ```
-# Components 
-The template contains the
+When building integrations for DFSPs the two integrations the core connector should support are payee transactions and payer transactions. i.e receiving incoming payments and initiating outgoing payments
+
+# Networking
+The core connector template exposes two servers that
+# How to implement a Get Parties
+To implememt 
 
 # Configuration.
 All configuration for any core connector should be put in environment variables.
