@@ -47,5 +47,5 @@ export type TCBSUpdateSendMoneyRequest = {
 }
 
 export interface ICbsClient{
-    getCustomer(deps: TGetCustomerInfoDeps):Promise<THttpResponse<TGetCustomerResponse>>
+    getCustomer(deps: TGetCustomerInfoDeps):Promise<TGetCustomerResponse>
 }
