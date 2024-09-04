@@ -20,45 +20,21 @@
  optionally within square brackets <email>.
 
 
- - Okello Ivan Elijah <elijahokello90@gmail.com>
+ - Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
 
  --------------
  ******/
-
-'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
+import { IHTTPClient, ILogger } from "../interfaces";
+import { IZicbClient, TGetCustomerRequest, TGetCustomerResponse, TInternalFundsTransferRequest, TInternalFundsTransferResponse, TZicbConfig } from "./types";
+export declare const ZICB_ROUTES: Readonly<{
+    zicbBanking: "/api/json/commercials/zicb/banking";
+}>;
+export declare class ZicbClient implements IZicbClient {
+    zicbConfig: TZicbConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+    constructor(zicbConfig: TZicbConfig, httpClient: IHTTPClient, logger: ILogger);
+    walletToWalletInternalFundsTransfer(deps: TInternalFundsTransferRequest): Promise<TInternalFundsTransferResponse>;
+    verifyCustomerByAccountNumber(deps: TGetCustomerRequest): Promise<TGetCustomerResponse>;
+    private getDefaultheader;
 }

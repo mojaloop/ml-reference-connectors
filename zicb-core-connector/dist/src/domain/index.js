@@ -1,3 +1,4 @@
+"use strict";
 /*****
  License
  --------------
@@ -24,41 +25,8 @@
 
  --------------
  ******/
-
-'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
-}
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = require("tslib");
+tslib_1.__exportStar(require("./coreConnectorAgg"), exports);
+tslib_1.__exportStar(require("./interfaces"), exports);
+//# sourceMappingURL=index.js.map

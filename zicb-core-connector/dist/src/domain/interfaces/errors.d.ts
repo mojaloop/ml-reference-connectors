@@ -24,41 +24,32 @@
 
  --------------
  ******/
-
-'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+import { TJson } from './types';
+export type ErrorOptions = {
+    cause?: Error;
+    httpCode: number;
+    mlCode?: string;
+    details?: TJson;
+};
+type RefundDetails = {
+    amount: number;
+    fineractAccountId: number;
+};
+export declare class BasicError extends Error {
+    cause?: Error;
+    httpCode?: number;
+    mlCode?: string;
+    details?: TJson;
+    constructor(message: string, options?: ErrorOptions);
 }
+export declare class ValidationError extends BasicError {
+    static invalidAccountNumberError(): ValidationError;
+    static unsupportedCurrencyError(): ValidationError;
+    static invalidQuoteError(): ValidationError;
+    static accountVerificationError(): ValidationError;
+    static unsupportedIdTypeError(): ValidationError;
+    static refundFailedError(details: RefundDetails): ValidationError;
+    static transferNotCompletedError(): ValidationError;
+    static quoteNotDefinedError(message: string, mlCode: string, httpCode: number): ValidationError;
+}
+export {};

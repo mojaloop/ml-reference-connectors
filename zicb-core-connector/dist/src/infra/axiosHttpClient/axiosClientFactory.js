@@ -24,41 +24,28 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AxiosClientFactory = exports.defaultHttpOptions = void 0;
+const axiosClient_1 = require("./axiosClient");
+const logger_1 = require("../logger");
+exports.defaultHttpOptions = Object.freeze({
+    timeout: 3000,
+    headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+    },
+    transitional: {
+        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
+    },
 });
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
+class AxiosClientFactory {
+    static createAxiosClientInstance() {
+        return new axiosClient_1.AxiosHTTPClient({
+            options: exports.defaultHttpOptions,
+            logger: (0, logger_1.loggerFactory)({ context: 'http' }),
+        });
     }
 }
+exports.AxiosClientFactory = AxiosClientFactory;
+//# sourceMappingURL=axiosClientFactory.js.map

@@ -24,41 +24,16 @@
 
  --------------
  ******/
-
-'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+import { CoreConnectorAggregate, ILogger } from '../domain';
+import { ServerRoute } from '@hapi/hapi';
+import { BaseRoutes } from './BaseRoutes';
+export declare class DFSPCoreConnectorRoutes extends BaseRoutes {
+    private readonly aggregate;
+    private readonly routes;
+    private readonly logger;
+    constructor(aggregate: CoreConnectorAggregate, logger: ILogger);
+    init(): Promise<void>;
+    getRoutes(): ServerRoute[];
+    private initiateTransfer;
+    private updateInitiatedTransfer;
 }

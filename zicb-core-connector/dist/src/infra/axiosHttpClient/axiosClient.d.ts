@@ -24,41 +24,15 @@
 
  --------------
  ******/
-
-'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+import { AxiosRequestConfig } from 'axios';
+import { IHTTPClient, THttpClientDeps, THttpRequestOptions, THttpResponse, TJson } from '../../domain';
+export declare class AxiosHTTPClient implements IHTTPClient {
+    private readonly axios;
+    private readonly logger;
+    constructor(deps: THttpClientDeps);
+    get<R = unknown>(url: string, options?: THttpRequestOptions): Promise<THttpResponse<R>>;
+    post<D extends TJson, R = unknown>(url: string, data: D, options?: THttpRequestOptions): Promise<THttpResponse<R>>;
+    put<D extends TJson, R = unknown>(url: string, data: D, options?: THttpRequestOptions): Promise<THttpResponse<R>>;
+    send<R = unknown>(options: AxiosRequestConfig): Promise<THttpResponse<R>>;
+    private responseDto;
 }

@@ -24,41 +24,43 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AxiosHTTPClient = void 0;
+const tslib_1 = require("tslib");
+const axios_1 = tslib_1.__importDefault(require("axios"));
+class AxiosHTTPClient {
+    axios;
+    logger;
+    constructor(deps) {
+        this.axios = axios_1.default.create(deps.options); // todo: move to deps
+        this.logger = deps.logger.child({ context: this.constructor.name });
     }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
+    async get(url, options) {
+        const res = await this.axios.get(url, options);
+        return this.responseDto(res);
+    }
+    async post(url, data, options) {
+        const res = await this.axios.post(url, data, options);
+        return this.responseDto(res);
+    }
+    async put(url, data, options) {
+        const res = await this.axios.put(url, data, options);
+        return this.responseDto(res);
+    }
+    async send(options) {
+        const res = await this.axios.request(options);
+        return this.responseDto(res);
+    }
+    responseDto(rawResponse) {
+        const { data, status } = rawResponse;
+        const json = Object.freeze({
+            data,
+            statusCode: status,
+        });
+        this.logger.info('Received response:', json);
+        return json;
     }
 }
+exports.AxiosHTTPClient = AxiosHTTPClient;
+//# sourceMappingURL=axiosClient.js.map

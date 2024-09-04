@@ -24,41 +24,29 @@
 
  --------------
  ******/
-
-'use strict';
-
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
+import { TLookupResponseInfo, TFineractConfig, TFineractGetAccountResponse, IFineractClient, TCalculateQuoteDeps, TCalculateQuoteResponse, TFineractTransferDeps, TFineractTransactionResponse, TFineractGetChargeResponse } from './types';
+export declare const ROUTES: Readonly<{
+    search: "search";
+    savingsAccount: "savingsaccounts";
+    clients: "clients";
+    charges: "charges";
+}>;
+export declare class FineractClient implements IFineractClient {
+    fineractConfig: TFineractConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+    constructor(fineractConfig: TFineractConfig, httpClient: IHTTPClient, logger: ILogger);
+    lookupPartyInfo(accountNo: string): Promise<TLookupResponseInfo>;
+    calculateWithdrawQuote(quoteDeps: TCalculateQuoteDeps): Promise<TCalculateQuoteResponse>;
+    verifyBeneficiary(accountNo: string): Promise<TLookupResponseInfo>;
+    receiveTransfer(transferDeps: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
+    getAccountId(accountNo: string): Promise<TLookupResponseInfo>;
+    private searchAccount;
+    getSavingsAccount(accountId: number): Promise<THttpResponse<TFineractGetAccountResponse>>;
+    private getDefaultHeaders;
+    private getAuthHeader;
+    private getClient;
+    sendTransfer(transactionPayload: TFineractTransferDeps): Promise<THttpResponse<TFineractTransactionResponse>>;
+    getCharges(): Promise<THttpResponse<TFineractGetChargeResponse>>;
 }

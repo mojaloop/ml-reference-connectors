@@ -24,41 +24,28 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SDKClientError = void 0;
+const interfaces_1 = require("../interfaces");
+class SDKClientError extends interfaces_1.BasicError {
+    // think, if it's better to have a separate class
+    static continueTransferError(message, options) {
+        const { httpCode = 500, mlCode = httpCode === 504 ? '2004' : '2001' } = options || {};
+        return new SDKClientError(message, { mlCode, httpCode });
     }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
+    static initiateTransferError(message = 'InitiateTransferError') {
+        return new SDKClientError(message, {
+            httpCode: 500,
+            mlCode: '2000',
+        });
+    }
+    static noQuoteReturnedError() {
+        return new SDKClientError('Quote response is not defined', {
+            httpCode: 500,
+            mlCode: '3200',
+        });
     }
 }
+exports.SDKClientError = SDKClientError;
+//# sourceMappingURL=errors.js.map

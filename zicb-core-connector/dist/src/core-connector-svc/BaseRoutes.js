@@ -24,41 +24,34 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BaseRoutes = void 0;
+const domain_1 = require("../domain");
+const getErrorDetails = (error) => {
+    if (error instanceof domain_1.BasicError) {
+        const { message, mlCode = '2000', httpCode = 500, details } = error;
         return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
+            message,
+            status: mlCode,
+            httpCode,
+            details,
         };
     }
+    return {
+        message: error instanceof Error ? error.message : 'Unknown Error',
+        status: '2000',
+        httpCode: 500,
+    };
+};
+class BaseRoutes {
+    handleResponse(data, h, statusCode = 200) {
+        return h.response(data).code(statusCode);
+    }
+    handleError(error, h) {
+        const { message, status, httpCode, details } = getErrorDetails(error);
+        return h.response({ status, message, details }).code(httpCode);
+    }
 }
+exports.BaseRoutes = BaseRoutes;
+//# sourceMappingURL=BaseRoutes.js.map

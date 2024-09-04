@@ -24,41 +24,18 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SDKClientFactory = void 0;
+const SDKClient_1 = require("./SDKClient");
+class SDKClientFactory {
+    static getSDKClientInstance(logger, httpClient, sdk_url) {
+        return new SDKClient_1.SDKClient({
+            logger,
+            httpClient,
+            schemeAdapterUrl: sdk_url,
+        });
     }
 }
+exports.SDKClientFactory = SDKClientFactory;
+//# sourceMappingURL=SDKClientFactory.js.map

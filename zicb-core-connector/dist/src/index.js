@@ -24,41 +24,33 @@
 
  --------------
  ******/
-
 'use strict';
-
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import {
-    ICbsClient,
-    TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
-} from './types';
-
-export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
-});
-
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
-    httpClient: IHTTPClient;
-    logger: ILogger;
-
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
-        this.cbsConfig = cbsConfig;
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
-                property: ''
-            },
-            statusCode: 200
-        };
-    }
+Object.defineProperty(exports, "__esModule", { value: true });
+const core_connector_svc_1 = require("./core-connector-svc");
+core_connector_svc_1.Service.start();
+async function _handle_int_and_term_signals(signal) {
+    core_connector_svc_1.logger.warn(`Service - ${signal} received - cleaning up...`);
+    let clean_exit = false;
+    setTimeout(() => {
+        clean_exit || process.abort();
+    }, 5000);
+    // call graceful stop routine
+    await core_connector_svc_1.Service.stop();
+    clean_exit = true;
+    process.exit();
 }
+//catches ctrl+c event
+process.on('SIGINT', _handle_int_and_term_signals.bind(this));
+//catches program termination event
+process.on('SIGTERM', _handle_int_and_term_signals.bind(this));
+//do something when app is closing
+/* istanbul ignore next */
+process.on('exit', async () => {
+    core_connector_svc_1.logger.info('Service - exiting...');
+});
+/* istanbul ignore next */
+process.on('uncaughtException', (err) => {
+    core_connector_svc_1.logger.error(`UncaughtException: ${err?.message}`, err);
+    process.exit(999);
+});
+//# sourceMappingURL=index.js.map
