@@ -40,6 +40,14 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
 
+    // Register openapi spec operationIds and route handler functions here
+    private readonly handlers = {
+        transfers: this.initiateTransfer.bind(this),
+        updateTransfer: this.updateInitiatedTransfer.bind(this),
+        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+        notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+    }
+
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
         this.aggregate = aggregate;
@@ -49,12 +57,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     async init() {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
-            handlers: {
-                transfers: this.initiateTransfer.bind(this),
-                updateTransfer: this.updateInitiatedTransfer.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
-                notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
-            },
+            handlers: this.getHandlers(),
         });
 
         await api.init();
@@ -88,6 +91,10 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     getRoutes(): ServerRoute[] {
         return this.routes;
+    }
+
+    private getHandlers(){
+        return this.handlers
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
