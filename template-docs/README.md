@@ -73,19 +73,27 @@ To use this template, you will need to understand it's structure, the changing c
 ```
 When building integrations for DFSPs the two integrations the core connector should support are payee transactions and payer transactions. i.e receiving incoming payments and initiating outgoing payments
 
-# Networking
-The core connector template exposes two servers that
-# How to implement a Get Parties
-To implememt 
+# Payee Integration.
 
-# Configuration.
-All configuration for any core connector should be put in environment variables.
+This section describes how to implement payee integrations to support payee operations from the Mojaloop Connector
 
-Environment variables are configured through the .env.example file in the root of this folder.
+# How to implement Get Parties
+TBD...
 
-Before using the .env.example file, you should create a .env file from it so that it can be used by the executing core connector.
+# How to implement Quote Requests
+TBD...
 
-Convict is the tool that is used in this repository for configuration management.
+# How to implenent Transfers
+TBD...
+
+# Payer Integration
+This section describes how to implement payer integrations to support payer operations to the Mojaloop Connector
+
+# How to implement Send Money
+TBD...
+
+# How to implement Update Send Money
+TBD...
 
 # Glossary
 - DFSP : Digital Financial Service Provider

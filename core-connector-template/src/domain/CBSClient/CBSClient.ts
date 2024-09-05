@@ -27,7 +27,7 @@
 
 'use strict';
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 import {
     ICbsClient,
     TCBSConfig,

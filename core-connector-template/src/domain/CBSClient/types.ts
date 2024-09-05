@@ -1,4 +1,4 @@
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 
 export enum IdType {
     MSISDN = 'MSISDN',
