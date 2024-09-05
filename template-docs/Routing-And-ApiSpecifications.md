@@ -47,10 +47,10 @@ paths:
 
 ```
 
-Take note of the operationId in the in code block above. The value is set to `hello`. 
+Take note of the operationId in the in code block above. The value is set to `hello`. Copy this api specification and paste it in the file at this 
+location of the newly created connector `core-connector-template/src/api-spec/core-connector-api-spec-dfsp.yml`
 
 We'll use this operationId to map a function route handler to handle requests for this api resource. Copy the example api spec and replace the contents of
 
 # Adding a route handler.
-To add a route handler, open the routes file `dfspCoreConnectorRoutes.ts` in the `core-connector-template/src/core-connector-svc` folder. For example you can open the file 
-TBD...
+To add a route handler, open the routes file `dfspCoreConnectorRoutes.ts` in the `core-connector-template/src/core-connector-svc` folder. Add a method to the 
