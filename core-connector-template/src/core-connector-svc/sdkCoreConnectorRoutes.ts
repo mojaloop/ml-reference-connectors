@@ -40,6 +40,14 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
 
+    private readonly handlers = {
+        getParties: this.getParties.bind(this),
+                quoteRequests: this.quoteRequests.bind(this),
+                transfers: this.transfers.bind(this),
+                validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+                notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+    }
+
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
         this.aggregate = aggregate;
@@ -50,13 +58,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         // initialise openapi backend with validation
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
-            handlers: {
-                getParties: this.getParties.bind(this),
-                quoteRequests: this.quoteRequests.bind(this),
-                transfers: this.transfers.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
-                notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
-            },
+            handlers: this.getHandlers(),
         });
 
         await api.init();
@@ -90,6 +92,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
 
     getRoutes(): ServerRoute[] {
         return this.routes;
+    }
+
+    private getHandlers(){
+        return this.handlers;
     }
 
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {

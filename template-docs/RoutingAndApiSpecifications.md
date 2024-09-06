@@ -65,7 +65,7 @@ private async hello(context: Context, request: Request, h: ResponseToolkit) {
         }
     }
 ```
-
+# Registering the Route Handler
 After adding this function to the class, add the following entry to the handlers attribute of the class.
 
 ```typescript
