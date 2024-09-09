@@ -32,8 +32,9 @@ import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
+import config from 'src/config';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec.-sdk.yml';
+const API_SPEC_FILE = config.get("server.SDK_API_SPEC_FILE");
 
 export class CoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;

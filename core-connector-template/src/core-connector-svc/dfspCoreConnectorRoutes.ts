@@ -32,8 +32,9 @@ import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
 import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import config from 'src/config';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec-dfsp.yml';
+const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
 
 export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;

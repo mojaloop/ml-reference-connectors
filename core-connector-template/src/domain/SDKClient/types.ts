@@ -30,10 +30,6 @@ import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
-export type TSDKSchemeAdapterConfig = {
-    SDK_BASE_URL: string;
-};
-
 export type TSDKOutboundTransferRequest = {
     /** @description Transaction ID from the DFSP backend, used to reconcile transactions between the Switch and DFSP backend systems. */
     homeTransactionId: string;

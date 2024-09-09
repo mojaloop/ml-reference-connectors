@@ -50,14 +50,14 @@ import {
 } from './SDKClient';
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
-    public IdType: string;
-    private logger: ILogger;
+    IdType: string;
+    logger: ILogger;
     DATE_FORMAT = 'dd MM yy';
 
     constructor(
-        private readonly sdkClient: ISDKClient,
-        private readonly cbsClient: ICbsClient,
-        private readonly cbsConfig: TCBSConfig,
+        readonly sdkClient: ISDKClient,
+        readonly cbsClient: ICbsClient,
+        readonly cbsConfig: TCBSConfig,
         logger: ILogger,
     ) {
         // todo: set the IdType from here 
