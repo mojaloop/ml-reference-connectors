@@ -125,7 +125,12 @@ class ABCDClient
 <strong><em> First Step: </em></strong>Setting up the  [Configurations](Configuration.md) . These are important configurations which need to set up at initial stage.
 
 
-<strong><em> Second Step: </em></strong>Setting up the [CBSClient](CBSClient.md). These is the class that has ICbsClient methods being implemented. 
+<strong><em> Second Step: </em></strong>Setting up the [CBSClient](CBSClient.md). These is the class that has ICBSClient methods being implemented. 
+
+
+<strong><em> Third Step: </em></strong>Getting familiar with the dfspCoreConnectorRoutes and sdkCoreConnectorRoutes in the [Core-Connector-svc](../core-connector-template/src/core-connector-svc/) folder. The routes are were incoming requests are handled and directed to specific parts of an application. The two important routes are the [DFSPCoreConnectorRoutes](DfspCoreConnectorRoutes.md) and the [SDKCoreConnectorRoutes](SdkCoreConnectorRoutes.md).
+
+
 
 # Payee Integration.
 
