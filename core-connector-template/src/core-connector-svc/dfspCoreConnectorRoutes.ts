@@ -32,7 +32,7 @@ import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
 import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
-import config from 'src/config';
+import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
 
@@ -43,11 +43,11 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     // Register openapi spec operationIds and route handler functions here
     private readonly handlers = {
-        transfers: this.initiateTransfer.bind(this),
-        updateTransfer: this.updateInitiatedTransfer.bind(this),
+        sendMoney: this.initiateTransfer.bind(this),
+        sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
-    }
+    };
 
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
@@ -95,7 +95,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private getHandlers(){
-        return this.handlers
+        return this.handlers;
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {

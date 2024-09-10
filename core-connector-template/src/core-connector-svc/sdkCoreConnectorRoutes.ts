@@ -32,7 +32,7 @@ import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
-import config from 'src/config';
+import config from '../config';
 
 const API_SPEC_FILE = config.get("server.SDK_API_SPEC_FILE");
 
@@ -42,12 +42,12 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private readonly logger: ILogger;
 
     private readonly handlers = {
-        getParties: this.getParties.bind(this),
-                quoteRequests: this.quoteRequests.bind(this),
-                transfers: this.transfers.bind(this),
-                validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
-                notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
-    }
+        BackendPartiesGetByTypeAndID: this.getParties.bind(this),
+        BackendQuoteRequest: this.quoteRequests.bind(this),
+        BackendTransfersPost: this.transfers.bind(this),
+        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+        notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+    };
 
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
