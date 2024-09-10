@@ -6,7 +6,7 @@ networks:
 
 services:
   core-connector:
-    image: mojaloop/core-connector:latest
+    image: mojaloop/mifos-ore-connector:latest
     build:
       context: .
     networks:
