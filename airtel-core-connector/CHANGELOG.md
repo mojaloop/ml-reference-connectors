@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/mojaloop/airtel-core-connector/compare/v1.1.10...v1.2.0) (2024-09-10)
+
+
+### Features
+
+* added property attribute to data object in getCustomer method in CBSclient ([2b410c4](https://github.com/mojaloop/airtel-core-connector/commit/2b410c4e9e6c882e34b12950679da952afa919b3))
+* updated readme doc in root folder ([0589704](https://github.com/mojaloop/airtel-core-connector/commit/058970451cd935e670ec6370df74f3e14c98eec1))
+
+
+### Bug Fixes
+
+* refactored interface and git hooks scripts ([40e67ac](https://github.com/mojaloop/airtel-core-connector/commit/40e67ac0dd6918f631bd1ebf0a22ae9b8acd2df7))
+
 ### [1.1.10](https://github.com/mojaloop/airtel-core-connector/compare/v1.1.9...v1.1.10) (2024-08-31)
 
 ### [1.1.9](https://github.com/mojaloop/airtel-core-connector/compare/v1.1.8...v1.1.9) (2024-08-31)
