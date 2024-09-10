@@ -34,12 +34,144 @@ Before you start building a core connector, there are some requirements that nee
 
 If you need to get knowledge on how Mojaloop works, consider taking the [Mojaloop Training Program](https://mojaloop.io/mojaloop-training-program/).
 
+# Code structure and Architecture
+
+Below is the directory structure of the core connector template.
+
+To use this template, you will need to understand it's structure, the changing components and the static components which you should not worry about.
+
+```bash
+.
+├── .circleci
+│   └── config.yml
+├── .env
+├── .env.example
+├── .eslintrc.js
+├── .gitignore
+├── .husky
+│   ├── _
+│   ├── commit-msg
+│   ├── pre-commit
+│   └── pre-push
+├── .ncurc.json
+├── .nvmrc
+├── .prettierrc.js
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── commitlint.config.js
+├── docker-compose.yml
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── src
+│   ├── api-spec
+│   ├── config.ts
+│   ├── constants.ts
+│   ├── core-connector-svc
+│   ├── domain
+│   ├── index.ts
+│   ├── infra
+│   └── plugins
+├── test
+│   ├── fixtures.ts
+│   ├── func
+│   ├── int
+│   ├── setup.ts
+│   └── unit
+└── tsconfig.json
+
+17 directories, 32 files
+```
+When building integrations for DFSPs the two integrations the core connector should support are payee transactions and payer transactions. i.e receiving incoming payments and initiating outgoing payments
+
+
+# Getting started with DFSP Integration
+Important information has to be acquired and how they are acquired may vary with DFSP to DFSP. They might differ interms of parameter in the headers and also there request and response bodies. All in all the implementation is very similar. What needs to be acquired is:
+
+### Payee
+- A way of retreiving a customers KYC information.(Get Parties)
+- A way of acquiring how much it will cost someone to recieve funds in their DFSP.(Quote Requests)
+- A way of depositing funds into their account.(Transfers)
+
+### Payer
+- A way of initiating a payment from the DFSP to the CC either on USSD or on their web or mobile application.
+- A way of sending or removing funds from a a payers account.
+- A way of checking the state of transaction
+- A way of refunding a customers account
+
+Before getting started with implementation with actual code, a sequence diagrams must be drawn and must be put in docs folder in the CC. These are crucial as they help with logic and are to be shown to stakeholder like project managers and the scrum master as it gives a high lever overview of what functionality is being implemented at that moment in time. A powerful tool which is to be used is mermaid. [Mermaid Documentation](https://mermaid.js.org/syntax/sequenceDiagram.html)
+
+```mermaid
+sequenceDiagram
+autonumber
+    CBS->>CC:GET / Request
+    CC-->>CBS: Response
+```
+# IMPORTANT NOTE:
+Important Configuration Information
+
+To make requests to the DFSP, certain sensitive information such as authentication keys and parameters in headers are required. These credentials should be stored in a secure environment file (.env) located in the root folder of the project.
+
+Please note that this information is confidential and should not be shared with anyone outside of the project team. It is crucial to keep these credentials private to prevent unauthorized access.
+
+Do not expose sensitive information in plain code that will be pushed to the public repository. Instead, use environment variables or secure storage mechanisms to protect these credentials.
+
+# Naming Conventions used in the CC
+
+- types are prefixed with a <strong>T</strong> i.e
+```typescript
+export type TCBSConfig 
+```
+- interfaces are prefixed with an <strong>I</strong> i.e
+```typescript
+export interface ICbsClient
+```
+- The DFSP name is prefixed as the client class file and name, i.e if the name of the DFSP is <strong>ABCD</strong>, then the client should be
+```typescript
+class ABCDClient
+```
+
+# Implementation
+
+<strong><em> First Step: </em></strong>Setting up the  [Configurations](Configuration.md) . These are important configurations which need to set up at initial stage.
+
+
+<strong><em> Second Step: </em></strong>Setting up the [CBSClient](CBSClient.md). These is the class that has ICBSClient methods being implemented. 
+
+
+<strong><em> Third Step: </em></strong>Getting familiar with the dfspCoreConnectorRoutes and sdkCoreConnectorRoutes in the [Core-Connector-svc](../core-connector-template/src/core-connector-svc/) folder. The routes are were incoming requests are handled and directed to specific parts of an application. The two important routes are the [DFSPCoreConnectorRoutes](DfspCoreConnectorRoutes.md) and the [SDKCoreConnectorRoutes](SdkCoreConnectorRoutes.md).
+
+
+
 # Payee Integration.
 
 This section describes how to implement payee integrations to support payee operations from the Mojaloop Connector
 
 # How to implement Get Parties
-TBD...
+
+Important information needs to be acquired from the DFSP. An endpoint to retieve a payee's infromation. The api must have an id type that can be used to retieve a KYC information either through a GET/{id} or a POST which has a the id in the request body. 
+
+for example:
+- GET request in curl
+```curl
+curl -X GET \
+  'https://example.com/api/kyc/12345' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+
+```
+- POST request in curl
+```curl
+curl -X GET \
+  'https://example.com/api/kyc' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -G \
+  --data-urlencode 'customer_id=12345' \
+  --data-urlencode 'id_type=PASSPORT' \
+  --data-urlencode 'id_number=AB123456'
+```
+
+
 
 # How to implement Quote Requests
 TBD...
@@ -57,7 +189,9 @@ TBD...
 TBD...
 
 # Glossary
+- CC : Core Connector
 - DFSP : Digital Financial Service Provider
 - CBS: Core Banking Solution
 - API: Application Programming Interface
 - WSL: Windows Sub-System For Linux
+- KYC: Know Your Customer
