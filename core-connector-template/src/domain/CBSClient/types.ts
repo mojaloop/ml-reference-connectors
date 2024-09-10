@@ -20,7 +20,6 @@ export type TCBSClientFactoryDeps = {
 
 export type TCBSConfig = {
     CBS_NAME: string;
-
 }
 
 export type TGetCustomerInfoDeps = {
