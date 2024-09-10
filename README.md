@@ -49,7 +49,7 @@ npm i
 ```
 
 # Building the core connector
-To build a new core connector refer to the core connector template guide [here](core-connector-template/README.md) to refactor your newly created connector for the new dfsp
+To build a new core connector refer to the core connector template guide [here](./template-docs/README.md) to refactor your newly created connector for the new dfsp
 
 # Heading
 
