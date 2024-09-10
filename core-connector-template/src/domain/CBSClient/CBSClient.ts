@@ -27,7 +27,7 @@
 
 'use strict';
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 import {
     ICbsClient,
     TCBSConfig,
@@ -52,13 +52,10 @@ export class CBSClient implements ICbsClient{
         this.httpClient = httpClient;
         this.logger = logger;
     }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
+    async getCustomer(deps: TGetCustomerInfoDeps): Promise<TGetCustomerResponse> {
         this.logger.info(`Getting customer information ${deps}`);
         return {
-            data:{
-
-            },
-            statusCode: 200
+            property:''
         };
     }
 }

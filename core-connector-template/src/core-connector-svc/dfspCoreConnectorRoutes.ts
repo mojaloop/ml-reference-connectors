@@ -32,13 +32,22 @@ import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
 import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import config from '../config';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec-dfsp.yml';
+const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
 
 export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
+
+    // Register openapi spec operationIds and route handler functions here
+    private readonly handlers = {
+        sendMoney: this.initiateTransfer.bind(this),
+        sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+        notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+    };
 
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
@@ -49,12 +58,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     async init() {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
-            handlers: {
-                transfers: this.initiateTransfer.bind(this),
-                updateTransfer: this.updateInitiatedTransfer.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
-                notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
-            },
+            handlers: this.getHandlers(),
         });
 
         await api.init();
@@ -88,6 +92,10 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     getRoutes(): ServerRoute[] {
         return this.routes;
+    }
+
+    private getHandlers(){
+        return this.handlers;
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {

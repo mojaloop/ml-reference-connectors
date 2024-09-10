@@ -32,13 +32,22 @@ import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
+import config from '../config';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec.-sdk.yml';
+const API_SPEC_FILE = config.get("server.SDK_API_SPEC_FILE");
 
 export class CoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
+
+    private readonly handlers = {
+        BackendPartiesGetByTypeAndID: this.getParties.bind(this),
+        BackendQuoteRequest: this.quoteRequests.bind(this),
+        BackendTransfersPost: this.transfers.bind(this),
+        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+        notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+    };
 
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
@@ -50,13 +59,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         // initialise openapi backend with validation
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
-            handlers: {
-                getParties: this.getParties.bind(this),
-                quoteRequests: this.quoteRequests.bind(this),
-                transfers: this.transfers.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
-                notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
-            },
+            handlers: this.getHandlers(),
         });
 
         await api.init();
@@ -90,6 +93,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
 
     getRoutes(): ServerRoute[] {
         return this.routes;
+    }
+
+    private getHandlers(){
+        return this.handlers;
     }
 
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {

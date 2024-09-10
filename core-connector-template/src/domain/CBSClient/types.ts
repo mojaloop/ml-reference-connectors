@@ -1,4 +1,4 @@
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
 
 export enum IdType {
     MSISDN = 'MSISDN',
@@ -20,7 +20,6 @@ export type TCBSClientFactoryDeps = {
 
 export type TCBSConfig = {
     CBS_NAME: string;
-
 }
 
 export type TGetCustomerInfoDeps = {
@@ -47,5 +46,5 @@ export type TCBSUpdateSendMoneyRequest = {
 }
 
 export interface ICbsClient{
-    getCustomer(deps: TGetCustomerInfoDeps):Promise<THttpResponse<TGetCustomerResponse>>
+    getCustomer(deps: TGetCustomerInfoDeps):Promise<TGetCustomerResponse>
 }
