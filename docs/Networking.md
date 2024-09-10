@@ -1,6 +1,8 @@
 # Networking 
 The core connector template is setup to expose two servers on two seperate ports.
 
+![Ports](./assets/Networking.png)
+
 One server is supposed to handle requests from the DFSP and the other port is supposed handle and receive requests from the Mojaloop Connector.
 
 The port allocation is as follows

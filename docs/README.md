@@ -15,11 +15,12 @@ Core Connector template to be adapted for rapid core connector development.
 9. [Error Handling](./ErrorHandling.md)
 10. [Integration Accounts](./IntegrationAccounts.md)
 11. [Request Lifecycle](./RequestHandling.md)
+12. [Glossary](#glossary)
 
 # Introduction
 A core connector is a middleware that facilitates a connection between the DFSP and the mojaloop connector.
 
-![Core Connector Overiew](./assets/Overview.png)
+![Core Connector Overiew](./assets/CCOverview.png)
 
 # Prerequisites
 Before you start building a core connector, there are some requirements that need to be in place before implementation starts. These are important because they affect the success of the integration
@@ -33,58 +34,6 @@ Before you start building a core connector, there are some requirements that nee
 - For Windows users you will need WSL (Ubuntu)
 
 If you need to get knowledge on how Mojaloop works, consider taking the [Mojaloop Training Program](https://mojaloop.io/mojaloop-training-program/).
-
-# Code structure and Architecture
-
-Below is the directory structure of the core connector template.
-
-To use this template, you will need to understand it's structure, the changing components and the static components which you should not worry about.
-
-```bash
-.
-├── .circleci
-│   └── config.yml
-├── .env
-├── .env.example
-├── .eslintrc.js
-├── .gitignore
-├── .husky
-│   ├── _
-│   ├── commit-msg
-│   ├── pre-commit
-│   └── pre-push
-├── .ncurc.json
-├── .nvmrc
-├── .prettierrc.js
-├── Dockerfile
-├── LICENSE
-├── README.md
-├── commitlint.config.js
-├── docker-compose.yml
-├── jest.config.js
-├── package-lock.json
-├── package.json
-├── src
-│   ├── api-spec
-│   ├── config.ts
-│   ├── constants.ts
-│   ├── core-connector-svc
-│   ├── domain
-│   ├── index.ts
-│   ├── infra
-│   └── plugins
-├── test
-│   ├── fixtures.ts
-│   ├── func
-│   ├── int
-│   ├── setup.ts
-│   └── unit
-└── tsconfig.json
-
-17 directories, 32 files
-```
-When building integrations for DFSPs the two integrations the core connector should support are payee transactions and payer transactions. i.e receiving incoming payments and initiating outgoing payments
-
 
 # Getting started with DFSP Integration
 Important information has to be acquired and how they are acquired may vary with DFSP to DFSP. They might differ interms of parameter in the headers and also there request and response bodies. All in all the implementation is very similar. What needs to be acquired is:
