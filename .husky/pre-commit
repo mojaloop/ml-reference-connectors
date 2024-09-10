@@ -1,7 +1,7 @@
 #!/bin/bash
 
 for dir in */; do
-    if [ $dir == *-core-connector/ ]; then
+    if [[ $dir == *-core-connector/ ]]; then
     cd $dir 
         npx lint-staged
     cd -
