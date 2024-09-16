@@ -32,6 +32,13 @@
 
  // TNM Config
 
+ export enum PartyType {
+    CONSUMER = 'CONSUMER',
+    AGENT = 'AGENT',
+    BUSINESS = 'BUSINESS',
+    DEVICE = 'DEVICE',
+}
+
  export type TNMConfig = {
      TNM_BASE_URL: string;
      CLIENT_WALLET: string;
@@ -42,6 +49,7 @@
      TOKEN: string;
      TRANSACTION_ENQUIRY_WAIT_TIME: number
      FSP_ID: string
+     TNM_CURRENCY: string
  }
 
  export type TGetKycArgs = {

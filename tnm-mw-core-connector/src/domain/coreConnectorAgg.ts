@@ -27,9 +27,12 @@
 
 'use strict';
 
+import config from 'src/config';
 import {
     ITNMClient,
+    PartyType,
     TNMConfig,
+    TNMError,
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
 } from './CBSClient';
@@ -43,6 +46,7 @@ import {
     ICoreConnectorAggregate,
     TtransferPatchNotificationRequest,
     TupdateSendMoneyDeps,
+    ValidationError,
 } from './interfaces';
 import {
     ISDKClient,
@@ -66,17 +70,81 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     //Payee
-    getParties(id: string, IdType: string): Promise<TLookupPartyInfoResponse> {
-        this.logger.info(`Getting party info ${id} ${IdType}`);
-        this.cbsClient.getKyc({
-            msisdn: id
+    async getParties(id: string, idType: string): Promise<TLookupPartyInfoResponse> {
+        this.logger.info(`Get Parties for ${id}`);
+        if (!(idType === this.cbsClient.tnmConfig.SUPPORTED_ID_TYPE)) {
+            throw ValidationError.unsupportedIdTypeError();
+        }
+
+        const lookupRes = await this.cbsClient.getKyc({ msisdn: id });
+        const party = {
+            data: {
+                displayName: `${lookupRes.data.full_name}`,
+                firstName: lookupRes.data.full_name,
+                idType: this.cbsClient.tnmConfig.SUPPORTED_ID_TYPE,
+                idValue: id,
+                lastName: lookupRes.data.full_name,
+                middleName: lookupRes.data.full_name,
+                type: PartyType.CONSUMER,
+                kycInformation: `${JSON.stringify(lookupRes)}`,
+            },
+            statusCode: 200,
+        };
+        this.logger.info(`Party found`, { party });
+        return party;
+    }
+
+    async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
+        this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
+        if (quoteRequest.to.idType !== this.IdType) {
+            throw ValidationError.unsupportedIdTypeError();
+        }
+
+        if (quoteRequest.currency !== config.get("tnm.TNM_CURRENCY")) {
+            throw ValidationError.unsupportedCurrencyError();
+        }
+
+        const res = await this.cbsClient.getKyc({
+            msisdn: quoteRequest.to.idValue,
+
         });
-        throw new Error('Method not implemented.');
+        //TODO: Implement bar checking
+        if (res.message != "Completed successfully") {
+            throw TNMError.payeeBlockedError("Account is barred ", 500, "5400");
+        }
+
+        const serviceCharge = config.get("tnm.SERVICE_CHARGE");
+
+        this.checkAccountBarred(quoteRequest.to.idValue);
+
+        const quoteExpiration = config.get("tnm.EXPIRATION_DURATION");
+        const expiration = new Date();
+        expiration.setHours(expiration.getHours() + Number(quoteExpiration));
+        const expirationJSON = expiration.toJSON();
+
+        return {
+            expiration: expirationJSON,
+            payeeFspCommissionAmount: '0',
+            payeeFspCommissionAmountCurrency: quoteRequest.currency,
+            payeeFspFeeAmount: serviceCharge,
+            payeeFspFeeAmountCurrency: quoteRequest.currency,
+            payeeReceiveAmount: quoteRequest.amount,
+            payeeReceiveAmountCurrency: quoteRequest.currency,
+            quoteId: quoteRequest.quoteId,
+            transactionId: quoteRequest.transactionId,
+            transferAmount: quoteRequest.amount,
+            transferAmountCurrency: quoteRequest.currency,
+        };
     }
-    quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
-        this.logger.info(`Calculating quote for ${quoteRequest.to.idValue}`);
-        throw new Error('Method not implemented.');
+
+    //TODO: Check actual response for barred accounts
+    private async checkAccountBarred(msisdn: string): Promise<void> {
+        const res = await this.cbsClient.getKyc({ msisdn: msisdn });
+        if (res.message != "Completed successfully") {
+            throw ValidationError.accountBarredError();
+        }
     }
+
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
         throw new Error('Method not implemented.');

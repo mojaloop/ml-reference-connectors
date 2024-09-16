@@ -1,6 +1,6 @@
 import "dotenv/config";
 import Convict from 'convict';
-import { TCBSConfig } from "./domain/CBSClient";
+import { TNMConfig } from "./domain/CBSClient";
 
 interface IConfigSchema {
     server: {
@@ -14,7 +14,7 @@ interface IConfigSchema {
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
     }
-    cbs:TCBSConfig;
+    tnm:TNMConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -64,13 +64,84 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    cbs:{
+    tnm:{
         CBS_NAME: {
             doc: 'Name of the DFSP',
             format: String,
             default: null, // required
             env: 'CBS_NAME',
         },
+        TNM_BASE_URL: {
+            doc: 'TNM Base URL',
+            format: String,
+            default: null, // required
+            env: 'TNM_BASE_URL',
+        },
+        CLIENT_WALLET: {
+            doc: 'TNM Client Wallet ID',
+            format: String,
+            default: null, // required
+            env: 'CLIENT_WALLET',
+        },
+        CLIENT_PASSWORD: {
+            doc: 'TNM Client Password',
+            format: String,
+            default: null, // required
+            env: 'CLIENT_PASSWORD',
+        },
+        SUPPORTED_ID_TYPE: {
+            doc: 'Supported Type',
+            format: String,
+            default: null, // required
+            env: 'SUPPORTED_ID_TYPE',
+        },
+        SERVICE_CHARGE: {
+            doc: '',
+            format: String,
+            default: null, //
+            env: 'SERVICE_CHARGE',
+        },
+        EXPIRATION_DURATION: {
+            doc: '',
+            format: String,
+            default: null, // required
+            env: '',
+        },
+        TOKEN: {
+            doc: '',
+            format: String,
+            default: null, // required
+            env: '',
+        },
+        TRANSACTION_ENQUIRY_WAIT_TIME: {
+            doc: '',
+            format: String,
+            default: null, // required
+            env: '',
+        },
+        FSP_ID: {
+            doc: '',
+            format: String,
+            default: null, // required
+            env: '',
+        },
+        TNM_CURRENCY: {
+            doc: 'Local Currency',
+            format: String,
+            default: null,
+            env: 'TNM_CURRENCY',
+        }
+
+
+        // TNM_BASE_URL: string;
+        // CLIENT_WALLET: string;
+        // CLIENT_PASSWORD: string;
+        // SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+        // SERVICE_CHARGE: string;
+        // EXPIRATION_DURATION: string;
+        // TOKEN: string;
+        // TRANSACTION_ENQUIRY_WAIT_TIME: number
+        // FSP_ID: string
     }
 });
 

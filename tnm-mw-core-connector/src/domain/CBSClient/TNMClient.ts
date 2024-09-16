@@ -31,7 +31,7 @@
  import {ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
 
  export const TNM_ROUTES = Object.freeze({
-    
+
      getToken: '/authenticate',
      getKyc: '/payments/validate/{{MSSDN}}',
      sendMoney: '/payments/',
@@ -177,7 +177,7 @@
                  'Authorization': `Bearer ${await this.getAuthHeader()}`
              }
          });
-         if (res.data.message !== 'Completed successfully') {
+         if (res.data.message != 'Completed successfully') {
              throw TNMError.getKycError();
          }
          return res.data;

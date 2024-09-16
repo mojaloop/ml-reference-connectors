@@ -34,30 +34,63 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from 'src/domain/CBSClient';
+import { TNMClientFactory, ITNMClient } from 'src/domain/CBSClient';
+import { Service } from 'src/core-connector-svc';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const cbsConfig = config.get("cbs");
-const SDK_URL = 'http://localhost:4040';
+const tnmConfig = config.get("tnm");
+const SDK_URL = 'http://localhost:4010';
+const ML_URL = 'http://0.0.0.0:3003';
+const DFSP_URL = 'http://0.0.0.0:3004';
+const idType = "MSISDN_NUMBER";
+const ACCOUNT_NO = "0881544547";
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: ICbsClient;
+    let tnmClient: ITNMClient;
     let sdkClient: ISDKClient;
 
-    beforeEach(() => {
-        mockAxios.reset();
-        const httpClient = AxiosClientFactory.createAxiosClientInstance();
-        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = CBSClientFactory.createClient({cbsConfig,httpClient,logger});
-        ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
+    beforeAll(async () => {
+        await Service.start();
     });
 
-    describe("Tests", ()=>{
-        test("test", async ()=>{
-            logger.info(ccAggregate.IdType);
-            throw new Error("Write tests");
+    afterAll(async () => {
+        await Service.stop();
+    });
+
+    beforeEach(() => {
+        // mockAxios.reset();
+        const httpClient = AxiosClientFactory.createAxiosClientInstance();
+        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
+        tnmClient = TNMClientFactory.createClient({tnmConfig: tnmConfig,httpClient,logger});
+        ccAggregate = new CoreConnectorAggregate(sdkClient,tnmClient, tnmConfig, logger);
+    });
+
+    describe("TNM Payee Test", ()=>{
+        test("Get Parties Happy Path", async ()=>{
+            const mockAxios = new MockAdapter(axios);
+            mockAxios.onGet().reply(200, {
+
+                    "message": "Completed successfully",
+                    "errors": [],
+                    "trace": [],
+                    "data": {
+                      "full_name": "Promise Mphoola"
+                    }
+
+            });
+
+            const url = `${ML_URL}/parties/${idType}/0881544547`;
+            const res = await axios.get(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+            mockAxios.restore();
+            expect(res.status).toEqual(200);
         });
     });
 });

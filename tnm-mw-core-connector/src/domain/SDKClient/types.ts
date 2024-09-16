@@ -111,3 +111,14 @@ export interface ISDKClient {
         id: number,
     ): Promise<THttpResponse<TtransferContinuationResponse>>;
 }
+
+export type TUpdateTransferDeps = {
+    fineractTransaction: {
+        fineractAccountId: number;
+        totalAmount: number;
+        routingCode: string;
+        receiptNumber: string;
+        bankNumber: string;
+    };
+    sdkTransferId: number | string;
+};
