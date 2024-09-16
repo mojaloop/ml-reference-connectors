@@ -31,6 +31,7 @@
  import {ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
 
  export const TNM_ROUTES = Object.freeze({
+    
      getToken: '/authenticate',
      getKyc: '/payments/validate/{{MSSDN}}',
      sendMoney: '/payments/',
@@ -63,7 +64,7 @@
                      'Authorization': `Bearer ${await this.getAuthHeader()}`,
                  }
              });
-             if (res.data.status.code !== '200') {
+             if (res.data.message !== 'Completed successfully') {
                  throw TNMError.refundMoneyError();
              }
              return res.data;
@@ -75,7 +76,7 @@
 
 
      async collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse> {
-         this.logger.info("Collecting Money from Airtel");
+         this.logger.info("Collecting Money from TNM");
          const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.collectMoney}`;
 
          try {

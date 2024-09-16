@@ -28,10 +28,10 @@
 'use strict';
 
 import {
-    ICbsClient,
-    TCBSConfig,
-    TCbsSendMoneyRequest,
-    TCbsSendMoneyResponse,
+    ITNMClient,
+    TNMConfig,
+    TNMSendMoneyRequest,
+    TNMSendMoneyResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -56,11 +56,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     constructor(
         readonly sdkClient: ISDKClient,
-        readonly cbsClient: ICbsClient,
-        readonly cbsConfig: TCBSConfig,
+        readonly cbsClient: ITNMClient,
+        readonly cbsConfig: TNMConfig,
         logger: ILogger,
     ) {
-        // todo: set the IdType from here 
+        // todo: set the IdType from here
         this.IdType = "MSISDN";
         this.logger = logger;
     }
@@ -68,8 +68,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     //Payee
     getParties(id: string, IdType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Getting party info ${id} ${IdType}`);
-        this.cbsClient.getCustomer({
-            property: id
+        this.cbsClient.getKyc({
+            msisdn: id
         });
         throw new Error('Method not implemented.');
     }
@@ -87,8 +87,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse> {
-        this.logger.info(`${transfer.property}`);
+    sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse> {
+        this.logger.info(`${transfer.payeeId}`);
         throw new Error('Method not implemented.');
     }
     updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse> {

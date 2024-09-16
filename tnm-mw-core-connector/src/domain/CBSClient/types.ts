@@ -168,6 +168,12 @@ export type TNMRefundResponse = {
         };
 };
 
+export type TNMClientFactoryDeps = {
+    tnmConfig: TNMConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+};
+
 export type TNMSendMoneyResponse = {
      "payeeDetails": {
          "idType": string;
