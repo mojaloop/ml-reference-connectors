@@ -28,14 +28,15 @@
 
  import { IHTTPClient, ILogger } from "../interfaces";
  import { TNMError } from "./errors";
- import {ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse } from "./types";
+ import {ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse, TMakePaymentRequest, TMakePaymentResponse } from "./types";
 
  export const TNM_ROUTES = Object.freeze({
 
-     getToken: '/authenticate',
-     getKyc: '/payments/validate/{{MSSDN}}',
+     authenticate: '/authenticate',
+     validate: '/payments/validate/',
+     makePayments: '/payments',
+
      sendMoney: '/payments/',
-     collectMoney: '/payments',
      refundMoney: '/invoices/refund/{{receipt_number}}',
      transactionEnquiry: '/payments/{{transaction_id}}/'
  });
@@ -53,105 +54,34 @@
      }
 
 
-     async refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse> {
-         this.logger.info("Refunding Money to Customer in TNM");
-         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.refundMoney}`;
+     async makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse> {
+        this.logger.info("Making Payment from TNM to Peyee");
+        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.makePayments}`;
 
-         try{
-             const res = await this.httpClient.post<TNMRefundMoneyRequest,TNMRefundMoneyResponse>(url, deps,{
-                 headers: {
-                     ...this.getDefaultHeader(),
-                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
-                 }
-             });
-             if (res.data.message !== 'Completed successfully') {
-                 throw TNMError.refundMoneyError();
-             }
-             return res.data;
-         }catch(error){
-             this.logger.error(`Error Refunding Money: ${error}`, { url, data: deps });
-             throw error;
-         }
-     }
+        try {
+            const res = await this.httpClient.post<TMakePaymentRequest,TMakePaymentResponse>(url, deps, {
+                headers: {
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                }
+            });
 
+            if (res.statusCode !== 200) {
+                throw TNMError.sendMoneyError();
+            }
+            return res.data;
 
-     async collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse> {
-         this.logger.info("Collecting Money from TNM");
-         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.collectMoney}`;
-
-         try {
-             const res = await this.httpClient.post<TNMCollectMoneyRequest, TNMCollectMoneyResponse>(url, deps, {
-                 headers: {
-                     ...this.getDefaultHeader(),
-                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
-                 }
-             });
-             if (res.data.status.code !== '200') {
-                 throw TNMError.collectMoneyError();
-             }
-             return res.data;
-
-         }catch(error){
-             this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
-             throw error;
-         }
-     }
-
-
-
-
-    //  async sendMoney(deps: TAirtelDisbursementRequestBody): Promise<TAirtelDisbursementResponse> {
-    //      this.logger.info("Sending Disbursement Body To Airtel");
-    //      const url = `https://${this.tnmConfig.AIRTEL_BASE_URL}${TNM_ROUTES.sendMoney}`;
-    //      try {
-    //          const res = await this.httpClient.post<TAirtelDisbursementRequestBody, TAirtelDisbursementResponse>(url, deps,
-    //              {
-    //                  headers: {
-    //                      ...this.getDefaultHeader(),
-    //                      'Authorization': `Bearer ${await this.getAuthHeader()}`,
-    //                  }
-    //              }
-    //          );
-
-    //          if (res.data.status.code !== '200') {
-    //              throw TNMError.disbursmentError();
-    //          }
-    //          return res.data;
-    //      } catch (error) {
-    //          this.logger.error(`Error Sending Money: ${error}`, { url, data: deps });
-    //          throw error;
-    //      }
-    //  }
-
-     //  Get transaction Enquiry
-
-     async getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse> {
-         this.logger.info("Getting Transaction Status Enquiry from Airtel");
-         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.transactionEnquiry}${deps.transactionId}`;
-         this.logger.info(url);
-         try {
-             const res = await this.httpClient.get<TNMTransactionEnquiryResponse>(url, {
-                 headers: {
-                     ...this.getDefaultHeader(),
-                     'Authorization': `Bearer ${await this.getAuthHeader()}`
-                 }
-             });
-
-             if (res.data.status.code !== '200') {
-                 this.logger.error(`Failed to get token: ${res.statusCode} - ${res.data}`);
-                 throw TNMError.getTokenFailedError();
-             }
-             return res.data;
-         } catch (error) {
-             this.logger.error(`Error getting token: ${error}`, { url, data: deps });
-             throw error;
-         }
+        }catch(error){
+            this.logger.error(`Error Sending Money: ${error}`, { url, data: deps });
+            throw error;
+        }
 
      }
+     
 
      async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
          this.logger.info("Getting Access Token from TNM");
-         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.getToken}`;
+         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.authenticate}`;
          this.logger.info(url);
          try {
              const res = await this.httpClient.post<TGetTokenArgs, TGetTokenResponse>(url, deps, {
@@ -171,7 +101,7 @@
 
      async getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse> {
          this.logger.info("Getting KYC Information");
-         const res = await this.httpClient.get<TnmValidateResponse>(`https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.getKyc}${deps.msisdn}`, {
+         const res = await this.httpClient.get<TnmValidateResponse>(`https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.validate}${deps.msisdn}`, {
              headers: {
                  ...this.getDefaultHeader(),
                  'Authorization': `Bearer ${await this.getAuthHeader()}`
@@ -187,16 +117,14 @@
      private getDefaultHeader() {
          return {
              'Content-Type': 'application/json',
-             'Token': this.tnmConfig.TOKEN,
-
          };
      }
 
 
      private async getAuthHeader(): Promise<string> {
          const res = await this.getToken({
-             password: this.tnmConfig.CLIENT_PASSWORD,
-             wallet: this.tnmConfig.CLIENT_WALLET,
+             password: this.tnmConfig.TNM_PASSWORD,
+             wallet: this.tnmConfig.TNM_WALLET,
          });
          return res.data.token;
      }

@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { ITNMClient, TNMConfig, TNMSendMoneyRequest, TNMSendMoneyResponse, TNMUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -130,20 +130,20 @@ export type TtransferPatchNotificationRequest = {
 };
 
 export type TupdateSendMoneyDeps = {
-    transferAccept: TCBSUpdateSendMoneyRequest,
+    transferAccept: TNMUpdateSendMoneyRequest,
     transferId: string
 }
 
 export interface ICoreConnectorAggregate  {
     sdkClient: ISDKClient;
-    cbsClient: ICbsClient;
-    cbsConfig: TCBSConfig;
+    tnmClient: ITNMClient;
+    tnmConfig: TNMConfig;
     IdType: string;
     logger: ILogger;
     getParties(id: string, IdType: string):Promise<TLookupPartyInfoResponse>;
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse>
+    sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse>
     updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse>
 }
