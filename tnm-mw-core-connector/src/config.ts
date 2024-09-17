@@ -77,17 +77,17 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'TNM_BASE_URL',
         },
-        CLIENT_WALLET: {
+        TNM_WALLET: {
             doc: 'TNM Client Wallet ID',
             format: String,
             default: null, // required
-            env: 'CLIENT_WALLET',
+            env: 'TNM_WALLET',
         },
-        CLIENT_PASSWORD: {
+        TNM_PASSWORD: {
             doc: 'TNM Client Password',
             format: String,
             default: null, // required
-            env: 'CLIENT_PASSWORD',
+            env: 'TNM_PASSWORD',
         },
         SUPPORTED_ID_TYPE: {
             doc: 'Supported Type',
@@ -96,34 +96,28 @@ const config = Convict<IConfigSchema>({
             env: 'SUPPORTED_ID_TYPE',
         },
         SERVICE_CHARGE: {
-            doc: '',
+            doc: 'Service Charge',
             format: String,
             default: null, //
             env: 'SERVICE_CHARGE',
         },
         EXPIRATION_DURATION: {
-            doc: '',
+            doc: 'Expiration Duration for Quotes',
             format: String,
             default: null, // required
-            env: '',
-        },
-        TOKEN: {
-            doc: '',
-            format: String,
-            default: null, // required
-            env: '',
+            env: 'EXPIRATION_DURATION',
         },
         TRANSACTION_ENQUIRY_WAIT_TIME: {
-            doc: '',
+            doc: 'TNM check transaction interval',
             format: String,
             default: null, // required
-            env: '',
+            env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
         FSP_ID: {
-            doc: '',
+            doc: 'Identifier for the DFSP',
             format: String,
             default: null, // required
-            env: '',
+            env: 'FSP_ID',
         },
         TNM_CURRENCY: {
             doc: 'Local Currency',
@@ -131,17 +125,6 @@ const config = Convict<IConfigSchema>({
             default: null,
             env: 'TNM_CURRENCY',
         }
-
-
-        // TNM_BASE_URL: string;
-        // CLIENT_WALLET: string;
-        // CLIENT_PASSWORD: string;
-        // SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
-        // SERVICE_CHARGE: string;
-        // EXPIRATION_DURATION: string;
-        // TOKEN: string;
-        // TRANSACTION_ENQUIRY_WAIT_TIME: number
-        // FSP_ID: string
     }
 });
 

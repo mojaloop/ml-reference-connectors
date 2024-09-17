@@ -40,21 +40,19 @@
 }
 
  export type TNMConfig = {
-     TNM_BASE_URL: string;
-     CLIENT_WALLET: string;
-     CLIENT_PASSWORD: string;
-     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
-     SERVICE_CHARGE: string;
-     EXPIRATION_DURATION: string;
-     TOKEN: string;
-     TRANSACTION_ENQUIRY_WAIT_TIME: number
-     FSP_ID: string
-     TNM_CURRENCY: string
+     TNM_BASE_URL: string,
+     TNM_WALLET: string,
+     TNM_PASSWORD: string,
+     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"],
+     SERVICE_CHARGE: string,
+     EXPIRATION_DURATION: string,
+     TRANSACTION_ENQUIRY_WAIT_TIME: string,
+     FSP_ID: string,
+     TNM_CURRENCY: string,
  }
 
  export type TGetKycArgs = {
-     msisdn: string;
-
+    msisdn: string;
  }
 
  export type TGetTokenArgs = {
@@ -83,14 +81,14 @@
  }
 
 
- export type TNMCollectionRequest = {
+ export type TMakePaymentRequest = {
     msisdn : string;
     amount : string;
     transaction_id: string;
     narration: string
  }
 
-export type TNMCollectionResponse = {
+export type TMakePaymentResponse = {
     message: string;
     errors: [];
     trace: [];
@@ -302,9 +300,11 @@ export type TNMSendMoneyResponse = {
      logger: ILogger;
      getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse>;
      getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
-     // sendMoney(deps: TAirtelDisbursementRequestBody): Promise<TAirtelDisbursementResponse>;
-     collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
-     refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>;
-     getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse>;
+     makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
+
+
+    //  collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
+    //  refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>;
+    //  getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse>;
  }
 

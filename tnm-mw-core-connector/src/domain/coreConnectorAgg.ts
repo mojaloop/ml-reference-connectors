@@ -27,10 +27,11 @@
 
 'use strict';
 
-import config from 'src/config';
+import config from '../config';
 import {
     ITNMClient,
     PartyType,
+    TMakePaymentRequest,
     TNMConfig,
     TNMError,
     TNMSendMoneyRequest,
@@ -60,8 +61,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     constructor(
         readonly sdkClient: ISDKClient,
-        readonly cbsClient: ITNMClient,
-        readonly cbsConfig: TNMConfig,
+        readonly tnmClient: ITNMClient,
+        readonly tnmConfig: TNMConfig,
         logger: ILogger,
     ) {
         // todo: set the IdType from here
@@ -72,16 +73,16 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     //Payee
     async getParties(id: string, idType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Get Parties for ${id}`);
-        if (!(idType === this.cbsClient.tnmConfig.SUPPORTED_ID_TYPE)) {
+        if (!(idType === this.tnmClient.tnmConfig.SUPPORTED_ID_TYPE)) {
             throw ValidationError.unsupportedIdTypeError();
         }
 
-        const lookupRes = await this.cbsClient.getKyc({ msisdn: id });
+        const lookupRes = await this.tnmClient.getKyc({ msisdn: id });
         const party = {
             data: {
                 displayName: `${lookupRes.data.full_name}`,
                 firstName: lookupRes.data.full_name,
-                idType: this.cbsClient.tnmConfig.SUPPORTED_ID_TYPE,
+                idType: this.tnmClient.tnmConfig.SUPPORTED_ID_TYPE,
                 idValue: id,
                 lastName: lookupRes.data.full_name,
                 middleName: lookupRes.data.full_name,
@@ -104,7 +105,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedCurrencyError();
         }
 
-        const res = await this.cbsClient.getKyc({
+        const res = await this.tnmClient.getKyc({
             msisdn: quoteRequest.to.idValue,
 
         });
@@ -139,20 +140,76 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     //TODO: Check actual response for barred accounts
     private async checkAccountBarred(msisdn: string): Promise<void> {
-        const res = await this.cbsClient.getKyc({ msisdn: msisdn });
+        const res = await this.tnmClient.getKyc({ msisdn: msisdn });
         if (res.message != "Completed successfully") {
             throw ValidationError.accountBarredError();
         }
     }
 
-    receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
+    async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
-        throw new Error('Method not implemented.');
+        if (transfer.to.idType != this.IdType) {
+            throw ValidationError.unsupportedIdTypeError();
+        }
+
+        if (transfer.currency !== config.get("tnm.TNM_CURRENCY")) {
+            throw ValidationError.unsupportedCurrencyError();
+        }
+        if (!this.validateQuote(transfer)) {
+            throw ValidationError.invalidQuoteError();
+        }
+
+        this.checkAccountBarred(transfer.to.idValue);
+        
+        return {
+            completedTimestamp: new Date().toJSON(),
+            homeTransactionId: transfer.transferId,
+            transferState: 'RECEIVED',
+        };
+
     }
-    updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
+
+    private validateQuote(transfer: TtransferRequest): boolean {
+        // todo define implmentation
+        this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
+        return true;
+    }
+
+    async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
-        throw new Error('Method not implemented.');
+        if (updateTransferPayload.currentState !== 'COMPLETED') {
+            throw ValidationError.transferNotCompletedError();
+        }
+        if (!this.validatePatchQuote(updateTransferPayload)) {
+            throw ValidationError.invalidQuoteError();
+        }
+
+        const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
+        await this.tnmClient.makepayment(makePaymentRequest)
+
     }
+
+
+    private getMakePaymentRequestBody(requestBody:TtransferPatchNotificationRequest) : TMakePaymentRequest{
+        if (!requestBody.quoteRequest) {
+            throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
+        }
+
+        return {
+            "msisdn" : requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
+            "amount": requestBody.quoteRequest.body.amount.amount,
+            "transaction_id":requestBody.quoteRequest.body.transactionId,
+            "narration": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned"
+        }
+    }
+
+
+    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
+        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
+        // todo define implmentation
+        return true;
+    }
+
 
     // Payer
     sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse> {

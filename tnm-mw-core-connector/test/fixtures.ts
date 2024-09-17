@@ -167,7 +167,7 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
       amountType: 'SEND',
       amount:{
         amount: amount,
-        currency :"ZMW"
+        currency :"MWK"
       },
       transactionType: {
         scenario: 'TRANSFER',
@@ -188,11 +188,11 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
 });
 
 
-export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978980797", amount: string = "100"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "0881544547", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
-  currency: "ZMW",
+  currency: "MWK",
   from: {
     idType: "MSISDN",
     idValue: "978034884"
@@ -213,7 +213,7 @@ export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978
 export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
 amount: amount,
 amountType: "SEND",
-currency: "ZMW",
+currency: "MWK",
 from: {
   //@ts-expect-error partyIdType var not of type IdType
   idType: idType,
@@ -228,7 +228,7 @@ ilpPacket: {
   data: {
     amount: {
       amount: amount,
-      currency: "ZMW",
+      currency: "MWK",
     },
     payee: {
       partyIdInfo: {
@@ -246,7 +246,7 @@ ilpPacket: {
         },
         dateOfBirth: "YYYY-MM-DD",
       },
-      supportedCurrencies: ["ZMW"],
+      supportedCurrencies: ["MWK"],
     },
     payer: {
       //@ts-expect-error partyIdType var not of type IdType
@@ -274,8 +274,8 @@ export const sendMoneyDTO =(idValue:string, amount:string,): TNMSendMoneyRequest
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
-  "sendCurrency": "ZMW",
-  "receiveCurrency": "ZMW",
+  "sendCurrency": "MWK",
+  "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType":"TRANSFER",
   "payer": "Elikah Okello",

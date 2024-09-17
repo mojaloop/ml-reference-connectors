@@ -109,7 +109,7 @@
          });
      }
 
-     static disbursmentError() {
+     static sendMoneyError() {
          return new TNMError("Send Money to Beneficiary Failed", {
              httpCode: 500,
              mlCode: '5000',
