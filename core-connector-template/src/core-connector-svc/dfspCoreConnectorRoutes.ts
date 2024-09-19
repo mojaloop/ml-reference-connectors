@@ -31,7 +31,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TCallbackRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
@@ -45,6 +45,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly handlers = {
         sendMoney: this.initiateTransfer.bind(this),
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+        callback: this.callbackHandler.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -112,12 +113,22 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest;
         try {
-            const updateTransferRes = await this.aggregate.updatesendMoney({
-                transferAccept: transferAccept,
-                transferId: params.transferId as string,
-            });
+            const updateTransferRes = await this.aggregate.updateSendMoney(
+                transferAccept,
+                params.transferId as string,
+            );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){
+        const callbackRequestBody: TCallbackRequest = request.payload as TCallbackRequest;
+        try{
+            const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
+            return this.handleResponse(callbackHandledRes,h);
+        }catch (error: unknown){
             return this.handleError(error, h);
         }
     }

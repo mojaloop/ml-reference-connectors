@@ -42,19 +42,20 @@ paths:
             is running.
   /send-money:
     post:
-      summary: Send Money endpoint 
-      operationId: sendMoney
-      description: >- 
+      summary: Send Money endpoint
+      description: >-
         The Endpoint used by the DFSP Operations application to initiate send money 
         requests to the mojaloop connector
+
+      operationId: sendMoney
       requestBody:
         description: Send Money request body
         content:
           application/json:
-            schema: 
+            schema:
               $ref: "#/components/schemas/sendMoneyRequest"
       tags:
-        - Send Money  
+        - Send Money
       responses:
         '200':
           description: >-
@@ -63,23 +64,23 @@ paths:
             integration
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/sendMoneyResponse"
         '400':
           description: >-
             Response for a bad request.
         '500':
-          description: >- 
+          description: >-
             Response for an internal server error
         '504':
           description: >-
-            Response for a timed out transfer 
-  /send-money/{id}:
+            Response for a timed out transfer
+  /send-money/{transferId}:
     put:
       summary: Confirm send money
       operationId: sendMoneyUpdate
       parameters:
-        - name: id
+        - name: transferId
           in: path
           required: true
           description: The ID of the transaction
@@ -93,7 +94,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ConfirmSendMoney'
       tags:
-        - Send Money 
+        - Send Money
       responses:
         '200':
           description: Send money confirmed successfully
@@ -102,18 +103,18 @@ paths:
 
   /merchant-payment:
     post:
-      summary: Send Money endpoint 
-      description: >- 
+      summary: Send Money endpoint
+      description: >-
         The Endpoint used by the DFSP Operations application to initiate merchant payment
         requests to the mojaloop connector
       requestBody:
         description: Send Money request body
         content:
           application/json:
-            schema: 
+            schema:
               $ref: "#/components/schemas/merchantPaymentRequest"
       tags:
-        - Merchant Payments 
+        - Merchant Payments
       responses:
         '200':
           description: >-
@@ -126,15 +127,15 @@ paths:
                 $ref: "#/components/schemas/merchantPaymentResponse"
 
         '400':
-          description: >- 
-            Response for bad request 
+          description: >-
+            Response for bad request
         '500':
-          description: >- 
+          description: >-
             Internal Server error
         '504':
-          description: >- 
+          description: >-
             Transfer Timeout.
-  
+
   /merchant-payment/{id}:
     put:
       summary: Confirm send money
@@ -153,16 +154,58 @@ paths:
             schema:
               $ref: '#/components/schemas/ConfirmSendMoney'
       tags:
-        - Merchant Payments 
+        - Merchant Payments
       responses:
         '200':
           description: Send money confirmed successfully
         '400':
           description: Bad request
+          
+  /callback:
+    put:
+      operationId: callback
+      tags:
+        - Callback Endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/callbackPayload'
+      responses:
+        '200': 
+          description: Receipt of callback confirmed
 
 
 components:
   schemas:
+    callbackPayload:
+      type: object
+      properties:
+        transaction:
+          type: object
+          properties:
+            id:
+              type: string
+              example: BBZMiscxy
+              description: Unique identifier for the transaction.
+            message:
+              type: string
+              example: Paid UGX 5,000 to TECHNOLOGIES LIMITED Charge UGX 140, Trans ID MP210603.1234.L06941.
+              description: Transaction message detailing payment, charges, and transaction ID.
+            status_code:
+              type: string
+              example: TS
+              description: Status code of the transaction.
+            airtel_money_id:
+              type: string
+              example: MP210603.1234.L06941
+              description: Airtel money transaction ID.
+          required:
+            - id
+            - message
+            - status_code
+            - airtel_money_id
     merchantPaymentRequest:
       type: object
       properties:
@@ -198,7 +241,6 @@ components:
           example: "9876543210"
         dateOfBirth:
           type: string
-          format: date
           example: "1985-04-12"
         geoLocationData:
           description: >-
@@ -251,13 +293,33 @@ components:
           example: "1.10"
         expiryDateTime:
           type: string
+          format: date-time
           example: "2024-08-01T12:00:00Z"
     sendMoneyResponse:
       type: object
       properties:
         payeeDetails:
-          type: string
-          example: "{\"name\":\"Jane Smith\",\"accountNumber\":\"1234567890\",\"bankName\":\"Example Bank\",\"address\":\"456 Elm Street, Somecity, Country\"}"
+          type: object
+          properties:
+            idType:
+              type: string
+              example: "MSISDN"
+            idValue:
+              type: string
+              example: "990454454"
+            fspId:
+              type: string
+              example: "airtelzambia"
+            firstName:
+              type: string
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
+
         receiveAmount:
           type: string
           example: "140.00"
@@ -270,12 +332,9 @@ components:
         feeCurrency:
           type: string
           example: "USD"
-        exchangeRate:
+        transactionId:
           type: string
-          example: "1.10"
-        expiryDateTime:
-          type: string
-          example: "2024-08-01T12:00:00Z"
+          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyRequest:
       type: object
       properties:
@@ -312,35 +371,14 @@ components:
         dateOfBirth:
           type: string
           example: "1985-04-12"
-        geoLocationData:
-          description: >-
-            Indicates the geographic location from where the transaction was
-            initiated.
-          properties:
-            latitude:
-              $ref: '#/components/schemas/latitude'
-            longitude:
-              $ref: '#/components/schemas/longitude'
-          required:
-            - latitude
-            - longitude
-          type: object
-        latitude:
-          description: >-
-            The API data type Latitude is a JSON String in a lexical format that is
-            restricted by a regular expression for interoperability reasons.
-          pattern: >-
-            ^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$
-          type: string
-        longitude:
-          description: >-
-            The API data type Longitude is a JSON String in a lexical format that is
-            restricted by a regular expression for interoperability reasons.
-          pattern: >-
-            ^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$
-          type: string
     ConfirmSendMoney:
       type: object
       properties:
         acceptQuote:
           type: boolean
+        msisdn:
+          type: string
+          example: "777503758"
+        amount:
+          type: string
+          example: "500"

@@ -99,26 +99,11 @@ This section describes how to implement payee integrations to support payee oper
 
 # How to implement Get Parties
 
-Important information needs to be acquired from the DFSP. An endpoint to retieve a payee's infromation. The api must have an id type that can be used to retieve a KYC information either through a GET/{id} or a POST which has a the id in the request body. 
+To implement get parties, you will need to design the sequence diagram first to document the integration.
 
-for example:
-- GET request in curl
-```curl
-curl -X GET \
-  'https://example.com/api/kyc/12345' \
-  -H 'Authorization: Bearer YOUR_API_KEY'
+Open the docs folder in the core connector you just created and refactor the sequence diagram by replacing the placeholder api call to your DFSP API with the actual url.
 
-```
-- POST request in curl
-```curl
-curl -X GET \
-  'https://example.com/api/kyc' \
-  -H 'Authorization: Bearer YOUR_API_KEY' \
-  -G \
-  --data-urlencode 'customer_id=12345' \
-  --data-urlencode 'id_type=PASSPORT' \
-  --data-urlencode 'id_number=AB123456'
-```
+
 
 
 
