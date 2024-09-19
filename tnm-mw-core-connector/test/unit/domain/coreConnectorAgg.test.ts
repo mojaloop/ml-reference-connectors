@@ -43,8 +43,7 @@ const logger = loggerFactory({ context: 'ccAgg tests' });
 const tnmConfig = config.get("tnm");
 const SDK_URL = 'http://localhost:4010';
 const ML_URL = 'http://0.0.0.0:3003';
-const DFSP_URL = 'http://0.0.0.0:3004';
-const idType = "MSISDN_NO";
+const idType = "MSISDN";
 const MSISDN_NO = "0881544547";
 
 describe('CoreConnectorAggregate Tests -->', () => {
@@ -64,79 +63,76 @@ describe('CoreConnectorAggregate Tests -->', () => {
         // mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        tnmClient = TNMClientFactory.createClient({tnmConfig: tnmConfig,httpClient,logger});
-        ccAggregate = new CoreConnectorAggregate(sdkClient,tnmClient, tnmConfig, logger);
+        tnmClient = TNMClientFactory.createClient({ tnmConfig: tnmConfig, httpClient, logger });
+        ccAggregate = new CoreConnectorAggregate(sdkClient, tnmClient, tnmConfig, logger);
     });
 
-    describe("TNM Payee Test", ()=>{
-        test("Get Parties Happy Path", async ()=>{
-            const mockAxios = new MockAdapter(axios);
-            mockAxios.onGet().reply(200, {
+    describe("TNM Payee Test", () => {
+        test("Get Parties Happy Path", async () => {
+            mockAxios.onGet().replyOnce(200, {
 
-                    "message": "Completed successfully",
-                    "errors": [],
-                    "trace": [],
-                    "data": {
-                      "full_name": "Promise Mphoola"
-                    }
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "Promise Mphoola"
+                }
 
             });
 
-            const url = `${ML_URL}/parties/${idType}/0881544547`;
-            const res = await axios.get(url, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+            mockAxios.onPost().replyOnce(200, {
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
+                    "expires_at": "2023-07-13 10:56:45"
+                }
             });
 
-            logger.info(JSON.stringify(res.data));
+            const kyc_res = await ccAggregate.getParties('0881544547', idType);
+            logger.info("Returned Data ==>", kyc_res.data)
+
+            logger.info(JSON.stringify(kyc_res.data));
             mockAxios.restore();
-            expect(res.status).toEqual(200);
+            expect(kyc_res.statusCode).toEqual(200);
         });
 
         test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
-            const mockAxios = new MockAdapter(axios);
-            mockAxios.onPost().reply(200,{
-                "expiration": "3945-08-30T22:03:24.190Z",
-                "extensionList": [
-                    {
-                        "key": "string",
-                        "value": "string"
-                    }
-                ],
-                "geoCode": {
-                    "latitude": "string",
-                    "longitude": "string"
-                },
-                "payeeFspCommissionAmount": "72",
-                "payeeFspCommissionAmountCurrency": "MWK",
-                "payeeFspFeeAmount": "0",
-                "payeeFspFeeAmountCurrency": "MWK",
-                "payeeReceiveAmount": "0",
-                "payeeReceiveAmountCurrency": "MWK",
-                "quoteId": "71cee55f-c58a-2a8e-8289-e18a2c80bf48",
-                "transactionId": "2861d780-60f5-5127-a73b-ab0617c00f72",
-                "transferAmount": "0.9",
-                "transferAmountCurrency": "MWK"
+            mockAxios.onGet().reply(200, {
+
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "Promise Mphoola"
+                }
+
             });
 
-            const quoteRequest: TQuoteRequest = quoteRequestDto();
-            const url = `${ML_URL}/quoterequests`;
-
-            const res = await axios.post(url, JSON.stringify(quoteRequest), {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+            mockAxios.onPost().reply(200, {
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
+                    "expires_at": "2023-07-13 10:56:45"
+                }
             });
-            logger.info(JSON.stringify(res.data));
 
-            expect(res.status).toEqual(200);
-            
+            const quoteRequest: TQuoteRequest = quoteRequestDto(undefined,undefined,"1000");
+
+            const res = await ccAggregate.quoteRequest(quoteRequest);
+
+            logger.info(JSON.stringify(res));
+            const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE'))/100 * Number(quoteRequest.amount);
+            expect(res.payeeFspFeeAmount).toEqual(fees.toString());
+
         });
 
-        
+
         test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
-            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO , "50");
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
             const url = `${ML_URL}/transfers`;
 
             const res = await axios.post(url, JSON.stringify(transferRequest), {
@@ -151,7 +147,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
             const mockAxios = new MockAdapter(axios);
-            mockAxios.onPut().reply(200,{
+            mockAxios.onPut().reply(200, {
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],

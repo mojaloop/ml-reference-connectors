@@ -114,7 +114,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw TNMError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
-        const serviceCharge = config.get("tnm.SERVICE_CHARGE");
+        const serviceChargePercentage = Number(config.get("tnm.SENDING_SERVICE_CHARGE"));
+        const fees = serviceChargePercentage/100 * Number(quoteRequest.amount);        
 
         this.checkAccountBarred(quoteRequest.to.idValue);
 
@@ -127,7 +128,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             expiration: expirationJSON,
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
-            payeeFspFeeAmount: serviceCharge,
+            payeeFspFeeAmount: fees.toString(),
             payeeFspFeeAmountCurrency: quoteRequest.currency,
             payeeReceiveAmount: quoteRequest.amount,
             payeeReceiveAmountCurrency: quoteRequest.currency,

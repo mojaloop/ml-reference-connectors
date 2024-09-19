@@ -44,7 +44,8 @@
      TNM_WALLET: string,
      TNM_PASSWORD: string,
      SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"],
-     SERVICE_CHARGE: string,
+     SENDING_SERVICE_CHARGE: string;
+     RECEIVING_SERVICE_CHARGE: string;
      EXPIRATION_DURATION: string,
      TRANSACTION_ENQUIRY_WAIT_TIME: string,
      FSP_ID: string,

@@ -30,7 +30,7 @@ optionally within square brackets <email>.
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
-import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
+import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 import config from '../config';
 
@@ -45,6 +45,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         BackendPartiesGetByTypeAndID: this.getParties.bind(this),
         BackendQuoteRequest: this.quoteRequests.bind(this),
         BackendTransfersPost: this.transfers.bind(this),
+        BackendTransfersPut: this.updateTransfers.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -130,4 +131,143 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleError(error, h);
         }
     }
+
+    private async updateTransfers(context: Context, request: Request, h: ResponseToolkit) {
+        const transfer = request.payload as TtransferPatchNotificationRequest;
+        try {
+            const { params } = context.request;
+            const transferId = params['transferId'] as string;
+            const result = await this.aggregate.updateTransfer(transfer, transferId);
+            return this.handleResponse(result, h, 200);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
