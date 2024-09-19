@@ -100,14 +100,13 @@ export type TMakePaymentResponse = {
 }
 
 
-export type TNMCallbackResponse = {
+export type TNMCallbackPayload = {
     receipt_number: string;
     result_description: string;
     result_code: string;
     result_time: string; //Datetime
     transaction_id: string;
     success: boolean
-
 }
 
 export type TNMCheckPaymentStatus = {

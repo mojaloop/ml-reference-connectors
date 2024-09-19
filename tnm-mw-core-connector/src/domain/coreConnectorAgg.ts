@@ -32,6 +32,7 @@ import {
     ITNMClient,
     PartyType,
     TMakePaymentRequest,
+    TNMCallbackPayload,
     TNMConfig,
     TNMError,
     TNMSendMoneyRequest,
@@ -220,5 +221,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse> {
         this.logger.info(`${updateSendMoneyDeps.transferId}`);
         throw new Error('Method not implemented.');
+    }
+
+    async handleCallback(payload: TNMCallbackPayload):Promise<void>{
+        
     }
 }
