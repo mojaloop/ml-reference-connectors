@@ -124,6 +124,18 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null,
             env: 'TNM_CURRENCY',
+        },
+        RECEIVING_SERVICE_CHARGE:{
+            doc: 'Percentage charged by TNM on request to pay',
+            format: String,
+            default: null,
+            env: 'RECEIVING_SERVICE_CHARGE',
+        },
+        SENDING_SERVICE_CHARGE:{
+            doc: 'Amount charged by TNM on disbursement to a customer wallet',
+            format: String,
+            default: null,
+            env: 'SENDING_SERVICE_CHARGE',
         }
     }
 });
