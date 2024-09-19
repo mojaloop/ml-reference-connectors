@@ -29,66 +29,42 @@
 import { BasicError } from '../interfaces';
 
 export class CBSError extends BasicError {
-    static withdrawFailedError(message: string) {
+    static getTokenFailedError() {
+        return new CBSError("Get Token Failed From Airtel", {
+            httpCode: 500,
+            mlCode: '5000',
+        });
+    }
+
+    static getKycError() {
+        return new CBSError("Get Kyc Failed", {
+            httpCode: 500,
+            mlCode: '5000',
+        });
+    }
+
+    static disbursmentError() {
+        return new CBSError("Send Money to Beneficiary Failed", {
+            httpCode: 500,
+            mlCode: '5000',
+        });
+    }
+    static collectMoneyError() {
+        return new CBSError("Collect Money from Airtel Failed", {
+            httpCode: 500,
+            mlCode: '4000',
+        });
+    }
+    static refundMoneyError() {
+        return new CBSError("Refund Money to Airtel Customer Failed", {
+            httpCode: 500,
+            mlCode: '4000',
+        });
+    }
+    static payeeBlockedError(message: string, httpCode:number, mlCode:string) {
         return new CBSError(message, {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-
-    static searchAccountError(message: string) {
-        return new CBSError(message, {
-            httpCode: 500,
-            mlCode: '3200',
-        });
-    }
-
-    static noAccountFoundError() {
-        return new CBSError('CBS Account Not Found', {
-            httpCode: 404,
-            mlCode: '3200',
-        });
-    }
-
-    static accountNotActiveError() {
-        return new CBSError('CBS Account not active', {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-
-    static getClientWithIdError() {
-        return new CBSError('Failed to get client by clientId ', {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-
-    static depositFailedError() {
-        return new CBSError('CBS Deposit Failed', {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-
-    static getChargesError() {
-        return new CBSError('CBS Get charges error', {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-
-    static accountInsufficientBalanceError() {
-        return new CBSError('CBS Account Insufficient Balance', {
-            httpCode: 500,
-            mlCode: '4001',
-        });
-    }
-
-    static accountDebitOrCreditBlockedError(message: string) {
-        return new CBSError(message, {
-            httpCode: 500,
-            mlCode: '4400', // todo: or 5400
+            httpCode: httpCode,
+            mlCode: mlCode,
         });
     }
 }
