@@ -7,7 +7,7 @@ Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
 CC-->>ML Connector: Response
-ML Connector->>CC: PATCH /transfers/{id}
+ML Connector->>CC: PUT /transfers/{id}
 Alt if Current State !== COMPLETED
 CC-->>ML Connector: Response 500
 End

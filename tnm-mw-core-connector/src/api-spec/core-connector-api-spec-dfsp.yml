@@ -161,9 +161,44 @@ paths:
         '400':
           description: Bad request
 
+  /callback:
+    put:
+      operationId: callback
+      tags:
+        - Callback Endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/callbackPayload'
+      responses:
+        '200': 
+          description: Receipt of callback confirmed
 
 components:
   schemas:
+    callbackPayload:
+      type: object
+      properties:
+        receipt_number:
+          type: string
+          example: BGV41JGWH0Y
+        result_description:
+          type: string
+          example: Process service request successfully
+        result_code:
+          type: string 
+          example: 0
+        result_time: 
+          type: string
+          example: "2024-07-31" 
+        transaction_id: 
+          type: string 
+          example: MPAMBA2KANEMAKUSP120240731205859
+        success: 
+          type: boolean
+          example: true
     merchantPaymentRequest:
       type: object
       properties:
