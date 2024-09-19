@@ -8,8 +8,8 @@ sequenceDiagram
   Alt If Checks fail
   CC-->>ML Connector: Response 400
   End
-  CC->>DFSP API:GET /replace/with/api/call/for/getting/customer 
-  DFSP API-->>CC: Response
+  CC->>CBS Api:GET /replace/with/api/call/for/getting/customer 
+  CBS Api-->>CC: Response
   CC->>CC:Response Check
   Alt If Response is Not Successful
   CC-->>ML Connector: Response 500

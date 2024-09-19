@@ -15,8 +15,8 @@ Alt if Currency Not Supported
 CC-->>ML Connector: Response 500
 End
 CC->>CC:Calculate Charge
-CC->> Airtel:GET /standard/v2/users/{msisdn}
-Airtel -->> CC:Response
+CC->> CBS Api:GET /standard/v2/users/{msisdn}
+CBS Api -->> CC:Response
 CC->>CC: Check Respomse
 Alt if Response not Successful
 CC-->>ML Connector: Response 500 ML Code: 5000

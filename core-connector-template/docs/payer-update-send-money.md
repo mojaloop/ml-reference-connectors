@@ -3,35 +3,32 @@
 ```mermaid
 sequenceDiagram
   autoNumber
-  ML Integration Service->>CC: POST /send-money/{id}/acceptQuote=true | false]
+  DFSP Customer App->>CC: POST /send-money/{id}/acceptQuote=true | false]
   CC->>CC: Check acceptQuote
   Alt If Quote not Accepted
-  CC-->>ML Integration Service: Response 500 OK
+  CC-->>DFSP Customer App: Response 500 OK
   End
-  CC->>Airtel:POST /merchant/v2/payments
-  Airtel-->>CC:Response
+  CC->>CBS Api:POST /merchant/v2/payments
+  CBS Api-->>CC:Response
   CC-->CC: Check Response
   Alt If Couldnt make reservation
-  CC-->>ML Integration Service: Response 500
+  CC-->>DFSP Customer App: Response 500
   End
-  CC->>Airtel: GET  /merchant/v2/payments/{id}
-  Loop While transaction status is TIP
-  CC->>CC: Delay for 2 seconds
-  CC->>Airtel: GET  /merchant/v2/payments/{id}
-  Alt if status == TS
-  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = true} and Break
-  else if status == TF
-  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = false} and Break
+  CBS Api->>CC: PUT /callback
+  CC->>CC: Check payment status 
+  Alt If Transaction Successful
+  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = true}
+  Else
+  CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = false}
   End
-  End
-  ML Connector -->> CC: Response
-  CC->>CC: Check Response
+  ML Connector-->>CC: Response
+  CC->>CC: Check response
   Alt if http error code 500 or 504 or currentState = ERROR_OCCURED
-  CC->>Airtel : Rolback transfer POST /standard/v2/payments/refund
-  Airtel-->>CC:Check Response
+  CC->>CBS Api : Rolback transfer POST /standard/v2/payments/refund
+  CBS Api-->>CC:Check Response
   Alt if Response not Successful
   CC->>CC: Initiate manual refund
   End
   End
-  CC-->>ML Integration Service: Response 200
+  CC-->> CBS Api: Response 200
 ```
