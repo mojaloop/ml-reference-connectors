@@ -131,7 +131,7 @@ jobs:
             - ./docker-image-local.tar
 
   test-unit:
-    executor: default-docker
+    executor: default-machine
     steps:
       - run:
           name: Install general dependencies
