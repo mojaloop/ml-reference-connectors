@@ -13,8 +13,7 @@ sequenceDiagram
   CC-->>TNM Application: Response 500
   End
   CC-->>TNM Application: Response 200
-  TNM API->>CC: /tnm/callback
-  CC-->>TNM API: Response 200
+  TNM API->>CC: PUT /callback
   CC->>CC: Check if success == false
   Alt If success == false
   CC->>ML Connector:PUT  /transfers/{id} {acceptQuote = false}
@@ -32,5 +31,6 @@ sequenceDiagram
   End
   End
   End
+   CC-->>TNM API: Response 200
 
 ```
