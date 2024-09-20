@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ITNMClient, TNMConfig, TNMSendMoneyRequest, TNMSendMoneyResponse, TNMUpdateSendMoneyRequest } from '../CBSClient';
+import { ITNMClient, TMakePaymentResponse, TNMConfig, TNMSendMoneyRequest, TNMSendMoneyResponse, TNMUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -145,5 +145,5 @@ export interface ICoreConnectorAggregate  {
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse>
-    updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse>
+    updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TMakePaymentResponse>
 }

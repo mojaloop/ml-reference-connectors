@@ -94,9 +94,7 @@ export type TSDKTransferContinuationRequest =
     | components['schemas']['transferContinuationAcceptConversion'];
 
 
-export type TtransferContinuationResponse =
-    | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse
-    | SDKSchemeAdapter.V2_0_0.Outbound.Types.errorTransferResponse;
+export type TtransferContinuationResponse = SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
 
 export type TSDKClientDeps = {
     logger: ILogger;
@@ -108,7 +106,7 @@ export interface ISDKClient {
     initiateTransfer(transfer: TSDKOutboundTransferRequest): Promise<THttpResponse<TSDKOutboundTransferResponse>>;
     updateTransfer(
         transferAccept: TSDKTransferContinuationRequest,
-        id: number,
+        id: string,
     ): Promise<THttpResponse<TtransferContinuationResponse>>;
 }
 

@@ -27,73 +27,73 @@
  --------------
  ******/
 
- import { IHTTPClient, ILogger } from '../interfaces';
- import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
+import { IHTTPClient, ILogger } from '../interfaces';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
- // TNM Config
+// TNM Config
 
- export enum PartyType {
+export enum PartyType {
     CONSUMER = 'CONSUMER',
     AGENT = 'AGENT',
     BUSINESS = 'BUSINESS',
     DEVICE = 'DEVICE',
 }
 
- export type TNMConfig = {
-     TNM_BASE_URL: string,
-     TNM_WALLET: string,
-     TNM_PASSWORD: string,
-     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"],
-     SENDING_SERVICE_CHARGE: string;
-     RECEIVING_SERVICE_CHARGE: string;
-     EXPIRATION_DURATION: string,
-     TRANSACTION_ENQUIRY_WAIT_TIME: string,
-     FSP_ID: string,
-     TNM_CURRENCY: string,
- }
+export type TNMConfig = {
+    TNM_BASE_URL: string,
+    TNM_WALLET: string,
+    TNM_PASSWORD: string,
+    SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"],
+    SENDING_SERVICE_CHARGE: string;
+    RECEIVING_SERVICE_CHARGE: string;
+    EXPIRATION_DURATION: string,
+    TRANSACTION_ENQUIRY_WAIT_TIME: string,
+    FSP_ID: string,
+    TNM_CURRENCY: string,
+}
 
- export type TGetKycArgs = {
+export type TGetKycArgs = {
     msisdn: string;
- }
+}
 
- export type TGetTokenArgs = {
-     wallet: string;
-     password: string;
+export type TGetTokenArgs = {
+    wallet: string;
+    password: string;
 
- }
+}
 
- export type TnmValidateResponse = {
-     message: string;
-     errors: string[];
-     trace: string[];
-     data: {
-         full_name: string;
-     };
- }
+export type TnmValidateResponse = {
+    message: string;
+    errors: string[];
+    trace: string[];
+    data: {
+        full_name: string;
+    };
+}
 
- export type TGetTokenResponse = {
-     message: string;
-     errors: string[];
-     trace: string[];
-     data: {
-         token: string;
-         expires_at: string;
-     };
- }
+export type TGetTokenResponse = {
+    message: string;
+    errors: string[];
+    trace: string[];
+    data: {
+        token: string;
+        expires_at: string;
+    };
+}
 
 
- export type TMakePaymentRequest = {
-    msisdn : string;
-    amount : string;
+export type TMakePaymentRequest = {
+    msisdn: string;
+    amount: string;
     transaction_id: string;
     narration: string
- }
+}
 
 export type TMakePaymentResponse = {
     message: string;
     errors: [];
     trace: [];
-    data : {
+    data: {
         transaction_id: string;
         receipt_number: string;
     }
@@ -111,17 +111,17 @@ export type TNMCallbackPayload = {
 
 export type TNMCheckPaymentStatus = {
 
-        message: string;
-        errors: string[];
-        trace: any[];
-        data: {
-          transaction_id: string;
-          receipt_number: string;
-          success: boolean;
-          result_description: string;
-          result_code: string;
-          created_at: string;
-        };
+    message: string;
+    errors: string[];
+    trace: any[];
+    data: {
+        transaction_id: string;
+        receipt_number: string;
+        success: boolean;
+        result_description: string;
+        result_code: string;
+        created_at: string;
+    };
 }
 
 export type TNMRefundMoneyResponse = {
@@ -131,47 +131,47 @@ export type TNMRefundMoneyResponse = {
     data: {
         reversal_transaction_id: string;
     };
- }
+}
 
 
- export type TNMInvoiceRequest = {
+export type TNMInvoiceRequest = {
     invoice_number: string;
     amount: number;
     msisdn: string;
     description: string;
-  };
+};
 
-export  type TNMInvoiceResponse = {
+export type TNMInvoiceResponse = {
     message: string;
     errors: string[];
     trace: any[];
     data: any[];
-  };
+};
 
-export  type TNMInvoiceStatusResponse = {
+export type TNMInvoiceStatusResponse = {
     message: string;
     errors: string[];
     trace: any[];
     data: {
-      invoice_number: string;
-      amount: string;
-      msisdn: string;
-      receipt_number: string;
-      settled_at: string;
-      paid: boolean;
-      reversal_transcation_id: string | null;
-      reversed: boolean;
-      reversed_at: string | null;
+        invoice_number: string;
+        amount: string;
+        msisdn: string;
+        receipt_number: string;
+        settled_at: string;
+        paid: boolean;
+        reversal_transcation_id: string | null;
+        reversed: boolean;
+        reversed_at: string | null;
     };
 };
 
 export type TNMRefundResponse = {
-        message: string;
-        errors: string[];
-        trace: any[];
-        data: {
-          reversal_transaction_id: string;
-        };
+    message: string;
+    errors: string[];
+    trace: any[];
+    data: {
+        reversal_transaction_id: string;
+    };
 };
 
 export type TNMClientFactoryDeps = {
@@ -181,130 +181,129 @@ export type TNMClientFactoryDeps = {
 };
 
 export type TNMSendMoneyResponse = {
-     "payeeDetails": {
-         "idType": string;
-         "idValue": string;
-         "fspId": string;
-         "firstName": string;
-         "lastName": string;
-         "dateOfBirth": string;
-     };
-     "receiveAmount": string;
-     "receiveCurrency": string;
-     "fees": string;
-     "feeCurrency": string;
-     "transactionId": string;
- }
+    "payeeDetails": {
+        "idType": string;
+        "idValue": string;
+        "fspId": string;
+        "firstName": string;
+        "lastName": string;
+        "dateOfBirth": string;
+    };
+    "receiveAmount": string;
+    "receiveCurrency": string;
+    "fees": string;
+    "feeCurrency": string;
+    "transactionId": string;
+}
+
+export type TNMSendMoneyRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendAmount": string;
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveCurrency": string;
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": string;
+    "payerAccount": string;
+    "dateOfBirth": string;
+}
+
+
+export type TNMUpdateSendMoneyRequest = {
+    "acceptQuote": boolean;
+    "msisdn": string;
+    "amount": string;
+    "narration": string;
+}
+
+export type TNMCollectMoneyRequest = {
+    "reference": string;
+    "subscriber": {
+        "country": string;
+        "currency": string;
+        "msisdn": string;
+    },
+    "transaction": {
+        "amount": number;
+        "country": string;
+        "currency": string;
+        "id": string;
+    }
+}
+
+export type TNMCollectMoneyResponse = {
+    "data": {
+        "transaction": {
+            "id": string;
+            "status": string;
+        }
+    },
+    "status": {
+        "code": string;
+        "message": string;
+        "result_code": string;
+        "response_code": string;
+        "success": boolean;
+    }
+}
+
+export type TNMRefundMoneyRequest = {
+    receipt_number: string;
+}
 
 
 
 
- export type TNMSendMoneyRequest = {
-     "homeTransactionId": string;
-     "payeeId": string;
-     "payeeIdType": components["schemas"]["PartyIdType"];
-     "sendAmount": string;
-     "sendCurrency": components['schemas']['Currency'];
-     "receiveCurrency": string;
-     "transactionDescription": string;
-     "transactionType": components['schemas']['transferTransactionType'];
-     "payer": string;
-     "payerAccount": string;
-     "dateOfBirth": string;
- }
+// Transaction Enquiry Request
+export type TNMTransactionEnquiryRequest = {
+    transactionId: string;
+}
 
 
- export type TNMUpdateSendMoneyRequest = {
-     "acceptQuote": boolean;
-     "msisdn": string;
-     "amount": string;
- }
+// Transaction Enquiry Response
 
- export type TNMCollectMoneyRequest = {
-     "reference": string;
-     "subscriber": {
-         "country": string;
-         "currency": string;
-         "msisdn": string;
-     },
-     "transaction": {
-         "amount": number;
-         "country": string;
-         "currency": string;
-         "id": string;
-     }
- }
+export type TNMTransactionEnquiryResponse = {
+    "data": {
+        "transaction": {
+            "airtel_money_id": string,
+            "id": string,
+            "message": string,
+            "status": ETransactionStatus
+        }
+    },
+    "status": {
+        "code": string,
+        "message": string,
+        "result_code": string,
+        "response_code": string,
+        "success": boolean
+    }
+}
 
- export type TNMCollectMoneyResponse = {
-     "data": {
-         "transaction": {
-             "id": string;
-             "status": string;
-         }
-     },
-     "status": {
-         "code": string;
-         "message": string;
-         "result_code": string;
-         "response_code": string;
-         "success": boolean;
-     }
- }
-
- export type TNMRefundMoneyRequest = {
-
- }
+export enum ETransactionStatus {
+    TransactionInProgress = "TIP",
+    TransactionSuccess = "TS",
+    TransactionFailed = "TF",
+    TransactionAmbiguous = "TA",
+    TransactionExpired = "TE"
+}
 
 
-
-
- // Transaction Enquiry Request
- export type TNMTransactionEnquiryRequest = {
-     transactionId: string;
- }
-
-
- // Transaction Enquiry Response
-
- export type TNMTransactionEnquiryResponse = {
-     "data": {
-         "transaction": {
-             "airtel_money_id": string,
-             "id": string,
-             "message": string,
-             "status": ETransactionStatus
-         }
-     },
-     "status": {
-         "code": string,
-         "message": string,
-         "result_code": string,
-         "response_code": string,
-         "success": boolean
-     }
- }
-
- export enum ETransactionStatus {
-     TransactionInProgress = "TIP",
-     TransactionSuccess = "TS",
-     TransactionFailed = "TF",
-     TransactionAmbiguous = "TA",
-     TransactionExpired = "TE"
- }
-
-
- // Interface for IAirtelClient with methods to be implemented in IAirtel
- export interface ITNMClient {
-     tnmConfig: TNMConfig;
-     httpClient: IHTTPClient;
-     logger: ILogger;
-     getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse>;
-     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
-     makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
+// Interface for IAirtelClient with methods to be implemented in IAirtel
+export interface ITNMClient {
+    tnmConfig: TNMConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+    getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse>;
+    getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
+    makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
+    refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>
 
 
     //  collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
     //  refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>;
     //  getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse>;
- }
+}
 

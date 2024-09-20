@@ -113,10 +113,10 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const { params } = context.request;
         const transferAccept = request.payload as TNMUpdateSendMoneyRequest;
         try {
-            const updateTransferRes = await this.aggregate.updatesendMoney({
-                transferAccept: transferAccept,
-                transferId: params.transferId as string,
-            });
+            const updateTransferRes = await this.aggregate.updateSendMoney(
+                transferAccept,
+                params.transferId as string
+            );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
