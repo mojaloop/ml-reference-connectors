@@ -46,7 +46,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
     let sdkClient: ISDKClient;
 
     beforeEach(() => {
-        // mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
         tnmClient = TNMClientFactory.createClient({ tnmConfig: tnmConfig, httpClient, logger });
