@@ -23,9 +23,6 @@
  --------------
  **********/
 
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
 import {
     ISDKClient,
@@ -35,14 +32,11 @@ import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { TNMClientFactory, ITNMClient } from '../../../src/domain/CBSClient';
-import { Service } from '../../../src/core-connector-svc';
-import { quoteRequestDto, transferPatchNotificationRequestDto, transferRequestDto } from '../../fixtures';
+import { quoteRequestDto, sdkInitiateTransferResponseDto, sdkUpdateTransferResponseDto, sendMoneyDTO, TNMCallbackPayloadDto, tnmUpdateSendMoneyRequestDto, transferPatchNotificationRequestDto, transferRequestDto } from '../../fixtures';
 
-const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
 const tnmConfig = config.get("tnm");
 const SDK_URL = 'http://localhost:4010';
-const ML_URL = 'http://0.0.0.0:3003';
 const idType = "MSISDN";
 const MSISDN_NO = "0881544547";
 
@@ -51,26 +45,18 @@ describe('CoreConnectorAggregate Tests -->', () => {
     let tnmClient: ITNMClient;
     let sdkClient: ISDKClient;
 
-    beforeAll(async () => {
-        await Service.start();
-    });
-
-    afterAll(async () => {
-        await Service.stop();
-    });
-
     beforeEach(() => {
         // mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
         tnmClient = TNMClientFactory.createClient({ tnmConfig: tnmConfig, httpClient, logger });
         ccAggregate = new CoreConnectorAggregate(sdkClient, tnmClient, tnmConfig, logger);
+        jest.resetAllMocks();
     });
 
     describe("TNM Payee Test", () => {
         test("Get Parties Happy Path", async () => {
-            mockAxios.onGet().replyOnce(200, {
-
+            tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -80,7 +66,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             });
 
-            mockAxios.onPost().replyOnce(200, {
+            tnmClient.getToken = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -94,12 +80,11 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info("Returned Data ==>", kyc_res.data)
 
             logger.info(JSON.stringify(kyc_res.data));
-            mockAxios.restore();
             expect(kyc_res.statusCode).toEqual(200);
         });
 
         test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
-            mockAxios.onGet().reply(200, {
+            tnmClient.getKyc = jest.fn().mockResolvedValue({
 
                 "message": "Completed successfully",
                 "errors": [],
@@ -107,10 +92,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "data": {
                     "full_name": "Promise Mphoola"
                 }
-
             });
 
-            mockAxios.onPost().reply(200, {
+            tnmClient.getToken = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -120,34 +104,45 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
             });
 
-            const quoteRequest: TQuoteRequest = quoteRequestDto(undefined,undefined,"1000");
+            const quoteRequest: TQuoteRequest = quoteRequestDto(undefined, undefined, "1000");
 
             const res = await ccAggregate.quoteRequest(quoteRequest);
 
             logger.info(JSON.stringify(res));
-            const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE'))/100 * Number(quoteRequest.amount);
+            const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
-
         });
-
 
         test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
-            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
-            const url = `${ML_URL}/transfers`;
+            tnmClient.getKyc = jest.fn().mockResolvedValue({
 
-            const res = await axios.post(url, JSON.stringify(transferRequest), {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "Promise Mphoola"
+                }
             });
-            logger.info(JSON.stringify(res.data));
-            expect(res.status).toEqual(201);
+
+            tnmClient.getToken = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
+                    "expires_at": "2023-07-13 10:56:45"
+                }
+            });
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
+
+            const res = await ccAggregate.receiveTransfer(transferRequest);
+
+            logger.info(JSON.stringify(res));
+            expect(res.transferState).toEqual("RECEIVED");
         });
 
-
-        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
-            const mockAxios = new MockAdapter(axios);
-            mockAxios.onPut().reply(200, {
+        test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () => {
+            tnmClient.makepayment = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -155,19 +150,82 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "transaction_id": "ljzowczj",
                     "receipt_number": "AGC00B5MCA"
                 }
-            });
+            })
+
+            jest.spyOn(tnmClient, "makepayment");
 
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN_NO, "500");
-            const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
-            const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            const res = await ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj");
 
-            logger.info(JSON.stringify(res.data));
-            mockAxios.restore();
-            expect(res.status).toEqual(200);
+            logger.info(JSON.stringify(res));
+            expect(res).toBeUndefined();
+            expect(tnmClient.makepayment).toHaveBeenCalled();
+        });
+    });
+
+    describe("TNM Payer Tests", () => {
+        test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            })
+            tnmClient.getKyc = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "Promise Mphoola"
+                }
+
+            })
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+            })
+            jest.spyOn(sdkClient, "updateTransfer");
+            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
+            logger.info("Response fromm send monety", res);
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+        });
+
+
+        test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
+            tnmClient.getToken = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
+                    "expires_at": "2023-07-13 10:56:45"
+                }
+            });
+            tnmClient.makepayment = jest.fn().mockResolvedValue(
+                {
+                    "message": "Completed successfully",
+                    "errors": [],
+                    "trace": [],
+                    "data": {
+                        "transaction_id": "ljzowczj",
+                        "receipt_number": "AGC00B5MCA"
+                    }
+                }
+            );
+            jest.spyOn(tnmClient, "makepayment");
+            const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
+            const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(tnmClient.makepayment).toHaveBeenCalled();
+        });
+
+        test("PUT /callback: should call mojaloop connector with acceptQuote: true if payment was successful", async () => {
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue(sdkUpdateTransferResponseDto(MSISDN_NO, "1000"));
+            jest.spyOn(sdkClient, "updateTransfer");
+            const payload = TNMCallbackPayloadDto();
+            const res = await ccAggregate.handleCallback(payload);
+            logger.info("Response", res);
+            expect(sdkClient.updateTransfer).toHaveBeenCalledWith(
+                { acceptQuote: true }, payload.transaction_id
+            )
         });
     });
 });
