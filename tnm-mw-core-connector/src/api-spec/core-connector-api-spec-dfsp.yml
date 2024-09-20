@@ -375,3 +375,6 @@ components:
         amount:
           type: string
           example: "500"
+        narration:
+          type: string
+          example: Payment for test
