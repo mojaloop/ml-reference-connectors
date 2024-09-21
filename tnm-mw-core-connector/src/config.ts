@@ -95,23 +95,11 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'SUPPORTED_ID_TYPE',
         },
-        SERVICE_CHARGE: {
-            doc: 'Service Charge',
-            format: String,
-            default: null, //
-            env: 'SERVICE_CHARGE',
-        },
         EXPIRATION_DURATION: {
             doc: 'Expiration Duration for Quotes',
             format: String,
             default: null, // required
             env: 'EXPIRATION_DURATION',
-        },
-        TRANSACTION_ENQUIRY_WAIT_TIME: {
-            doc: 'TNM check transaction interval',
-            format: String,
-            default: null, // required
-            env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
         FSP_ID: {
             doc: 'Identifier for the DFSP',

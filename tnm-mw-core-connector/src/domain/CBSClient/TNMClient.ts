@@ -28,7 +28,7 @@
 
 import { IHTTPClient, ILogger } from "../interfaces";
 import { TNMError } from "./errors";
-import { ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse, TMakePaymentRequest, TMakePaymentResponse } from "./types";
+import { ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse, TMakePaymentRequest, TMakePaymentResponse, TNMInvoiceRequest, TNMInvoiceResponse } from "./types";
 
 export const TNM_ROUTES = Object.freeze({
 
@@ -37,6 +37,7 @@ export const TNM_ROUTES = Object.freeze({
     makePayments: '/payments',
     sendMoney: '/payments/',
     refundMoney: '/invoices/refund/',
+    collectMoney: '/invoices',
     transactionEnquiry: '/payments/{{transaction_id}}/'
 });
 
@@ -74,9 +75,30 @@ export class TNMClient implements ITNMClient {
         }
     }
 
+    async collectMoney(deps: TNMInvoiceRequest): Promise<TNMInvoiceResponse>{
+        this.logger.info(`Trying to collect money from customer with msisdn ${deps.msisdn}`);
+        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.collectMoney}`;
 
-    async makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse> {
-        this.logger.info(`Trying to collect money from customer with number ${deps.msisdn}`);
+        try{
+            const res = await this.httpClient.post<TNMInvoiceRequest,TNMInvoiceResponse>(url,deps,{
+                headers:{
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                }
+            });
+            if (res.statusCode !== 200) {
+                throw TNMError.collectMoneyError();
+            }
+            return res.data;
+        }catch(error: unknown){
+            this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
+            throw error;
+        }
+    }
+
+
+    async sendMoney(deps: TMakePaymentRequest): Promise<TMakePaymentResponse> {
+        this.logger.info(`Trying to send money to customer with number ${deps.msisdn}`);
         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.makePayments}`;
 
         try {
@@ -96,7 +118,6 @@ export class TNMClient implements ITNMClient {
             this.logger.error(`Error Sending Money: ${error}`, { url, data: deps });
             throw error;
         }
-
     }
 
 

@@ -141,7 +141,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () => {
-            tnmClient.makepayment = jest.fn().mockResolvedValue({
+            tnmClient.sendMoney = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -151,14 +151,14 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
             })
 
-            jest.spyOn(tnmClient, "makepayment");
+            jest.spyOn(tnmClient, "sendMoney");
 
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN_NO, "500");
             const res = await ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj");
 
             logger.info(JSON.stringify(res));
             expect(res).toBeUndefined();
-            expect(tnmClient.makepayment).toHaveBeenCalled();
+            expect(tnmClient.sendMoney).toHaveBeenCalled();
         });
     });
 
@@ -198,22 +198,19 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "expires_at": "2023-07-13 10:56:45"
                 }
             });
-            tnmClient.makepayment = jest.fn().mockResolvedValue(
+            tnmClient.collectMoney = jest.fn().mockResolvedValue(
                 {
-                    "message": "Completed successfully",
+                    "message": "Request accepted and processing",
                     "errors": [],
                     "trace": [],
-                    "data": {
-                        "transaction_id": "ljzowczj",
-                        "receipt_number": "AGC00B5MCA"
-                    }
-                }
+                    "data": []
+                  }
             );
-            jest.spyOn(tnmClient, "makepayment");
+            jest.spyOn(tnmClient, "collectMoney");
             const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
             const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
             logger.info("Response ", res);
-            expect(tnmClient.makepayment).toHaveBeenCalled();
+            expect(tnmClient.collectMoney).toHaveBeenCalled();
         });
 
         test("PUT /callback: should call mojaloop connector with acceptQuote: true if payment was successful", async () => {

@@ -47,7 +47,6 @@ export type TNMConfig = {
     SENDING_SERVICE_CHARGE: string;
     RECEIVING_SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string,
-    TRANSACTION_ENQUIRY_WAIT_TIME: string,
     FSP_ID: string,
     TNM_CURRENCY: string,
 }
@@ -298,8 +297,9 @@ export interface ITNMClient {
     logger: ILogger;
     getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse>;
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
-    makepayment(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
+    sendMoney(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
     refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>
+    collectMoney(deps: TNMInvoiceRequest): Promise<TNMInvoiceResponse>
 
 
     //  collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
