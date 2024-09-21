@@ -37,6 +37,8 @@ import {
     TNMCallbackPayload,
     TNMConfig,
     TNMError,
+    TNMInvoiceRequest,
+    TNMInvoiceResponse,
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
     TNMUpdateSendMoneyRequest,
@@ -193,7 +195,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.tnmClient.makepayment(makePaymentRequest)
+        await this.tnmClient.sendMoney(makePaymentRequest)
 
     }
 
@@ -315,32 +317,31 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TMakePaymentResponse> {
+    async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        return await this.tnmClient.makepayment(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
+        return await this.tnmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
     }
 
-    private getTCbsCollectMoneyRequest(collection: TNMUpdateSendMoneyRequest, transferId: string): TMakePaymentRequest {
+    private getTCbsCollectMoneyRequest(collection: TNMUpdateSendMoneyRequest, transferId: string): TNMInvoiceRequest {
         return {
+            invoice_number: transferId,
+            amount: Number(collection.amount),
             msisdn: collection.msisdn,
-            amount: collection.amount,
-            transaction_id: transferId,
-            narration: collection.narration
+            description: collection.narration,
         };
     }
 
     async handleCallback(payload: TNMCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction_id}`);
-        let sdkRes;
         try{
             if(payload.success){
-                sdkRes = await this.sdkClient.updateTransfer({acceptQuote: true},payload.transaction_id);
+                await this.sdkClient.updateTransfer({acceptQuote: true},payload.transaction_id);
             }else{
-                sdkRes = await this.sdkClient.updateTransfer({acceptQuote: false},payload.transaction_id);
+                await this.sdkClient.updateTransfer({acceptQuote: false},payload.transaction_id);
             }
         }catch (error: unknown){
             if(error instanceof SDKClientError){

@@ -141,7 +141,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () => {
-            tnmClient.makepayment = jest.fn().mockResolvedValue({
+            tnmClient.sendMoney = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
                 "trace": [],
@@ -158,7 +158,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             logger.info(JSON.stringify(res));
             expect(res).toBeUndefined();
-            expect(tnmClient.makepayment).toHaveBeenCalled();
+            expect(tnmClient.sendMoney).toHaveBeenCalled();
         });
     });
 
@@ -198,7 +198,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "expires_at": "2023-07-13 10:56:45"
                 }
             });
-            tnmClient.makepayment = jest.fn().mockResolvedValue(
+            tnmClient.sendMoney = jest.fn().mockResolvedValue(
                 {
                     "message": "Completed successfully",
                     "errors": [],
@@ -213,7 +213,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
             const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
             logger.info("Response ", res);
-            expect(tnmClient.makepayment).toHaveBeenCalled();
+            expect(tnmClient.sendMoney).toHaveBeenCalled();
         });
 
         test("PUT /callback: should call mojaloop connector with acceptQuote: true if payment was successful", async () => {
