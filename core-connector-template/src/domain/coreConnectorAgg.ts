@@ -75,15 +75,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     //Payee
-    getParties(id: string, IdType: string): Promise<TLookupPartyInfoResponse> {
+    async getParties(id: string, IdType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Getting party info ${id} ${IdType}`);
         throw new Error('Method not implemented.');
     }
-    quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
+    async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Calculating quote for ${quoteRequest.to.idValue}`);
         throw new Error('Method not implemented.');
     }
-    receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
+    async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
         throw new Error('Method not implemented.');
     }
