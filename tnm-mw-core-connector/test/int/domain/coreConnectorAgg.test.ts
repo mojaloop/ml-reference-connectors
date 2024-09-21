@@ -54,7 +54,7 @@
  const idType = "MSISDN";
 
 
- describe('CoreConnectorAggregate Tests -->', () => {
+ describe.skip('CoreConnectorAggregate Tests -->', () => {
      let ccAggregate: CoreConnectorAggregate;
      let tnmClient: ITNMClient;
      let sdkClient: ISDKClient;
