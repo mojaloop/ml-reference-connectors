@@ -141,15 +141,17 @@ jobs:
           name: Configure Defaults, Execute unit tests
           command: |
             source $(pwd)/.circleci/pipeline.sh
+            source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run test:unit
                 cd -
               fi
             done
+
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
 

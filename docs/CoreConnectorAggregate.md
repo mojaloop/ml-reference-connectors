@@ -122,7 +122,7 @@ The transfers aggregate function can look like this.
 ```
 It is important to note that at this point, we don't do the acutal crediting of funds into the beneficiary's account. This is done when the core connector recieves a PUT notification about the transfer `currentState` which is described in the next section
 
-# Transfer Notification
+# PUT Transfer Notification
 This aggregate function is supposed to handle a PUT request that is a notification from the mojaloop scheme about the status of a transfer. 
 
 The PUT Notification request looks like this. The UUID at the end of the URL path is the transfer ID. You can use this id in requests to the core banking solution api as ways to identify transactions and also for transaction traceability.
@@ -154,7 +154,7 @@ The function would take on a structure like this.
 12  }
 ```
 
-We can only credit the customer's account when we receive a put notificatio whose current state is `COMPLETED`. Otherwise, we must return an error response to the mojaloop connector.
+We can only credit the customer's account when we receive a put notification whose current state is `COMPLETED`. Otherwise, we must return an error response to the mojaloop connector.
 
 # Payer Integration.
 The payer integration functions are majorly 2. These are the most important functions that need to be implemented by the core connector aggregate class. They are;
@@ -168,7 +168,30 @@ The payer integration is not as straight forward as payee integrations. The bigg
 Assuming a payment channel has been chosen from which requests will be triggered to the core connector read below to see how the two functions should be implemented in the aggregate.
 
 # Send Money
-This is the aggregate function that initiates the process of sending money from a DFSP's customer to a beneficiary in another DFSP. This bit of the integration is what will allow the customers initiate outgoing payments to beneficiaries in other DFSPs.
+This is the aggregate function that initiates the process of sending money from a DFSP's customer to a beneficiary in another DFSP. This bit of the integration is what will allow the customers initiate outgoing payments to beneficiaries in other DFSPs in the payment scheme. This function is supposed to respond to conversion terms returned by the mojaloop connector. It is supposed to accept or decline them. It is then supposed to return a quote to the DFSP. The DFSP will then show it to the customer who is trying to make the payment. 
+
+The quote returned by this function, will contain the fees for transfering an amount and name of the intended beneficiary. 
+
+> When showing the fees to the customer, the DFSPs own fees should also be commnicated to the customer. This is to align with the Level One Principles of fees transparency.
+
+After showing the customer the fees, they will decided depending on the fees whether to proceed with the transaction or not. Once they respond with a choice, the function that will handle that request is the `Update Send Money`
+
+
+This Send money is already implemented in the core connector template and may not need any refactoring since the flow is the same for all integrations. The bulk of the work must be done at the DFSP application to get a customer journey developed.
+
+# Customer Journey for DFSP Application
+An application through which customers initiate payments from is required to have a successful payment initiation. Here is a proposed customer journey that can be adapted and modified as needed depending on the needs of the specific integration
+
+- Customer opens the app and clicks on `Make COMESA Payment`
+- Customer is presented with a form to enter the account identifier of the person to whom they are sending the funds.
+- Customer specifies destination country and DFSP
+- Customer specifies the amount to be sent and clicks `SUBMIT`
+- The application initiates a `POST /send-money` request to the core connector in the background and responds with a quote to show the fees and how much the payee will recieve in their receive currency.
+- The customer either chooses to click `CONTINUE` or `ABORT` and the application notifies that the request is being processed
+- The application then sends a `PUT /send-money/{id}` request to the core connector to capture the customer's feedback. Depending on whether the customer accepted the terms of the transfer or not, the core connector will either initiate debit on the customer's account or just abort the transfer
+- When the processing is complete, notify the customer either by email or SMS about the outcome of the transfer request.
+
+# Update Send Money
 
 # Errors
 

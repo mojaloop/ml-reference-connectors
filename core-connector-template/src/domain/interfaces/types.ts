@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { ICbsClient, TCbsCollectMoneyResponse, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -129,11 +129,6 @@ export type TtransferPatchNotificationRequest = {
     transferId?: components['schemas']['transferId'];
 };
 
-export type TupdateSendMoneyDeps = {
-    transferAccept: TCBSUpdateSendMoneyRequest,
-    transferId: string
-}
-
 export interface ICoreConnectorAggregate  {
     sdkClient: ISDKClient;
     cbsClient: ICbsClient;
@@ -145,5 +140,5 @@ export interface ICoreConnectorAggregate  {
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse>
-    updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse>
+    updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse>
 }

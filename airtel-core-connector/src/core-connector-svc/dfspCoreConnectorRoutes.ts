@@ -32,7 +32,7 @@
 import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
-import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest } from '../domain/CBSClient';
+import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest } from '../domain/CBSClient';
 import { BaseRoutes } from './BaseRoutes';
 
 const API_SPEC_FILE = './src/api-spec/core-connector-api-spec-dfsp.yml';
@@ -54,6 +54,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             handlers: {
                 sendMoney: this.initiateTransfer.bind(this),
                 updateSendMoney: this.updateInitiatedTransfer.bind(this),
+                callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
@@ -111,6 +112,17 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept, transferId );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+
+    private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){
+        const callbackRequestBody: TCallbackRequest = request.payload as TCallbackRequest;
+        try{
+            const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
+            return this.handleResponse(callbackHandledRes,h);
+        }catch (error: unknown){
             return this.handleError(error, h);
         }
     }
