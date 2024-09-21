@@ -124,7 +124,8 @@ export class CoreConnectorAggregate {
             throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
-        const serviceCharge = config.get("airtel.SERVICE_CHARGE");
+        const serviceCharge = Number(config.get("airtel.SERVICE_CHARGE"));
+        const fees = serviceCharge/100 * Number(quoteRequest.amount);
 
         this.checkAccountBarred(quoteRequest.to.idValue);
 
@@ -137,7 +138,7 @@ export class CoreConnectorAggregate {
             expiration: expirationJSON,
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
-            payeeFspFeeAmount: serviceCharge,
+            payeeFspFeeAmount: fees.toString(),
             payeeFspFeeAmountCurrency: quoteRequest.currency,
             payeeReceiveAmount: quoteRequest.amount,
             payeeReceiveAmountCurrency: quoteRequest.currency,
@@ -421,29 +422,33 @@ export class CoreConnectorAggregate {
 
     async handleCallback(payload: TCallbackRequest): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
-        let sdkRes;
         try {
             if (payload.transaction.status_code === "TS") {
-                sdkRes = await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
             } else {
-                sdkRes = await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                
-                const airtelRes = await this.airtelClient.refundMoney({
+                // perform refund or rollback
+                this.handleRefund(payload);
+            }
+        }
+    }
+
+    private async handleRefund(payload: TCallbackRequest){
+        try{
+            if(payload.transaction.status_code === "TS"){
+                await this.airtelClient.refundMoney({
                     "transaction": {
                         "airtel_money_id": payload.transaction.airtel_money_id,
                     }
                 });
-
-                if(airtelRes.status.code != '200'){
-                    throw AirtelError.refundMoneyError();
-                }else{
-                    // Prerform manual refund or rollback
-                }
-
             }
+        }catch(error: unknown){
+            this.logger.error("Refund failed. Initiating manual process...")
+            // todo: define a way to start a manual refund process.
+            throw error;
         }
     }
 }
