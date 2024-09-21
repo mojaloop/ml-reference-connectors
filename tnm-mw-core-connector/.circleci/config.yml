@@ -60,7 +60,7 @@ defaults_configure_nvm: &defaults_configure_nvm
     nvm install $(cat .nvmrc)
     nvm alias default $(cat .nvmrc)
     nvm use $(cat .nvmrc)
-        
+
 ##
 # Executors
 #
@@ -90,18 +90,11 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run: 
-          name: Configure Defaults, NPM Install
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_configure_nvm
-                npm ci 
-                cd -
-              fi
-            done
+      - run:
+          <<: *defaults_configure_nvm
+      - run:
+          name: Update NPM install
+          command: npm ci
       - save_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
           paths:
@@ -111,20 +104,14 @@ jobs:
     executor: default-machine
     steps:
       - checkout
-      - run: 
-         name: Build Docker Local Images
-         command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                dir_no_slash="${dir%/}"  # Remove trailing slash
-                cd "$dir_no_slash" 
-                echo "Building Docker image: local"
-                docker build -t $DOCKER_ORG/$dir_no_slash:local .
-                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir_no_slash:local
-                cd -
-              fi
-            done
+      - run:
+          name: Build Docker local image
+          command: |
+            echo "Building Docker image: local"
+            docker build -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
+      - run:
+          name: Save docker image to workspace
+          command: docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -137,23 +124,13 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run: 
-          name: Configure Defaults, Execute unit tests
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [ "${dir%-core-connector/}" != "$dir" ]; then
-                cd $dir
-                defaults_configure_nvm
-                npm ci
-                npm run test:unit
-                cd -
-              fi
-            done
-
+      - run:
+          <<: *defaults_configure_nvm
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Execute unit tests
+          command: npm run test:unit
 
   test-functional:
     executor: default-machine
@@ -164,22 +141,21 @@ jobs:
       - run:
           name: Load the pre-built docker local image from workspace
           command: docker load -i /tmp/docker-image-local.tar
-      - run: 
+      - run:
+          name: Start docker-compose for this service and TTK
+          command: |
+            cd test/func
+            docker-compose up -d
+      - run:
+          name: Wait for some time
+          command: |
+            sleep 10
+      - run:
           name: Execute Functional Tests
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                cd test/func
-                docker-compose up -d
-                sleep 10
-                cd test/func
-                docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
-                docker compose down
-                cd -
-              fi
-            done
+            cd test/func
+            docker-compose -f ./ttk-tests-docker-compose.yml up --abort-on-container-exit
+            docker compose down
       - store_artifacts:
           path: ./test/func/reports
           destination: test
@@ -191,21 +167,13 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run: 
-          name: Configure Defaults, Execute Dep Check
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_configure_nvm
-                npm ci
-                npm run dep:check
-                cd -
-              fi
-            done
+      - run:
+          <<: *defaults_configure_nvm
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Execute dependency tests
+          command: npm run dep:check
 
   test-func:
     executor: default-machine
@@ -213,23 +181,27 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp
-      - run: 
-          name: Configure Defaults, Execute integration tests
+      - run:
+          name: Start Mock SDK Scheme Adapter API
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                docker-compose -f ./test/func/sdk-docker-compose.yml up -d
-                sleep 10
-                nvm install
-                nvm use
-                npm install
-                npm run test:int
-                docker-compose -f ./test/func/sdk-docker-compose.yml down
-                cd -
-              fi
-            done
+            docker-compose -f ./test/func/sdk-docker-compose.yml up -d
+      - run:
+          name: Wait for some time
+          command: |
+            sleep 10
+      - run:
+          name: Install dependencies
+          command: |
+            nvm install
+            nvm use
+            npm install
+      - run:
+          name: Execute Functional Tests
+          command: npm run test:functional
+      - run:
+          name: Stop docker-compose TTK backend
+          command: |
+            docker-compose -f ./test/func/sdk-docker-compose.yml down
 
   test-lint:
     executor: default-docker
@@ -238,21 +210,13 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run: 
-          name: Configure Defaults, Execute Dep Check
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_configure_nvm
-                npm ci
-                npm run lint
-                cd -
-              fi
-            done
+      - run:
+          <<: *defaults_configure_nvm
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Execute lint tests
+          command: npm run lint
 
   release:
     executor: default-docker
@@ -261,34 +225,16 @@ jobs:
           name: Install general dependencies
           command: *defaults_Dependencies
       - checkout
-      - run: 
-          name: Configure Defaults
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_configure_nvm
-                npm ci
-                cd -
-              fi
-            done
+      - run:
+          <<: *defaults_configure_nvm
       - restore_cache:
           keys:
           - dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           <<: *defaults_configure_git
-      - run: 
+      - run:
           name: Generate changelog and bump package version
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                npm run release -- --no-verify
-                cd -
-              fi
-            done
+          command: npm run release -- --no-verify
       - run:
           name: Push the release
           command: git push --follow-tags origin ${CIRCLE_BRANCH}
@@ -309,34 +255,30 @@ jobs:
           command: |
             git fetch origin
             git checkout origin/${CIRCLE_BRANCH}
-      - run: 
-          name: Format the changelog into the github release body and get release tag
+      - run:
+          <<: *defaults_export_version_from_package
+      - run:
+          name: Check the release changes
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_export_version_from_package
-                echo "Changes are: ${RELEASE_CHANGES}"
-                cd -
-              fi
-            done
-      - run: 
+            echo "Changes are: ${RELEASE_CHANGES}"
+      - run:
           name: Create Release
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
-                cd -
-              fi
-            done
+            gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
 
   publish:
     executor: default-machine
     steps:
       - checkout
+      - run:
+          name: Setup for LATEST release
+          command: |
+            echo "export RELEASE_TAG=$RELEASE_TAG_PROD" >> $BASH_ENV
+            echo "RELEASE_TAG=$RELEASE_TAG_PROD"
+
+            PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
+            echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
+            echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
       - attach_workspace:
           at: /tmp
       - run:
@@ -346,34 +288,32 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: 
-          name: Tag and Publish Images
+      - run:
+          name: Re-tag pre built image
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                dir_no_slash="${dir%/}"  # Remove trailing slash
-                cd "$dir_no_slash" 
-                echo "export RELEASE_TAG=$RELEASE_TAG_PROD" >> $BASH_ENV
-                echo "RELEASE_TAG=$RELEASE_TAG_PROD"
-
-                PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
-                echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
-                echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
-                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
-                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
-                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
-                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
-                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
-                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
-                cd -
-              fi
-            done
+            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+      - run:
+          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
+          command: |
+            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
+            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
 
   publish-snapshot:
     executor: default-machine
     steps:
       - checkout
+      - run:
+          name: Setup for SNAPSHOT release
+          command: |
+            echo "export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT" >> $BASH_ENV
+            echo "RELEASE_TAG=$RELEASE_TAG_SNAPSHOT"
+
+            PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
+            echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
+            echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
       - attach_workspace:
           at: /tmp
       - run:
@@ -383,29 +323,18 @@ jobs:
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: 
-          name: Tag and Publish Images
+      - run:
+          name: Re-tag pre built image
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                dir_no_slash="${dir%/}"  # Remove trailing slash
-                cd "$dir_no_slash" 
-                echo "export RELEASE_TAG=$RELEASE_TAG_SNAPSHOT" >> $BASH_ENV
-                echo "RELEASE_TAG=$RELEASE_TAG_SNAPSHOT"
-
-                PACKAGE_VERSION=$(cat package-lock.json | jq -r .version)
-                echo "export PACKAGE_VERSION=${PACKAGE_VERSION}" >> $BASH_ENV
-                echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
-                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
-                docker tag $DOCKER_ORG/$dir_no_slash:local $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
-                echo "Publishing $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG"
-                docker push $DOCKER_ORG/$dir_no_slash:$CIRCLE_TAG
-                echo "Publishing $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG"
-                docker push $DOCKER_ORG/$dir_no_slash:$RELEASE_TAG
-                cd -
-              fi
-            done
+            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+            docker tag $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
+      - run:
+          name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
+          command: |
+            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG"
+            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+            echo "Publishing $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG"
+            docker push $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG
 
 
 ##
