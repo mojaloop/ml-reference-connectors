@@ -76,7 +76,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
 
             const kyc_res = await ccAggregate.getParties('0881544547', idType);
-            logger.info("Returned Data ==>", kyc_res.data)
+            logger.info("Returned Data ==>", kyc_res.data);
 
             logger.info(JSON.stringify(kyc_res.data));
             expect(kyc_res.statusCode).toEqual(200);
@@ -149,7 +149,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "transaction_id": "ljzowczj",
                     "receipt_number": "AGC00B5MCA"
                 }
-            })
+            });
 
             jest.spyOn(tnmClient, "sendMoney");
 
@@ -166,7 +166,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-            })
+            });
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -175,10 +175,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "full_name": "Promise Mphoola"
                 }
 
-            })
+            });
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
-            })
+            });
             jest.spyOn(sdkClient, "updateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
@@ -221,7 +221,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info("Response", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalledWith(
                 { acceptQuote: true }, payload.transaction_id
-            )
+            );
         });
     });
 });

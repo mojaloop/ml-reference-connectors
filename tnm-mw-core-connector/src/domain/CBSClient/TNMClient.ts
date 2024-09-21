@@ -28,7 +28,7 @@
 
 import { IHTTPClient, ILogger } from "../interfaces";
 import { TNMError } from "./errors";
-import { ITNMClient as ITNMClient, TNMCollectMoneyRequest, TNMCollectMoneyResponse, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse, TNMTransactionEnquiryRequest, TNMTransactionEnquiryResponse, TGetKycArgs, TGetTokenArgs, TGetTokenResponse, TMakePaymentRequest, TMakePaymentResponse, TNMInvoiceRequest, TNMInvoiceResponse } from "./types";
+import { ITNMClient as ITNMClient, TNMConfig, TnmValidateResponse, TNMRefundMoneyRequest, TNMRefundMoneyResponse,TGetKycArgs, TGetTokenArgs, TGetTokenResponse, TMakePaymentRequest, TMakePaymentResponse, TNMInvoiceRequest, TNMInvoiceResponse } from "./types";
 
 export const TNM_ROUTES = Object.freeze({
 
@@ -58,7 +58,7 @@ export class TNMClient implements ITNMClient {
         const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.refundMoney}${deps.receipt_number}`;
 
         try {
-            const res = await this.httpClient.post<{}, TNMRefundMoneyResponse>(url, {}, {
+            const res = await this.httpClient.post<undefined, TNMRefundMoneyResponse>(url, undefined, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,

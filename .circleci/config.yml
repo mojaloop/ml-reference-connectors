@@ -95,8 +95,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci 
                 cd -
@@ -140,7 +140,6 @@ jobs:
       - run: 
           name: Configure Defaults, Execute unit tests
           command: |
-            source $(pwd)/.circleci/pipeline.sh
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
               if [ "${dir%-core-connector/}" != "$dir" ]; then
@@ -196,8 +195,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run dep:check
@@ -243,8 +242,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run lint
@@ -266,8 +265,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 cd -
@@ -283,8 +282,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 npm run release -- --no-verify
                 cd -
               fi

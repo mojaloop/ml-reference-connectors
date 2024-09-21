@@ -446,7 +446,7 @@ export class CoreConnectorAggregate {
                 });
             }
         }catch(error: unknown){
-            this.logger.error("Refund failed. Initiating manual process...")
+            this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;
         }
