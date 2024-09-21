@@ -280,14 +280,7 @@ jobs:
       - run: 
           name: Generate changelog and bump package version
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [ "${dir%-core-connector/}" != "$dir" ]; then
-                cd $dir
-                npm run release -- --no-verify
-                cd -
-              fi
-            done
+            npm run release -- --no-verify
       - run:
           name: Push the release
           command: git push --follow-tags origin ${CIRCLE_BRANCH}
@@ -493,7 +486,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
           filters:
             branches:
               only:
@@ -514,7 +507,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
             - build-local
           filters:
             tags:
@@ -528,7 +521,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
             - build-local
           filters:
             tags:
