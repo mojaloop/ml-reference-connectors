@@ -162,7 +162,10 @@ jobs:
           at: /tmp
       - run:
           name: Load the pre-built docker local image from workspace
-          command: docker load -i /tmp/docker-image-local.tar
+          command: |
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run: 
           name: Execute Functional Tests
           command: |
@@ -322,7 +325,9 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: | 
-            docker load -i /tmp/docker-image-local.tar
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -359,7 +364,9 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: | 
-            docker load -i /tmp/docker-image-local.tar
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
