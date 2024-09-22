@@ -302,29 +302,6 @@ jobs:
           command: |
             git fetch origin
             git checkout origin/${CIRCLE_BRANCH}
-      - run: 
-          name: Format the changelog into the github release body and get release tag
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_export_version_from_package
-                echo "Changes are: ${RELEASE_CHANGES}"
-                cd -
-              fi
-            done
-      - run: 
-          name: Create Release
-          command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
-                cd -
-              fi
-            done
       - run:
           <<: *defaults_export_version_from_package
       - run:
