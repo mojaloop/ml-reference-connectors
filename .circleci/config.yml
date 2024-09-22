@@ -280,6 +280,7 @@ jobs:
       - run: 
           name: Generate changelog and bump package version
           command: |
+            git tag -d $(git tag)
             npm run release -- --no-verify
       - run:
           name: Push the release
@@ -324,6 +325,16 @@ jobs:
                 cd -
               fi
             done
+      - run:
+          <<: *defaults_export_version_from_package
+      - run:
+          name: Check the release changes
+          command: |
+            echo "Changes are: ${RELEASE_CHANGES}"
+      - run:
+          name: Create Release
+          command: |
+            gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
 
   publish:
     executor: default-machine
