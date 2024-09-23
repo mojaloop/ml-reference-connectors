@@ -40,6 +40,7 @@ import {
     AirtelError,
     ETransactionStatus,
     TCallbackRequest,
+    TAirtelCollectMoneyResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -127,7 +128,7 @@ export class CoreConnectorAggregate {
         const serviceCharge = Number(config.get("airtel.SERVICE_CHARGE"));
         const fees = serviceCharge/100 * Number(quoteRequest.amount);
 
-        this.checkAccountBarred(quoteRequest.to.idValue);
+        await this.checkAccountBarred(quoteRequest.to.idValue);
 
         const quoteExpiration = config.get("airtel.EXPIRATION_DURATION");
         const expiration = new Date();
@@ -170,7 +171,7 @@ export class CoreConnectorAggregate {
             throw ValidationError.invalidQuoteError();
         }
 
-        this.checkAccountBarred(transfer.to.idValue);
+        await this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
@@ -229,6 +230,10 @@ export class CoreConnectorAggregate {
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
+
+        if(transfer.sendCurrency !== this.airtelConfig.X_CURRENCY){
+            throw ValidationError.unsupportedCurrencyError();
+        }
 
         if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
             if (!this.validateConversionTerms(res.data)) {
@@ -322,84 +327,13 @@ export class CoreConnectorAggregate {
         return true;
     }
 
-    async updateSentTransfer(transferAccept: TAirtelUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
+    async updateSentTransfer(transferAccept: TAirtelUpdateSendMoneyRequest, transferId: string): Promise<TAirtelCollectMoneyResponse> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const airtelRes = await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
-
-        // Transaction id from response 
-        const transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
-            transactionId: airtelRes.data.transaction.id
-        });
-
-
-        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
-            transactionEnquiry,
-            transferId,
-            airtelRes,
-            transferAccept
-        });
-
-        // if (!(sdkRes.data.currentState === "COMPLETED")) { 
-        //     await this.airtelClient.refundMoney({
-        //         "transaction": {
-        //             "airtel_money_id": airtelRes.data.transaction.id,
-        //         }
-        //     });
-
-        //     // todo: Define manual refund process and uncomment this
-        // }
-
-        return sdkRes.data;
-    }
-
-    private async checkTransactionAndRespondToMojaloop(deps: TtransactionEnquiryDeps): Promise<THttpResponse<TtransferContinuationResponse>> {
-        this.logger.info("Checking transaction and responding mojaloop");
-        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
-        let counter = 0;
-        while (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionInProgress || deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionAmbiguous) {
-            this.logger.info(`Waiting for transaction status`);
-            if (counter > 1) {
-                this.logger.info(`Checking timed out. Transaction is unsuccessful,Responding with false`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: true, //todo: fix back after demo
-                }, deps.transferId);
-                break;
-            }
-            // todo: make the number of seconds configurable
-            await new Promise(r => setTimeout(r, this.airtelConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
-            deps.transactionEnquiry = await this.airtelClient.getTransactionEnquiry({
-                transactionId: deps.airtelRes.data.transaction.id
-            });
-
-            if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionSuccess) {
-                this.logger.info(`Transaction is successful, Responding with true`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: deps.transferAccept.acceptQuote
-                }, deps.transferId);
-                break;
-            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionFailed) {
-                this.logger.info(`Transaction is unsuccessful,Responding with false`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: true, //todo: fix back after demo
-                }, deps.transferId);
-                break;
-            } else if (deps.transactionEnquiry.data.transaction.status === ETransactionStatus.TransactionExpired) {
-                this.logger.info(`Transaction is unsuccessful,Transaction has expired`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: true, //todo: fix back after demo
-                }, deps.transferId);
-                break;
-            }
-            counter += 1;
-        }
-        if (!sdkRes) {
-            throw SDKClientError.updateTransferRequestNotDefinedError();
-        }
-        return sdkRes;
+        return await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
     }
 
 
