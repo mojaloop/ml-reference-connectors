@@ -38,7 +38,6 @@ import {
     TAirtelUpdateSendMoneyRequest,
     TAirtelCollectMoneyRequest,
     AirtelError,
-    ETransactionStatus,
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
 } from './CBSClient';
@@ -52,7 +51,6 @@ import {
     ValidationError,
     TtransferPatchNotificationRequest,
     THttpResponse,
-    TtransactionEnquiryDeps,
 } from './interfaces';
 import {
     ISDKClient,

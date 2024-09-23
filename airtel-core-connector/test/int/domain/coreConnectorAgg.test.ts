@@ -215,7 +215,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 headers:{
                     'Content-Type': 'application/json'
                 },
-            })
+            });
 
             expect(res.status).toEqual(200);
         });
