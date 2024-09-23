@@ -1,7 +1,7 @@
 ```mermaid
 sequenceDiagram
   autoNumber
-  ML Integration Service->>CC: POST /send-money/{id}/acceptQuote=true | false]
+  ML Integration Service->>CC: PUT /send-money/{id}/acceptQuote=true | false]
   CC->>CC: Check acceptQuote
   Alt If Quote not Accepted
   CC-->>ML Integration Service: Response 500 OK
