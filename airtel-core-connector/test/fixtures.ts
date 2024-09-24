@@ -1,5 +1,5 @@
 import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import {TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
+import {TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
 
@@ -310,4 +310,13 @@ export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:st
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString()
+});
+
+export const callbackPayloadDto = (amount: string, transferStatus: string): TCallbackRequest => ({
+  "transaction": {
+    "id": crypto.randomUUID(),
+    "message": `Paid ZMW ${amount} to TECHNOLOGIES LIMITED Charge UGX 1, Trans ID MP210603.1234.L06941.`,
+    "status_code": transferStatus,
+    "airtel_money_id": "MP210603.1234.L06941"
+  }
 });
