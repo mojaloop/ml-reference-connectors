@@ -34,7 +34,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from 'src/domain/CBSClient';
+import { CBSClientFactory, ICbsClient } from '../../../src/domain/CBSClient';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
@@ -54,10 +54,15 @@ describe('CoreConnectorAggregate Tests -->', () => {
         ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
     });
 
-    describe("Tests", ()=>{
+    describe("Payee Tests", ()=>{
         test("test", async ()=>{
-            logger.info(ccAggregate.IdType);
-            throw new Error("Write tests");
+            logger.info("Write payee tests");
+        });
+    });
+
+    describe("Payer Tests", ()=>{
+        test("test", async ()=>{
+            logger.info("Write payer tests")
         });
     });
 });

@@ -66,7 +66,7 @@ export class CBSClient implements ICbsClient{
     
     async getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse> {
         this.logger.info("Getting KYC Information");
-        const res = await this.httpClient.get<TCbsKycResponse>(`https://${this.cbsConfig.AIRTEL_BASE_URL}${CBS_ROUTES.getKyc}${deps.msisdn}`, {
+        const res = await this.httpClient.get<TCbsKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.msisdn}`, {
             headers: {
                 ...this.getDefaultHeader(),
                 'Authorization': `Bearer ${await this.getAuthHeader()}`
@@ -80,7 +80,7 @@ export class CBSClient implements ICbsClient{
 
     async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
         this.logger.info("Getting Access Token from Airtel");
-        const url = `https://${this.cbsConfig.AIRTEL_BASE_URL}${CBS_ROUTES.getToken}`;
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getToken}`;
         this.logger.info(url);
         try {
             const res = await this.httpClient.post<TGetTokenArgs, TGetTokenResponse>(url, deps, {
@@ -99,7 +99,7 @@ export class CBSClient implements ICbsClient{
 
     async sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse> {
         this.logger.info("Sending Disbursement Body To Airtel");
-        const url = `https://${this.cbsConfig.AIRTEL_BASE_URL}${CBS_ROUTES.sendMoney}`;
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.sendMoney}`;
         try {
             const res = await this.httpClient.post<TCbsDisbursementRequestBody, TCbsDisbursementResponse>(url, deps,
                 {
@@ -121,7 +121,7 @@ export class CBSClient implements ICbsClient{
     }
     async collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse> {
         this.logger.info("Collecting Money from Airtel");
-        const url = `https://${this.cbsConfig.AIRTEL_BASE_URL}${CBS_ROUTES.collectMoney}`;
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {
             const res = await this.httpClient.post<TCbsCollectMoneyRequest, TCbsCollectMoneyResponse>(url, deps, {
@@ -143,7 +143,7 @@ export class CBSClient implements ICbsClient{
 
     async refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse> {
         this.logger.info("Refunding Money to Customer in Airtel");
-        const url = `https://${this.cbsConfig.AIRTEL_BASE_URL}${CBS_ROUTES.refundMoney}`;
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
 
         try{
             const res = await this.httpClient.post<TCbsRefundMoneyRequest,TCbsRefundMoneyResponse>(url, deps,{
