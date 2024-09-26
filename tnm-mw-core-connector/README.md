@@ -4,7 +4,7 @@
 The TNM Core connector connects to the Mojaloop Connector to facilitate payments across the COMESA member states. It provides the flexibility of transacting in your local currency and the receiving party in their local currency as well.
 
 ## Integration Accounts
-Comesa
+
 
 
 ## Deployment Configurations
