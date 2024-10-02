@@ -363,7 +363,7 @@ export class CoreConnectorAggregate {
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
                 // perform refund or rollback
-                this.handleRefund(payload);
+                await this.handleRefund(payload);
             }
         }
     }
