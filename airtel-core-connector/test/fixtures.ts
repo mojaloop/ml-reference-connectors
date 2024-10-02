@@ -300,7 +300,7 @@ export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyReq
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType":"TRANSFER",
-  "payer": "Elikah Okello",
+  "payer": "Elijah Okello",
   "payerAccount": idValue,
   "dateOfBirth": "1985-04-12"
 });
