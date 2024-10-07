@@ -146,12 +146,13 @@
              httpCode: httpCode,
          });
      }
+ 
      static notEnoughInformationError(message: string, mlCode: string){
-        return new ValidationError(message, {
-            mlCode: mlCode,
-            httpCode: 500,
-        });
-    }
+         return new ValidationError(message, {
+             mlCode: mlCode,
+             httpCode: 500,
+         });
+     }
      static quoteNotAcceptedError(){
          return new ValidationError("Payer rejected transaction request", {
              mlCode: '4101',
