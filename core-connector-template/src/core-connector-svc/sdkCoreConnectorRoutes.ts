@@ -30,7 +30,7 @@ optionally within square brackets <email>.
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
-import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
+import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 import config from '../config';
 
@@ -45,6 +45,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         BackendPartiesGetByTypeAndID: this.getParties.bind(this),
         BackendQuoteRequest: this.quoteRequests.bind(this),
         BackendTransfersPost: this.transfers.bind(this),
+        BackendTransfersPut: this.transferNotification.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -105,7 +106,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const Id = params['ID'] as string;
             const IdType = params['IdType'] as string;
             const result = await this.aggregate.getParties(Id,IdType);
-            return this.handleResponse(result.data, h);
+            return this.handleResponse(result, h);
         } catch (error) {
             return this.handleError(error, h);
         }
@@ -128,6 +129,18 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(result, h, 201);
         } catch (error: unknown) {
             return this.handleError(error, h);
+        }
+    }
+
+    private async transferNotification(context: Context, request: Request, h: ResponseToolkit){
+        const transferNotificatioPayload = request.payload as TtransferPatchNotificationRequest;
+        const { params } = context.request;
+        const transferId = params['transferId'] as string;
+        try{
+            const result = await this.aggregate.updateTransfer(transferNotificatioPayload, transferId);
+            return this.handleResponse(result,h);
+        }catch(error: unknown){
+            return this.handleError(error,h);
         }
     }
 }

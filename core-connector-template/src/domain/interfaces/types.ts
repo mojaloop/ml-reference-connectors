@@ -31,10 +31,10 @@ import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
-import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
+import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ICbsClient, TCbsCollectMoneyResponse, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
-import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
+import { ICbsClient, TCbsCollectMoneyResponse, TCBSConfig, TCbsKycResponse, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { ISDKClient } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
 
@@ -47,7 +47,25 @@ export type THttpClientDeps = {
 
 export type TQuoteRequest = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteRequest;
 
-export type TtransferRequest = SDKSchemeAdapter.V2_0_0.Backend.Types.transferRequest;
+export type TtransferRequest = {
+    /** @description Linked homeR2PTransactionId which was generated as part of POST /requestToPay to SDK incase of requestToPay transfer. */
+    homeR2PTransactionId?: string;
+    amount: components['schemas']['money'];
+    amountType: components['schemas']['amountType'];
+    currency: components['schemas']['currency'];
+    from: components['schemas']['transferParty'];
+    ilpPacket: {
+        data: components['schemas']['ilpPacketData'];
+    };
+    note?: string;
+    quote: TQuoteResponse;
+    quoteRequestExtensions?: components['schemas']['extensionList'];
+    subScenario?: components['schemas']['TransactionSubScenario'];
+    to: components['schemas']['transferParty'];
+    transactionType: components['schemas']['transactionType'];
+    transferId: components['schemas']['transferId'];
+    transactionRequestId?: components['schemas']['transactionRequestId'];
+};
 
 export type THttpResponse<R> = {
     data: R;
@@ -66,7 +84,7 @@ export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
 
-export type Payee = {
+export type Party = {
     dateOfBirth?: string;
     displayName: string;
     extensionList?: unknown[];
@@ -90,7 +108,7 @@ export type Transfer = {
     transferState: string;
 };
 
-export type TLookupPartyInfoResponse = THttpResponse<Payee>;
+export type TLookupPartyInfoResponse = THttpResponse<Party>;
 
 export type TtransferPatchNotificationRequest = {
     currentState?: OutboundComponents['schemas']['transferStatus'];
@@ -129,13 +147,20 @@ export type TtransferPatchNotificationRequest = {
     transferId?: components['schemas']['transferId'];
 };
 
-export interface ICoreConnectorAggregate  {
+export type TGetQuotesDeps = {
+    res: TCbsKycResponse;
+    fees: number;
+    expiration: string;
+    quoteRequest: TQuoteRequest
+}
+
+export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
     cbsClient: ICbsClient;
     cbsConfig: TCBSConfig;
     IdType: string;
     logger: ILogger;
-    getParties(id: string, IdType: string):Promise<TLookupPartyInfoResponse>;
+    getParties(id: string, IdType: string): Promise<Party>;
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;

@@ -21,17 +21,17 @@ export type TCBSClientFactoryDeps = {
 
 export type TCBSConfig = {
     CBS_NAME: string;
-    AIRTEL_BASE_URL: string;
+    DFSP_BASE_URL: string;
     CLIENT_ID: string;
     CLIENT_SECRET: string;
     GRANT_TYPE: string;
     X_COUNTRY: string;
-    X_CURRENCY: string;
+    X_CURRENCY: components["schemas"]["Currency"];
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
-    SERVICE_CHARGE: string;
+    SENDING_SERVICE_CHARGE: number;
+    RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    TRANSACTION_ENQUIRY_WAIT_TIME: number
     FSP_ID:string
 }
 

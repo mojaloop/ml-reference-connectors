@@ -161,9 +161,51 @@ paths:
         '400':
           description: Bad request
 
+  /callback:
+    put:
+      operationId: callback
+      tags:
+        - Callback Endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/callbackPayload'
+      responses:
+        '200': 
+          description: Receipt of callback confirmed
+
 
 components:
   schemas:
+    callbackPayload:
+      type: object
+      properties:
+        transaction:
+          type: object
+          properties:
+            id:
+              type: string
+              example: BBZMiscxy
+              description: Unique identifier for the transaction.
+            message:
+              type: string
+              example: Paid UGX 5,000 to TECHNOLOGIES LIMITED Charge UGX 140, Trans ID MP210603.1234.L06941.
+              description: Transaction message detailing payment, charges, and transaction ID.
+            status_code:
+              type: string
+              example: TS
+              description: Status code of the transaction.
+            airtel_money_id:
+              type: string
+              example: MP210603.1234.L06941
+              description: Airtel money transaction ID.
+          required:
+            - id
+            - message
+            - status_code
+            - airtel_money_id
     merchantPaymentRequest:
       type: object
       properties:

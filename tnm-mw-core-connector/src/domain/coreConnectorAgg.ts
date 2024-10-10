@@ -33,7 +33,6 @@ import {
     ITNMClient,
     PartyType,
     TMakePaymentRequest,
-    TMakePaymentResponse,
     TNMCallbackPayload,
     TNMConfig,
     TNMError,
@@ -195,7 +194,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.tnmClient.sendMoney(makePaymentRequest)
+        await this.tnmClient.sendMoney(makePaymentRequest);
 
     }
 
@@ -210,7 +209,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "amount": requestBody.quoteRequest.body.amount.amount,
             "transaction_id": requestBody.quoteRequest.body.transactionId,
             "narration": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned"
-        }
+        };
     }
 
 
@@ -357,7 +356,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 await this.tnmClient.refundPayment({receipt_number:payload.receipt_number});
             }
         }catch(error: unknown){
-            this.logger.error("Refund failed. Initiating manual process...")
+            this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;
         }

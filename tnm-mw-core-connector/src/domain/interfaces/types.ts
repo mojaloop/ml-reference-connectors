@@ -33,10 +33,10 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ITNMClient, TMakePaymentResponse, TNMConfig, TNMInvoiceResponse, TNMSendMoneyRequest, TNMSendMoneyResponse, TNMUpdateSendMoneyRequest } from '../CBSClient';
-import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
+import { ITNMClient, TNMConfig, TNMInvoiceResponse, TNMSendMoneyRequest, TNMSendMoneyResponse, TNMUpdateSendMoneyRequest } from '../CBSClient';
+import { ISDKClient } from '../SDKClient';
 
-export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
+export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson> | unknown;
 
 export type THttpRequestOptions = Omit<AxiosRequestConfig, 'url' | 'method'>;
 

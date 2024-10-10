@@ -1,0 +1,1 @@
+# Deploying a core connector alongside Payment Manager
