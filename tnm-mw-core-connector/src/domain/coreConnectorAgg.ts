@@ -142,7 +142,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             payeeReceiveAmountCurrency: quoteRequest.currency,
             quoteId: quoteRequest.quoteId,
             transactionId: quoteRequest.transactionId,
-            transferAmount: quoteRequest.amount,
+            transferAmount: (Number(quoteRequest.amount) + fees).toString() ,
             transferAmountCurrency: quoteRequest.currency,
         };
     }
@@ -168,12 +168,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.invalidQuoteError();
         }
 
-        this.checkAccountBarred(transfer.to.idValue);
+        await this.checkAccountBarred(transfer.to.idValue);
 
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
 
     }
