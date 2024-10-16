@@ -194,61 +194,83 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   transactionType: "TRANSFER"
 });
 
-
 export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
-  amount: amount,
-  amountType: "SEND",
-  currency: "MWK",
-  from: {
-    //@ts-expect-error partyIdType var not of type IdType
-    idType: idType,
-    idValue: idValue
+  "transferId": crypto.randomUUID(),
+  "amount": amount,
+  "amountType": "SEND",
+  "currency": "MWK",
+  "from": {
+      "idType": "MSISDN",
+      "idValue": "777123456"
   },
-  to: {
-    //@ts-expect-error partyIdType var not of type IdType
-    idType: idType,
-    idValue: idValue
+  "to": {
+      //@ts-expect-error idType 
+      "idType": idType,
+      "idValue": idValue
   },
-  ilpPacket: {
-    data: {
-      amount: {
-        amount: amount,
-        currency: "MWK",
-      },
-      payee: {
-        partyIdInfo: {
-          //@ts-expect-error partyIdType var not of type IdType
-          partyIdType: idType,
-          partyIdentifier: idValue,
-          fspId: "airtel-123-qwerty",
-        },
-        merchantClassificationCode: "1234",
-        name: "Payee Name",
-        personalInfo: {
-          complexName: {
-            firstName: "PayeeFirstName",
-            lastName: "PayeeLastName",
+  "ilpPacket": {
+      "data": {
+          "amount": {
+              "amount": "400",
+              "currency": "ZMW"
           },
-          dateOfBirth: "YYYY-MM-DD",
-        },
-        supportedCurrencies: ["MWK"],
-      },
-      payer: {
-        //@ts-expect-error partyIdType var not of type IdType
-        idType: idType,
-        idValue: idValue
-      },
-      quoteId: crypto.randomUUID(),
-      transactionId: crypto.randomUUID(),
-      transactionType: {
-        initiator: "PAYER",
-        initiatorType: "CONSUMER",
-        scenario: "TRANSFER",
-        subScenario: "LOCALLY_DEFINED_SUBSCENARIO",
-      },
-    },
+          "payee": {
+              "partyIdInfo": {
+                  "partyIdType": "MSISDN",
+                  "partyIdentifier": "0882997445",
+                  "fspId": "tnmmalawi"
+              },
+              "merchantClassificationCode": "1234",
+              "name": "Payee Name",
+              "personalInfo": {
+                  "complexName": {
+                      "firstName": "PayeeFirstName",
+                      "lastName": "PayeeLastName"
+                  },
+                  "dateOfBirth": "2001-08-21"
+              },
+          },
+          "payer": {
+              "partyIdInfo": {
+                  "partyIdType": "MSISDN",
+                  "partyIdentifier": "0882997445",
+                  "fspId": "tnmmalawi"
+              },
+              "merchantClassificationCode": "1234",
+              "name": "Payee Name",
+              "personalInfo": {
+                  "complexName": {
+                      "firstName": "PayeeFirstName",
+                      "lastName": "PayeeLastName"
+                  },
+                  "dateOfBirth": "2001-08-21"
+              },
+          },
+          "quoteId": "2d93d09c-aa9f-411a-ba48-b315dd04d5d8",
+          "transactionId": "25394f6a-aa14-46a2-b28a-35140e842f7d",
+          "transactionType": {
+              "initiator": "PAYER",
+              "initiatorType": "CONSUMER",
+              "scenario": "TRANSFER",
+              "subScenario": "LOCALLY_DEFINED_SUBSCENARIO"
+          }
+      }
   },
-  note: "Transfer Quote Request",
+  "transactionType":"TRANSFER",
+  "quote": {
+      "expiration": "2024-10-15T13:17:57.742Z",
+      "payeeFspCommissionAmount": "0",
+      "payeeFspCommissionAmountCurrency": "MWK",
+      "payeeFspFeeAmount": "3",
+      "payeeFspFeeAmountCurrency": "MWK",
+      "payeeReceiveAmount": "100",
+      "payeeReceiveAmountCurrency": "MWK",
+      "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
+      "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
+      "transferAmount": "103",
+      "transferAmountCurrency": "MWK"
+  },
+  "note": "Transfer Quote Request"
 });
 
 
@@ -267,6 +289,7 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequ
   "payerAccount": idValue,
   "dateOfBirth": "1985-04-12"
 });
+
 
 
 export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TNMUpdateSendMoneyRequest => ({

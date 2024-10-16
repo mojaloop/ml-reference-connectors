@@ -86,7 +86,7 @@ export class TNMClient implements ITNMClient {
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
                 }
             });
-            if (res.statusCode !== 200) {
+            if (res.statusCode !== 202) {
                 throw TNMError.collectMoneyError();
             }
             return res.data;
