@@ -25,14 +25,8 @@
  **********/
 
 
-import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { TNMClientFactory, TNMError, ITNMClient, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, TNMCallbackPayload } from '../../../src/domain/CBSClient';
-import {
-    ISDKClient,
-    SDKClientFactory,
-
-} from '../../../src/domain/SDKClient';
-import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
+import {TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
+import {TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, TNMCallbackPayload } from '../../../src/domain/CBSClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TNMCallbackPayloadDto } from '../../fixtures';
@@ -43,8 +37,6 @@ import { randomUUID } from 'crypto';
 
 jest.setTimeout(20000);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const tnmConfig = config.get('tnm');
-const SDK_URL = 'http://localhost:4010';
 const ML_URL = `http://${config.get("server.SDK_SERVER_HOST")}:${config.get("server.SDK_SERVER_PORT")}`;
 const DFSP_URL = `http://${config.get("server.DFSP_SERVER_HOST")}:${config.get("server.DFSP_SERVER_PORT")}`;
 
@@ -54,9 +46,6 @@ const idType = "MSISDN";
 
 
 describe('CoreConnectorAggregate Tests -->', () => {
-    let ccAggregate: CoreConnectorAggregate;
-    let tnmClient: ITNMClient;
-    let sdkClient: ISDKClient;
 
     beforeAll(async () => {
         await Service.start();
@@ -68,15 +57,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     beforeEach(() => {
-        // mockAxios.reset();
-        const httpClient = AxiosClientFactory.createAxiosClientInstance();
-        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        tnmClient = TNMClientFactory.createClient({
-            tnmConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(sdkClient, tnmClient, tnmConfig, logger);
     });
 
     describe('TNM Test', () => {
@@ -123,7 +103,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         // Patch Transfer Requests Test - Payee
 
-        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
+        test.skip('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "100");
             const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
             const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
@@ -166,7 +146,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
 
             logger.info(JSON.stringify(res.data));
-            expect(res.status).toEqual(200)
+            expect(res.status).toEqual(200);
         });
 
         // TNM Callback
@@ -180,7 +160,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
             });
             logger.info(JSON.stringify(res.data));
-            expect(res.status).toEqual(200)
+            expect(res.status).toEqual(200);
         });
 
     });

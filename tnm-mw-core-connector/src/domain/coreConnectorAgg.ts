@@ -125,7 +125,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         const serviceChargePercentage = Number(config.get("tnm.SENDING_SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
 
-        this.checkAccountBarred(quoteRequest.to.idValue);
+        await this.checkAccountBarred(quoteRequest.to.idValue);
 
         const quoteExpiration = config.get("tnm.EXPIRATION_DURATION");
         const expiration = new Date();
