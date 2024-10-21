@@ -40,6 +40,7 @@ import {
     TMTNTransactionEnquiryRequest,
     TMTNCollectMoneyRequest,
     TMTNCollectMoneyResponse,
+    TGetTokenRequest,
 
 } from './types';
 
@@ -98,28 +99,36 @@ export class MTNClient implements IMTNClient{
     }
 
 
-    // Getting Access Token
 
-    async getToken(): Promise<TGetTokenResponse> {
-        this.logger.info("Getting Access Token From MTN");
-        const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`;
-        this.logger.info(url);
-        try {
-            const res = await this.httpClient.post<TGetTokenResponse>(url, undefined, {
-                headers: this.getDefaultHeader()
-            });
-            if (res.statusCode !== 200) {
-                this.logger.error(`Failed To Get Token: ${res.statusCode} - ${res.data}`);
-                throw MTNError.getTokenFailedError();
-            }
-            return res.data as TGetTokenResponse;
-        } catch (error) {
-            this.logger.error(`Error Getting Token: ${error}`, { url });
-            throw error;
+
+// Getting Access Token
+
+async getToken(): Promise<TGetTokenResponse> {
+    this.logger.info("Getting Access Token from MTN");
+    const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`;
+    this.logger.info(`Request URL: ${url}`);
+    try {
+        // Send the POST request with an empty body (since no request payload is required)
+        const res = await this.httpClient.post<TGetTokenResponse, any>(url, undefined, {
+            headers: this.getDefaultHeader()
+        });
+
+        // Check if the status code is not 200 (OK)
+        if (res.statusCode !== 200) {
+            this.logger.error(`Failed To Get Token: ${res.statusCode} - ${res.data}`);
+            throw MTNError.getTokenFailedError();
         }
+        this.logger.info('Token Retrieved Successfully');
+        return res.data;  // Return the token response
+    } catch (error) {
+        this.logger.error(`Error Getting Token: ${error}`, { url });
+        throw error;
     }
-    
+}
 
+
+
+    
     // Get KYC Information
 
 
@@ -202,7 +211,6 @@ export class MTNClient implements IMTNClient{
     async collectMoney(deps: TMTNCollectMoneyRequest): Promise<TMTNCollectMoneyResponse> {
         this.logger.info("Collecting Money from MTN");
         const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.collectMoney}`;
-        
         try {
             const res = await this.httpClient.post<TMTNCollectMoneyRequest, any>(url, deps, {
                 headers: {

@@ -20,6 +20,7 @@
  optionally within square brackets <email>.
 
 
+ - Niza Tembo <mcwayzj@gmail.com>
  - Okello Ivan Elijah <elijahokello90@gmail.com>
 
  --------------

@@ -24,18 +24,18 @@
  - Niza Tembo <mcwayzj@gmail.com>
  --------------
  ******/
-'use strict';
+ 'use strict';
 
-
-import { MTNClient } from "./MTNClient";
-import { TMTNClientFactoryDeps } from './types';
-
-export class MTNClientFactory {
-    static createClient(mtnClientfactoryDeps: TMTNClientFactoryDeps) {
-        return new MTNClient(
+ import { MTNClient } from './MTNClient';
+ import { TMTNClientFactoryDeps } from './types';
+ 
+ export class MTNClientFactory {
+     static createClient(mtnClientfactoryDeps: TMTNClientFactoryDeps) {
+         return new MTNClient(
             mtnClientfactoryDeps.mtnConfig,
             mtnClientfactoryDeps.httpClient,
             mtnClientfactoryDeps.logger,
-        );
-    }
-}
+         );
+     }
+ }
+ 

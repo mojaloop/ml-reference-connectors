@@ -52,6 +52,10 @@ export type TGetTokenResponse = {
 }
 
 
+export type TGetTokenRequest = {
+
+}
+
 export type TGetKycArgs = {
  "msisdn" : string;
 }

@@ -24,17 +24,18 @@
 
  --------------
  ******/
-'use strict';
+ 'use strict';
 
-import { SDKClient } from './SDKClient';
-import { IHTTPClient, ILogger } from '../interfaces';
-
-export class SDKClientFactory {
-    static getSDKClientInstance(logger: ILogger, httpClient: IHTTPClient, sdk_url: string) {
-        return new SDKClient({
-            logger,
-            httpClient,
-            schemeAdapterUrl: sdk_url,
-        });
-    }
-}
+ import { SDKClient } from './SDKClient';
+ import { IHTTPClient, ILogger } from '../interfaces';
+ 
+ export class SDKClientFactory {
+     static getSDKClientInstance(logger: ILogger, httpClient: IHTTPClient, sdk_url: string) {
+         return new SDKClient({
+             logger,
+             httpClient,
+             schemeAdapterUrl: sdk_url,
+         });
+     }
+ }
+ 

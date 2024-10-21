@@ -20,6 +20,7 @@
  optionally within square brackets <email>.
 
 
+ - Niza Tembo <mcwayzj@gmail.com>
  - Okello Ivan Elijah <elijahokello90@gmail.com>
 
  --------------
@@ -167,8 +168,6 @@ export class CoreConnectorAggregate {
     }
 
 
-
-
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
@@ -201,7 +200,6 @@ export class CoreConnectorAggregate {
         const mtnDisbursementRequest: TMTNDisbursementRequestBody = this.getDisbursementRequestBody(updateTransferPayload);
         await this.mtnClient.sendMoney(mtnDisbursementRequest);
     }
-
 
     
     private getDisbursementRequestBody(requestBody: TtransferPatchNotificationRequest): TMTNDisbursementRequestBody {
@@ -241,8 +239,6 @@ export class CoreConnectorAggregate {
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
-    
-
 
     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Conversion Terms with transfer response amount${transferResponse.amount}`);
@@ -322,7 +318,6 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(res.data);
     }
 
-
     async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
@@ -392,8 +387,6 @@ export class CoreConnectorAggregate {
         this.logger.info(`${updateSendMoneyDeps.transferId}`);
         throw new Error('Method not implemented.');
     }
-
-
 
     private getTMTNCollectMoneyRequest(collection: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
         return {

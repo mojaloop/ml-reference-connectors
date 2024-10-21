@@ -21,6 +21,7 @@ optionally within square brackets <email>.
 
 
 - Okello Ivan Elijah <elijahokello90@gmail.com>
+- Niza Tembo <mcwayzj@gmail.com>
 
 --------------
 ******/
@@ -35,11 +36,11 @@ import config from '../config';
 import { CoreConnectorRoutes } from './sdkCoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { CBSClientFactory } from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
+import { MTNClientFactory } from 'src/domain/CBSClient/MTNClientFactory';
 
-export const logger = loggerFactory({ context: config.get("cbs.CBS_NAME") });
+export const logger = loggerFactory({ context: 'MTN CC' });
 
 export class Service {
     static coreConnectorAggregate: CoreConnectorAggregate;
@@ -49,11 +50,11 @@ export class Service {
 
     static async start(httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance()) {
         this.httpClient = httpClient;
-        const cbsConfig = config.get("cbs");
-        const cbsClient = CBSClientFactory.createClient({
-            cbsConfig,
-            httpClient,
-            logger
+        const mtnConfig = config.get('mtn');
+        const mtnClient = MTNClientFactory.createClient({
+            mtnConfig: mtnConfig,
+            httpClient: this.httpClient,
+            logger: logger,
         });
 
         const sdkClient = SDKClientFactory.getSDKClientInstance(
@@ -61,7 +62,7 @@ export class Service {
             httpClient,
             config.get('sdkSchemeAdapter.SDK_BASE_URL'),
         );
-        this.coreConnectorAggregate = new CoreConnectorAggregate(sdkClient,cbsClient,cbsConfig, logger);
+        this.coreConnectorAggregate = new CoreConnectorAggregate(sdkClient, mtnClient, mtnConfig, logger);
 
         await this.setupAndStartUpServer();
         logger.info('Core Connector Server started');
@@ -91,7 +92,7 @@ export class Service {
         this.dfspServer.route(dfspCoreConnectorRoutes.getRoutes());
 
         await this.sdkServer.start();
-        logger.info(`SDK Core Connector Server running at ${this.sdkServer.info.uri}`);
+        logger.info(`Mojaloop Connector Core Connector Server running at ${this.sdkServer.info.uri}`);
         await this.dfspServer.start();
         logger.info(`DFSP Core Connector Server running at ${this.dfspServer.info.uri}`);
     }

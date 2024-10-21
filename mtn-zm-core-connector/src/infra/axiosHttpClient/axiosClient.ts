@@ -46,7 +46,7 @@ export class AxiosHTTPClient implements IHTTPClient {
 
     async post<D extends TJson, R = unknown>(
         url: string,
-        data: D,
+        data?: D,
         options?: THttpRequestOptions,
     ): Promise<THttpResponse<R>> {
         const res = await this.axios.post<R>(url, data, options);
@@ -55,7 +55,7 @@ export class AxiosHTTPClient implements IHTTPClient {
 
     async put<D extends TJson, R = unknown>(
         url: string,
-        data: D,
+        data?: D,
         options?: THttpRequestOptions,
     ): Promise<THttpResponse<R>> {
         const res = await this.axios.put<R>(url, data, options);
