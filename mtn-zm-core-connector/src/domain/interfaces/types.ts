@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { TMTNDisbursementRequestBody, TMTNTransactionEnquiryRequest, TMTNUpdateSendMoneyRequest, TMTNTransactionEnquiryResponse, TMTNCollectMoneyResponse } from '../CBSClient';
 import { TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -92,6 +92,7 @@ export type Transfer = {
 
 export type TLookupPartyInfoResponse = THttpResponse<Payee>;
 
+
 export type TtransferPatchNotificationRequest = {
     currentState?: OutboundComponents['schemas']['transferStatus'];
     /** @enum {string} */
@@ -130,15 +131,14 @@ export type TtransferPatchNotificationRequest = {
 };
 
 export type TupdateSendMoneyDeps = {
-    transferAccept: TCBSUpdateSendMoneyRequest,
+    transferAccept: TMTNUpdateSendMoneyRequest,
     transferId: string
 }
 
-export interface ICoreConnectorAggregate  {
-    getParties(id: string, IdType: string):Promise<TLookupPartyInfoResponse>;
-    quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
-    receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
-    updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse>
-    updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse>
+export type TtransactionEnquiryDeps = {
+    transactionEnquiry:TMTNTransactionEnquiryResponse, 
+        transferId: string,
+        mtnRes: TMTNCollectMoneyResponse,
+        transferAccept: TMTNUpdateSendMoneyRequest
 }
+

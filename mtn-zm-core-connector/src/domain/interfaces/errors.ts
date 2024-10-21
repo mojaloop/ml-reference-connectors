@@ -60,6 +60,26 @@ export class ValidationError extends BasicError {
         });
     }
 
+    static invalidReturnedQuoteError(){
+        return new ValidationError("Invalid Quote Error", {
+            mlCode: '5101',
+            httpCode: 500,
+        });
+    }
+
+    static invalidConversionQuoteError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
+        });
+    }
+    static transferIdNotDefinedError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
+        });
+    }
+
     static accountVerificationError() {
         return new ValidationError('Funds Source Account is not active in CBS', {
             mlCode: '3200',
@@ -71,6 +91,48 @@ export class ValidationError extends BasicError {
         return new ValidationError('Unsupported Id Type', {
             mlCode: '3100',
             httpCode: 400,
+        });
+    }
+
+    static unsupportedCurrencyError(){
+        return new ValidationError("Incorrect Currency", {
+            mlCode: '5106',
+            httpCode: 400,
+        }); 
+    }
+
+    static accountBarredError(){
+        return new ValidationError("Account is Barred", {
+            mlCode: '5400',
+            httpCode: 400,
+        });
+    }
+
+    static invalidQuoteError(){
+        return new ValidationError("Invalid Quote Error", {
+            mlCode: '5101',
+            httpCode: 400,
+        });
+    }
+
+    static transferNotCompletedError(){
+        return new ValidationError("Transfer Not Completed Error", {
+            mlCode: '5000',
+            httpCode: 500,
+        });
+    }
+
+    static quoteNotDefinedError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
+        });
+    }
+
+    static quoteNotAcceptedError(){
+        return new ValidationError("Payer rejected transaction request", {
+            mlCode: '4101',
+            httpCode: 500,
         });
     }
 }
@@ -114,4 +176,12 @@ export class MTNError extends BasicError{
             mlCode: mlCode,
         });
     }
+
+    static quoteNotAcceptedError(){
+        return new ValidationError("Payer rejected transaction request", {
+            mlCode: '4101',
+            httpCode: 500,
+        });
+    }
+
 } 

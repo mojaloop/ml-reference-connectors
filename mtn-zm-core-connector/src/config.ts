@@ -1,7 +1,9 @@
-import "dotenv/config";
+import 'dotenv/config';
 import Convict from 'convict';
+import { TMTNConfig } from './domain/CBSClient';
 import { TSDKSchemeAdapterConfig } from './domain/SDKClient';
-import { TMTNConfig } from "./domain/CBSClient";
+
+
 
 interface IConfigSchema {
     server: {
@@ -10,8 +12,8 @@ interface IConfigSchema {
         DFSP_SERVER_HOST: string;
         DFSP_SERVER_PORT: number;
     };
-    sdkSchemeAdapter: TSDKSchemeAdapterConfig;
     mtn:TMTNConfig;
+    sdkSchemeAdapter: TSDKSchemeAdapterConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -49,14 +51,87 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    mtn:{
-        CBS_NAME: {
-            doc: 'Name of the DFSP',
+    mtn: {
+        MTN_BASE_URL: {
+            doc: 'MTN Base URL',
             format: String,
             default: null, // required
-            env: 'CBS_NAME',
+            env: 'MTN_BASE_URL',
         },
+        MTN_API_KEY: {
+            doc: 'MTN API KEY',
+            format: String,
+            default: null, // required
+            env: 'MTN_API_KEY',
+        },
+        MTN_CLIENT_ID: {
+            doc: 'MTN CLIENT ID', 
+            format: String,
+            default: null, // required
+            env: 'MTN_CLIENT_ID',
+        },
+        MTN_SUBSCRIPTION_KEY: {
+            doc: 'MTN SUBSCRIPTION KEY',
+            format: String,
+            default: null, // required
+            env: 'MTN_SUBSCRIPTION_KEY',
+        },
+        X_COUNTRY: {
+            doc: 'Country Name',
+            format: String,
+            default: null, // required
+            env: 'X_COUNTRY',
+        },
+        X_CURRENCY: {
+            doc: 'Country Currency',
+            format: String,
+            default: null, // required
+            env: 'X_CURRENCY',
+        },
+        SUPPORTED_ID_TYPE: {
+            doc: 'Supported ID Type',
+            format: String,
+            default: null, // required
+            env: 'SUPPORTED_ID_TYPE',
+        },
+        SERVICE_CHARGE: {
+            doc: 'Service Charge',
+            format: String,
+            default: null, // required
+            env: 'SERVICE_CHARGE',
+        },
+        EXPIRATION_DURATION: {
+            doc: 'Expiration Duration for Quotes',
+            format: String,
+            default: null, // required
+            env: 'EXPIRATION_DURATION',
+        },
+        FSP_ID: {
+            doc: 'Mojaloop FSP ID',
+            format: String,
+            default: null, // required
+            env: 'FSP_ID',
+        },
+        MTN_TARGET_ENVIRONMENT: {
+            doc: 'MTN Target Environment',
+            format: String,
+            default: null, // required
+            env: 'MTN_TARGET_ENVIRONMENT',
+        },
+        MTN_ENCODED_CREDENTIALS: {
+            doc: 'MTN Encoded Credentials',
+            format: String,
+            default: null, // required
+            env: 'MTN_ENCODED_CREDENTIALS',
+        },
+        TRANSACTION_ENQUIRY_WAIT_TIME: {
+            doc: 'Transaction Enquiry Wait Time (in seconds)',
+            format: Number,
+            default: 30, // default wait time
+            env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
+        }
     }
+    
 });
 
 config.validate({ allowed: 'strict' });
