@@ -71,7 +71,7 @@ export const fineractGetSavingsAccountResponseDto = (
 export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
 
 
-export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string): TtransferPatchNotificationRequest => ({
+export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string, transactionId: string): TtransferPatchNotificationRequest => ({
   //@ts-expect-error currentState var to of type
   currentState: currentState,
   direction: "INBOUND",
@@ -121,7 +121,7 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
   quoteRequest: {
     body: {
       quoteId: '',
-      transactionId: '47e8a9cd-3d89-55c5-a15a-b57a28ad763e',
+      transactionId: transactionId,
       payee: {
         partyIdInfo: {
           //@ts-expect-error partyIdType var not of type IdType
