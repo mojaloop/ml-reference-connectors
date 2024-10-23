@@ -147,9 +147,9 @@ export class ValidationError extends BasicError {
         });
     }
 
-    static notEnoughInformationError(){
-        return new ValidationError("Not enough information returned by mojaloop connector. fxQuotesResponse and quotesResponse", {
-            mlCode: '4000',
+    static notEnoughInformationError(message: string, mlCode: string){
+        return new ValidationError(message, {
+            mlCode: mlCode,
             httpCode: 500,
         });
     }
