@@ -1,12 +1,14 @@
 # Airtel Core Connector 
 
 # Introdution
-This connection facilitates communication between Airtel and the Mojaloop Payment Manager. It processes incoming requests from Airtel and routes them to the payment manager. It was created using the [Core Connector Template](../core-connector-template/). 
+This core connector facilitates communication between the Airtel Zambia mobile money api and the Mojaloop Connector. It processes incoming requests from Airtel's customer facing platform and routes them to mojaloop through the mojaloop connector. It was created based on the [Core Connector Template](../core-connector-template/). 
 
 # Integration Accounts
-These are accounts that are used for dispursing and collecting money in Airtel.
-- Dispursing Account:  This COMESA account receives funds and disburses them to individual payer accounts. It serves as the primary entry point for funds, which are then distributed to respective accounts through the receive transfer request.
-- Collections Account: This account collects money when a payer initiates a send money request. Funds are transferred from the individual payer's account to the COMESA Collections Account..
+These are accounts that are used to facilitate incoming and outgoing payments in the airtel mobile money platform.
+- Disbursements Account: This account is a funded account that is used to support incoming payments. When a request to credit a customer account is received by the connector, checks are performed by the connector and eventually funds will be credited to the customer's account from this account. 
+- Collections Account: This is an account that is used to support outgoing payments. When a request to send funds out of airtel is received, this account serves as the holding place for funds that are owed to the scheme.
+
+At the end of the day, these are the accounts used to support the settlement process and to make sure everyday DFSP is paid what they are owed.
 
 # Deployment Configuration .env
 These are Airtel Configurations needed for connection. There are found in the [env.example](.env.example)
