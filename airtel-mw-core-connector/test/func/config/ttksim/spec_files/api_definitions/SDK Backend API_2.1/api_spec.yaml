@@ -850,7 +850,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - MWK
         - ZWD
       maxLength: 3
       minLength: 3

@@ -423,7 +423,7 @@ components:
                     example: 'SEND'
                 currency:
                     type: string
-                    example: 'ZMW'
+                    example: 'MWK'
                 expiration:
                     type: string
                     example: '3177-01-09T02:50:53.508-09:33'
@@ -441,7 +441,7 @@ components:
                     example: '0'
                 feesCurrency:
                     type: string
-                    example: 'ZMW'
+                    example: 'MWK'
                 from:
                     type: object
                     properties:
@@ -760,7 +760,7 @@ components:
                     type: string
                 transactionRequestId:
                     type: string
- 
+
         TransferResponse:
             type: object
             properties:

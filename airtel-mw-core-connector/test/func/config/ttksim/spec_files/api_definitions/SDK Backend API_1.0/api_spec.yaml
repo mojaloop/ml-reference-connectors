@@ -937,7 +937,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - MWK
         - ZWD
     Amount:
       title: Amount

@@ -16,8 +16,8 @@ services:
       - CLIENT_ID=61d4070a-77d8-4287-a8f5-7574ef41fffa
       - CLIENT_SECRET=3dbeec92-2ea9-4eb4-9bde-b4d5125d8870
       - GRANT_TYPE=client_credentials
-      - X_COUNTRY=ZM
-      - X_CURRENCY=ZMW
+      - X_COUNTRY=MW
+      - X_CURRENCY=MWK
       - SUPPORTED_ID_TYPE=MSISDN
       - SERVICE_CHARGE=0
       - EXPIRATION_DURATION=1

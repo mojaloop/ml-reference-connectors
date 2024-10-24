@@ -917,7 +917,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - MWK
         - ZWD
       maxLength: 3
       minLength: 3
@@ -1766,7 +1766,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - MWK
         - ZWD
     Amount:
       title: Amount

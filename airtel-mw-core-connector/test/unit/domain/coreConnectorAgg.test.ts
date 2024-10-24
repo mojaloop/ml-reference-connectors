@@ -93,8 +93,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
             });
 
-              //
-
               const res = await ccAggregate.getParties('978980797', 'MSISDN');
                 expect(res.statusCode).toEqual(200);
             } catch (error) {
@@ -238,31 +236,52 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     // Airtel payer tests
     describe("Airtel Payer Tests", () => {
-      // test("POST /send-money: should return payee details and fees with correct info provided", async () => {
-      //     sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-      //         ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-      //     });
-      //     airtelClient.getKyc = jest.fn().mockResolvedValue({
-      //         "message": "Completed successfully",
-      //         "errors": [],
-      //         "trace": [],
-      //         "data": {
-      //             "full_name": "Promise Mphoola"
-      //         }
 
-      //     });
-      //     sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-      //         ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
-      //     });
-      //     jest.spyOn(sdkClient, "updateTransfer");
-      //     const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
-      //     logger.info("Response before sending money...", sendMoneyRequestBody);
-      //     const res = await ccAggregate.sendTransfer(sendMoneyRequestBody);
-      //     // const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
-      //     logger.info("Response from sending money", res);
-      //     expect(sdkClient.updateTransfer).toHaveBeenCalled();
+        test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                data: {
+                    currentState: 'WAITING_FOR_CONVERSION_ACCEPTANCE',
+                    transferId: 'TX123456789'
+                }
+            });
 
-      // });
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                message: "Completed successfully",
+                errors: [],
+                trace: [],
+                data: {
+                  first_name: "Promise",
+                  full_name: "Promise Mphoola"
+                }
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                data: {
+                    transferId: 'TX123456789',
+                    fees: '1000',
+                    receiveAmount: '1000',
+                    receiveCurrency: 'MWK',
+                    feeCurrency: 'MWK',
+                }
+            });
+
+            jest.spyOn(sdkClient, "updateTransfer");
+
+            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
+            logger.info("Response before sending money...", sendMoneyRequestBody);
+
+            const res = await ccAggregate.sendTransfer(sendMoneyRequestBody);
+            logger.info("Response from sending money", res);
+
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+            expect(res).toMatchObject({
+                receiveAmount: "1000",
+                fees: "1000",
+                receiveCurrency: "MWK"
+            });
+        });
+
+
 
 
       // test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {

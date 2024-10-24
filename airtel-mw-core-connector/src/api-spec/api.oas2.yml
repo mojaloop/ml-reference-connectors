@@ -740,7 +740,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - MWK
         - ZWD
     accountsRequest:
       type: array

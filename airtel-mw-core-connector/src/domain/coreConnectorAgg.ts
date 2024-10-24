@@ -266,6 +266,8 @@ export class CoreConnectorAggregate {
                 throw ValidationError.invalidReturnedQuoteError();
             }
 
+            console.log("check response...", acceptRes)
+            console.log("check response...", acceptRes.data)
             return this.getTAirtelSendMoneyResponse(acceptRes.data);
         }
         if (!this.validateReturnedQuote(res.data)) {
