@@ -1,4 +1,4 @@
-# CBS Config
+# MTN (CBS) Config
 MTN_BASE_URL=https://sandbox.momodeveloper.mtn.com
 MTN_API_KEY=7980056948c445b3a3551a73673c861c
 MTN_CLIENT_ID=d55ae2d7-52e5-4aea-8cd2-ed263c426c8b
@@ -18,9 +18,8 @@ DFSP_SERVER_PORT=3004
 SDK_SERVER_HOST=0.0.0.0
 SDK_SERVER_PORT=3003
 
-#Mojaloop Connector
-#Do not put the trailing slash on the url
+# Mojaloop Connector
+# Do not put the trailing slash on the url
 SDK_BASE_URL=http://localhost:4010
-FSP_ID=mtndfsp
+FSP_ID=mtnzambia 
 CONNECTOR_NAME=MTNCC
-FSP_ID=mtnzambia

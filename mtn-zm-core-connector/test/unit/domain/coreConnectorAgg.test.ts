@@ -34,24 +34,25 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from 'src/domain/CBSClient';
+import {IMTNClient } from 'src/domain/CBSClient';
+import { MTNClientFactory} from 'src/domain/CBSClient/MTNClientFactory';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const cbsConfig = config.get("cbs");
+const mtnConfig = config.get("mtn");
 const SDK_URL = 'http://localhost:4040';
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: ICbsClient;
+    let mtnClient: IMTNClient;
     let sdkClient: ISDKClient;
 
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = CBSClientFactory.createClient({cbsConfig,httpClient,logger});
-        ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
+        mtnClient = MTNClientFactory.createClient({mtnConfig, httpClient,logger});
+        ccAggregate = new CoreConnectorAggregate(sdkClient,mtnClient, mtnConfig, logger);
     });
 
     describe("Tests", ()=>{

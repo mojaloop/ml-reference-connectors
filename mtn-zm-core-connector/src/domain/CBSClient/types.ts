@@ -21,6 +21,44 @@ export enum PartyType {
     DEVICE = 'DEVICE',
 }
 
+export type TCBSClientFactoryDeps = {
+    cbsConfig: TCBSConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+}
+
+export type TGetCustomerInfoDeps = {
+
+}
+
+export type TGetCustomerResponse = {
+
+
+}
+
+export interface ICbsClient {
+    cbsConfig: TCBSConfig;
+    httpClient: IHTTPClient;
+    logger: ILogger;
+}
+
+
+export type TCBSConfig = {
+    CBS_NAME: string;
+    DFSP_BASE_URL: string;
+    CLIENT_ID: string;
+    CLIENT_SECRET: string;
+    GRANT_TYPE: string;
+    X_COUNTRY: string;
+    X_CURRENCY: components["schemas"]["Currency"];
+    SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+    SENDING_SERVICE_CHARGE: number;
+    RECEIVING_SERVICE_CHARGE: number;
+    EXPIRATION_DURATION: string;
+    AIRTEL_PIN: string;
+    FSP_ID:string
+}
+
 export type TMTNClientFactoryDeps = {
     mtnConfig: TMTNConfig;
     httpClient: IHTTPClient;

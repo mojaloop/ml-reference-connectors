@@ -24,17 +24,17 @@
 
  --------------
  ******/
-'use strict';
+ 'use strict';
 
-import { CBSClient } from './CBSClient';
-import { TCBSClientFactoryDeps } from './types';
-
-export class CBSClientFactory {
-    static createClient(cbsClientfactoryDeps: TCBSClientFactoryDeps) {
-        return new CBSClient(
-            cbsClientfactoryDeps.cbsConfig,
-            cbsClientfactoryDeps.httpClient,
-            cbsClientfactoryDeps.logger
-        );
-    }
-}
+ import { CBSClient } from './CBSClient';
+ import { TCBSClientFactoryDeps } from './types';
+ 
+ export class CBSClientFactory {
+     static createClient(cbsClientfactoryDeps: TCBSClientFactoryDeps) {
+         return new CBSClient(
+             cbsClientfactoryDeps.cbsConfig,
+             cbsClientfactoryDeps.httpClient,
+             cbsClientfactoryDeps.logger
+         );
+     }
+ }

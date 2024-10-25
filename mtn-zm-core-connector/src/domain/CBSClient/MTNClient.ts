@@ -99,8 +99,6 @@ export class MTNClient implements IMTNClient{
     }
 
 
-
-
 // Getting Access Token
 
 async getToken(): Promise<TGetTokenResponse> {
