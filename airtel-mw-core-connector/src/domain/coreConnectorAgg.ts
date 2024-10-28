@@ -224,23 +224,20 @@ export class CoreConnectorAggregate {
 
 
     async sendTransfer(transfer: TAirtelSendMoneyRequest): Promise<TAirtelSendMoneyResponse> {
-        this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
-        this.logger.info(`Transfer from airtel account with details${transfer}`);
+        // this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
+        // this.logger.info(`Transfer from airtel account with details${transfer}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
-        this.logger.info(`Transfer frequest${transferRequest}`);
 
         const res = await this.sdkClient.initiateTransfer(transferRequest);
-        console.log(`Transfer res${res}`);
 
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
+        console.log(transfer.sendCurrency);
+        console.log(this.airtelConfig.X_CURRENCY);
         if(transfer.sendCurrency !== this.airtelConfig.X_CURRENCY){
             throw ValidationError.unsupportedCurrencyError();
         }
-
-        this.logger.info("check res content...", res.data);
-        console.log(res.data);
 
         if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
             if (!this.validateConversionTerms(res.data)) {
@@ -266,10 +263,9 @@ export class CoreConnectorAggregate {
                 throw ValidationError.invalidReturnedQuoteError();
             }
 
-            console.log("check response...", acceptRes)
-            console.log("check response...", acceptRes.data)
             return this.getTAirtelSendMoneyResponse(acceptRes.data);
         }
+
         if (!this.validateReturnedQuote(res.data)) {
             throw ValidationError.invalidReturnedQuoteError();
         }
@@ -306,7 +302,6 @@ export class CoreConnectorAggregate {
     }
 
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
-        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
@@ -319,7 +314,7 @@ export class CoreConnectorAggregate {
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency returned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
