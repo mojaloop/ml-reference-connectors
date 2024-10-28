@@ -51,7 +51,7 @@
     "@types/hapi": "^18.0.14",
     "@types/hapi__vision": "^5.5.8",
     "@types/iban": "^0.0.35",
-    "@types/jest": "^29.5.13",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.11.30",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/typescript-estree": "^7.2.0",
@@ -73,7 +73,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.10",
+    "@hapi/hapi": "^21.3.12",
     "@mojaloop/central-services-logger": "^11.3.1",
     "axios": "^1.6.8",
     "convict": "^6.2.4",
