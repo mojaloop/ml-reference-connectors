@@ -43,7 +43,7 @@ paths:
   /send-money:
     post:
       summary: Send Money endpoint
-      description: >-
+      description: >- 
         The Endpoint used by the DFSP Operations application to initiate send money 
         requests to the mojaloop connector
 
