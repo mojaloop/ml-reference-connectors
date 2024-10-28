@@ -100,6 +100,9 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.sendTransfer(transfer);
             return this.handleResponse(result, h);
         } catch (error: unknown) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
@@ -112,6 +115,9 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept, transferId );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
@@ -123,6 +129,9 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
             return this.handleResponse(callbackHandledRes,h);
         }catch (error: unknown){
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
