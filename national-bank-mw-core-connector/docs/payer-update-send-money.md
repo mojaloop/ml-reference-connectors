@@ -26,5 +26,5 @@ sequenceDiagram
   Alt if error occured
   CC->>CC: Initiate Refund 
   End
-  CC-->> CBS Api: Response 200
+  CC-->> DFSP Customer App: Response 200
 ```
