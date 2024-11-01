@@ -179,7 +179,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
-        this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
+        // todo define implmentation
+        this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
         let result = true;
         if (transfer.amountType === 'SEND') {
             if (!this.checkSendAmounts(transfer)) {
@@ -239,7 +240,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return result;
     }
 
-
+    
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
