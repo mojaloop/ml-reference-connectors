@@ -33,7 +33,6 @@ import {
     ITNMClient,
     PartyType,
     TMakePaymentRequest,
-    TMakePaymentResponse,
     TNMCallbackPayload,
     TNMConfig,
     TNMError,
@@ -182,9 +181,66 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     private validateQuote(transfer: TtransferRequest): boolean {
         // todo define implmentation
         this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
-        return true;
+        let result = true;
+        if (transfer.amountType === 'SEND') {
+            if (!this.checkSendAmounts(transfer)) {
+                result = false;
+            }
+        } else if (transfer.amountType === 'RECEIVE') {
+            if (!this.checkReceiveAmounts(transfer)) {
+                result = false;
+            }
+        }
+        return result;
     }
 
+    private checkSendAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Send Quote...', { transfer });
+        let result = true;
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
+            // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
+        ) {
+            result = false;
+        }
+
+        if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
+        }
+
+        if (
+            parseFloat(transfer.quote.payeeReceiveAmount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+        return result;
+    }
+
+    private checkReceiveAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Receive Quote...', { transfer });
+        let result = true;
+        if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+        }
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspCommissionAmount || '0') +
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+
+        if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
+            result = false;
+        }
+        return result;
+    }
+
+    
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
@@ -195,7 +251,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.tnmClient.sendMoney(makePaymentRequest)
+        await this.tnmClient.sendMoney(makePaymentRequest);
 
     }
 
@@ -210,7 +266,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "amount": requestBody.quoteRequest.body.amount.amount,
             "transaction_id": requestBody.quoteRequest.body.transactionId,
             "narration": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned"
-        }
+        };
     }
 
 
@@ -357,7 +413,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 await this.tnmClient.refundPayment({receipt_number:payload.receipt_number});
             }
         }catch(error: unknown){
-            this.logger.error("Refund failed. Initiating manual process...")
+            this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;
         }

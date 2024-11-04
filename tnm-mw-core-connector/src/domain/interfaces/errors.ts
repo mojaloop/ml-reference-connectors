@@ -146,13 +146,16 @@
              httpCode: httpCode,
          });
      }
+<<<<<<< HEAD
  
-     static notEnoughInformationError(){
-         return new ValidationError("Not enough information returned by mojaloop connector. fxQuotesResponse and quotesResponse", {
-             mlCode: '4000',
-             httpCode: 500,
-         });
-     }
+=======
+>>>>>>> ft/fdh-mw-core-connector
+     static notEnoughInformationError(message: string, mlCode: string){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: 500,
+        });
+    }
      static quoteNotAcceptedError(){
          return new ValidationError("Payer rejected transaction request", {
              mlCode: '4101',

@@ -1,5 +1,5 @@
 import { TSDKOutboundTransferResponse, TtransferContinuationResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TMakePaymentRequest, TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
+import {TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';

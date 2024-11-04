@@ -33,9 +33,9 @@ import {
     SDKClientFactory,
     TSDKOutboundTransferRequest,
     TSDKTransferContinuationRequest,
-} from '../../src/domain/SDKClient';
-import { AxiosClientFactory } from '../../src/infra/axiosHttpClient';
-import { loggerFactory } from '../../src/infra/logger';
+} from '../../../src/domain/SDKClient';
+import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
+import { loggerFactory } from '../../../src/infra/logger';
 
 const mockAxios = new MockAdapter(axios);
 const SDK_URL = 'http://localhost:4040';
@@ -122,7 +122,7 @@ describe('SDK Scheme Adapter Unit Tests', () => {
 
         //act
         mockAxios.onAny().reply(200, {});
-        const res = await sdkClient.updateTransfer(continueTransfer, 1);
+        const res = await sdkClient.updateTransfer(continueTransfer, "1");
 
         // assert
         expect(res.statusCode).toEqual(200);

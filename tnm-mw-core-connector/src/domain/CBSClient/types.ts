@@ -6,7 +6,7 @@
 
  http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF unknown KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
  Contributors
  --------------
@@ -112,7 +112,7 @@ export type TNMCheckPaymentStatus = {
 
     message: string;
     errors: string[];
-    trace: any[];
+    trace: unknown[];
     data: {
         transaction_id: string;
         receipt_number: string;
@@ -143,14 +143,14 @@ export type TNMInvoiceRequest = {
 export type TNMInvoiceResponse = {
     message: string;
     errors: string[];
-    trace: any[];
-    data: any[];
+    trace: unknown[];
+    data: unknown[];
 };
 
 export type TNMInvoiceStatusResponse = {
     message: string;
     errors: string[];
-    trace: any[];
+    trace: unknown[];
     data: {
         invoice_number: string;
         amount: string;
@@ -167,7 +167,7 @@ export type TNMInvoiceStatusResponse = {
 export type TNMRefundResponse = {
     message: string;
     errors: string[];
-    trace: any[];
+    trace: unknown[];
     data: {
         reversal_transaction_id: string;
     };
