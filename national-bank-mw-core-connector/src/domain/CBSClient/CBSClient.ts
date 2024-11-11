@@ -30,10 +30,10 @@
 import { IHTTPClient, ILogger } from '../interfaces';
 import { CBSError } from './errors';
 import {
-    ICbsClient,
+    INBMClient,
     TCbsCollectMoneyRequest,
     TCbsCollectMoneyResponse,
-    TCBSConfig,
+    TNBMConfig,
     TCbsDisbursementRequestBody,
     TCbsDisbursementResponse,
     TCbsKycResponse,
@@ -42,6 +42,7 @@ import {
     TGetKycArgs,
     TGetTokenArgs,
     TGetTokenResponse,
+    TNBMTransactionResponse
 } from './types';
 
 export const CBS_ROUTES = Object.freeze({
@@ -53,17 +54,17 @@ export const CBS_ROUTES = Object.freeze({
     transactionEnquiry: '/standard/v1/payments/'
 });
 
-export class CBSClient implements ICbsClient{
-    cbsConfig: TCBSConfig;
+export class NBMClient implements INBMClient {
+    cbsConfig: TNBMConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
 
-    constructor(cbsConfig: TCBSConfig, httpClient: IHTTPClient, logger: ILogger) {
+    constructor(cbsConfig: TNBMConfig, httpClient: IHTTPClient, logger: ILogger) {
         this.cbsConfig = cbsConfig;
         this.httpClient = httpClient;
         this.logger = logger;
     }
-    
+
     async getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse> {
         this.logger.info("Getting KYC Information");
         const res = await this.httpClient.get<TCbsKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.msisdn}`, {
@@ -134,8 +135,8 @@ export class CBSClient implements ICbsClient{
                 throw CBSError.collectMoneyError();
             }
             return res.data;
-            
-        }catch(error){
+
+        } catch (error) {
             this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
             throw error;
         }
@@ -145,8 +146,8 @@ export class CBSClient implements ICbsClient{
         this.logger.info("Refunding Money to Customer in Airtel");
         const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
 
-        try{
-            const res = await this.httpClient.post<TCbsRefundMoneyRequest,TCbsRefundMoneyResponse>(url, deps,{
+        try {
+            const res = await this.httpClient.post<TCbsRefundMoneyRequest, TCbsRefundMoneyResponse>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
@@ -156,7 +157,7 @@ export class CBSClient implements ICbsClient{
                 throw CBSError.refundMoneyError();
             }
             return res.data;
-        }catch(error){
+        } catch (error) {
             this.logger.error(`Error Refunding Money: ${error}`, { url, data: deps });
             throw error;
         }
@@ -178,5 +179,24 @@ export class CBSClient implements ICbsClient{
             grant_type: this.cbsConfig.GRANT_TYPE
         });
         return res.access_token;
+    }
+
+    //Mock Function for NBM to simulate debiting the customer
+    async mockSendMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const response: TNBMTransactionResponse = {
+                    success: true,
+                    message: `Account ${debitAccountId} debited and account ${creditAccountId} credited successfully.`,
+                    transactionId: `txn_${Math.floor(Math.random() * 100000)}`,
+                    debitAccountId,
+                    creditAccountId,
+                    amount,
+                    status: "credited",
+                    timestamp: new Date().toISOString(),
+                };
+                resolve(response);
+            }, 1000);
+        });
     }
 }

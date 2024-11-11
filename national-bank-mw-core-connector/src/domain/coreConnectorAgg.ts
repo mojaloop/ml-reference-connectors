@@ -29,16 +29,17 @@
 
 import { randomUUID } from 'crypto';
 import {
-    ICbsClient,
+    INBMClient,
     TCallbackRequest,
     TCbsCollectMoneyRequest,
     TCbsCollectMoneyResponse,
-    TCBSConfig,
+    TNBMConfig,
     TCbsDisbursementRequestBody,
     TCbsKycResponse,
     TCbsSendMoneyRequest,
     TCbsSendMoneyResponse,
     TCBSUpdateSendMoneyRequest,
+    PartyType
 } from './CBSClient';
 import {
     ILogger,
@@ -68,8 +69,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     constructor(
         readonly sdkClient: ISDKClient,
-        readonly cbsClient: ICbsClient,
-        readonly cbsConfig: TCBSConfig,
+        readonly cbsClient: INBMClient,
+        readonly cbsConfig: TNBMConfig,
         logger: ILogger,
     ) {
         this.IdType = this.cbsConfig.SUPPORTED_ID_TYPE;
@@ -82,7 +83,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!(IdType === this.cbsConfig.SUPPORTED_ID_TYPE)) {
             throw ValidationError.unsupportedIdTypeError();
         }
+        
         const res = await this.cbsClient.getKyc({ msisdn: id });
+        const party = {
+            data: {
+               firstName: res.data.first_name,
+               lastName: res.data.last_name,
+               idType: this.cbsClient.cbsConfig.SUPPORTED_ID_TYPE,
+               idValue: id,
+               type: PartyType.CONSUMER
+            }
+        }
         return this.getPartiesResponse(res);
     }
 

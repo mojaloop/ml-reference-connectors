@@ -1,6 +1,6 @@
 import "dotenv/config";
 import Convict from 'convict';
-import { TCBSConfig } from "./domain/CBSClient";
+import { TNBMConfig } from "./domain/CBSClient";
 
 interface IConfigSchema {
     server: {
@@ -14,7 +14,7 @@ interface IConfigSchema {
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
     }
-    cbs:TCBSConfig;
+    cbs:TNBMConfig;
 }
 
 const config = Convict<IConfigSchema>({

@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ICbsClient, TCbsCollectMoneyResponse, TCBSConfig, TCbsKycResponse, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { INBMClient, TCbsCollectMoneyResponse, TNBMConfig, TCbsKycResponse, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -156,8 +156,8 @@ export type TGetQuotesDeps = {
 
 export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
-    cbsClient: ICbsClient;
-    cbsConfig: TCBSConfig;
+    cbsClient: INBMClient;
+    cbsConfig: TNBMConfig;
     IdType: string;
     logger: ILogger;
     getParties(id: string, IdType: string): Promise<Party>;

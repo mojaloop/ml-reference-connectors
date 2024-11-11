@@ -13,13 +13,20 @@ export enum IdType {
     ALIAS = 'ALIAS',
 }
 
+export enum PartyType {
+    CONSUMER = 'CONSUMER',
+    AGENT = 'AGENT',
+    BUSINESS = 'BUSINESS',
+    DEVICE = 'DEVICE',
+}
+
 export type TCBSClientFactoryDeps = {
-    cbsConfig: TCBSConfig;
+    cbsConfig: TNBMConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
 }
 
-export type TCBSConfig = {
+export type TNBMConfig = {
     CBS_NAME: string;
     DFSP_BASE_URL: string;
     CLIENT_ID: string;
@@ -207,8 +214,19 @@ export type TCbsRefundMoneyResponse = {
     }
 }
 
-export interface ICbsClient {
-    cbsConfig: TCBSConfig;
+export type TNBMTransactionResponse = {
+    success: boolean;
+    message: string;
+    transactionId: string;
+    debitAccountId: string;
+    creditAccountId: string;
+    amount: number;
+    status: "debited" | "credited";
+    timestamp: string;
+  };
+
+export interface INBMClient {
+    cbsConfig: TNBMConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
     getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse>;

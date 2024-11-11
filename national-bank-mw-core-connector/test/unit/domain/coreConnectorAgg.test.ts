@@ -34,7 +34,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from '../../../src/domain/CBSClient';
+import { NBMClientFactory, INBMClient } from '../../../src/domain/CBSClient';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
@@ -43,14 +43,14 @@ const SDK_URL = 'http://localhost:4040';
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: ICbsClient;
+    let cbsClient: INBMClient;
     let sdkClient: ISDKClient;
 
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = CBSClientFactory.createClient({cbsConfig,httpClient,logger});
+        cbsClient = NBMClientFactory.createClient({cbsConfig,httpClient,logger});
         ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
     });
 

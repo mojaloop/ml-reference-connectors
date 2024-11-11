@@ -35,7 +35,7 @@ import config from '../config';
 import { CoreConnectorRoutes } from './sdkCoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { CBSClientFactory } from '../domain/CBSClient';
+import { NBMClientFactory } from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
 
@@ -50,7 +50,7 @@ export class Service {
     static async start(httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance()) {
         this.httpClient = httpClient;
         const cbsConfig = config.get("cbs");
-        const cbsClient = CBSClientFactory.createClient({
+        const cbsClient = NBMClientFactory.createClient({
             cbsConfig,
             httpClient,
             logger
