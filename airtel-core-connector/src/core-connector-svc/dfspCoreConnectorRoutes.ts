@@ -101,7 +101,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             if(error instanceof Error){
-                this.logger.error(error)
+                this.logger.error(error,error)
             }
             return this.handleError(error, h);
         }
@@ -116,7 +116,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
             if(error instanceof Error){
-                this.logger.error(error)
+                this.logger.error(error,error)
             }
             return this.handleError(error, h);
         }
@@ -130,7 +130,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(callbackHandledRes,h);
         }catch (error: unknown){
             if(error instanceof Error){
-                this.logger.error(error)
+                this.logger.error(error,error)
             }
             return this.handleError(error, h);
         }
