@@ -413,8 +413,7 @@ export type TAirtelSendMoneyResponse = {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "firstName": string;
-        "lastName": string;
+        "displayName": string;
         "dateOfBirth": string;
       };
     "receiveAmount": string;

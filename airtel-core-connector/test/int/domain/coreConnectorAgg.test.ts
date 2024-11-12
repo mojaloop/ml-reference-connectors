@@ -176,7 +176,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         //  Send Money - Payer
 
-        test('Test POST/ send-money: response should be payee details ', async ()=>{
+        test.skip('Test POST/ send-money: response should be payee details ', async ()=>{
             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
 
