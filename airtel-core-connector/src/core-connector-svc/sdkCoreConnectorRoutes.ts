@@ -102,6 +102,9 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.getParties(id, idType);
             return this.handleResponse(result.data, h);
         } catch (error) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
@@ -112,6 +115,9 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const quote = await this.aggregate.quoteRequest(quoteRequest);
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
@@ -122,6 +128,9 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.receiveTransfer(transfer);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
@@ -135,6 +144,9 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.updateTransfer(transfer, transferId);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
+            if(error instanceof Error){
+                this.logger.error(error)
+            }
             return this.handleError(error, h);
         }
     }
