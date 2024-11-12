@@ -9,6 +9,7 @@ interface IConfigSchema {
         SDK_SERVER_PORT: number;
         DFSP_SERVER_HOST: string;
         DFSP_SERVER_PORT: number;
+        HTTP_TIMEOUT: number;
     };
     airtel: TAirtelConfig;
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
@@ -16,6 +17,12 @@ interface IConfigSchema {
 
 const config = Convict<IConfigSchema>({
     server: {
+        HTTP_TIMEOUT: {
+            doc: 'HTTP Timeout seconds',
+            format: Number,
+            default: null, // required
+            env: 'HTTP_TIMEOUT',
+        },
         SDK_SERVER_HOST: {
             doc: 'SDK Server host',
             format: String,
@@ -103,7 +110,7 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null, // required
             env: 'EXPIRATION_DURATION',
-        }, 
+        },
 
         AIRTEL_PIN: {
             doc: 'Airtel Pin for Disbursements',
@@ -118,7 +125,7 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
-        
+
         FSP_ID: {
             doc: 'Mojaloop FSP Is',
             format: String,
