@@ -314,7 +314,7 @@ export class CoreConnectorAggregate {
     }
 
     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount${transferResponse.amount}`);
+        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferResponse.amount}`);
         let result = true;
         if (
             !(this.airtelConfig.X_CURRENCY === transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
@@ -360,7 +360,7 @@ export class CoreConnectorAggregate {
             result = false;
         }
         const quoteResponseBody = transferResponse.quoteResponse?.body;
-        const fxQuoteResponseBody = transferResponse.fxQuotesResponse?.body
+        const fxQuoteResponseBody = transferResponse.fxQuotesResponse?.body;
         if (!quoteResponseBody) {
             throw SDKClientError.noQuoteReturnedError();
         }

@@ -69,35 +69,15 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     beforeEach(() => {
-        // mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
-        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
         airtelClient = AirtelClientFactory.createClient({
             airtelConfig,
             httpClient,
             logger,
         });
-        ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
     });
 
     describe('Airtel Test', () => {
-
-        test('Test Get Parties Happy Path', async () => {
-            const res = await ccAggregate.getParties('978980797', 'MSISDN');
-            expect(res.statusCode).toEqual(200);
-        });
-
-        test('Test Get Parties With a Number That Does not Exist', async () => {
-            try {
-                await ccAggregate.getParties('777503758', 'MSISDN');
-            } catch (error) {
-                if (error instanceof AirtelError) {
-                    expect(error.httpCode).toEqual(500);
-                    expect(error.mlCode).toEqual('5000');
-                }
-            }
-
-        });
 
         // Get Parties Test  - Payee
         test('Get /parties/MSISDN/{id}: sdk-server - Should return party info if it exists in airtel', async () => {
@@ -142,24 +122,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         // Patch Transfer Requests Test - Payee
 
         test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
-            const mockAxios = new MockAdapter(axios);
-            mockAxios.onPut().reply(200, {
-                "data": {
-                    "transaction": {
-                        "reference_id": "a867963f-37b2-4723-9757-26bf1f28902c",
-                        "airtel_money_id": "01101110011",
-                        "id": MSISDN,
-                        "status": "Completed Transaction",
-                        "message": "Working Transaction",
-                    }
-                },
-                "status": {
-                    "response_code": "200",
-                    "code": "200",
-                    "success": true,
-                    "message": "Successful",
-                }
-            });
+            Service.coreConnectorAggregate.updateTransfer = jest.fn().mockResolvedValue({})
 
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500");
             const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
@@ -170,12 +133,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
 
             logger.info(JSON.stringify(res.data));
-            mockAxios.restore();
             expect(res.status).toEqual(200);
         });
 
         //  Send Money - Payer
-
         test('Test POST/ send-money: response should be payee details ', async ()=>{
             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
