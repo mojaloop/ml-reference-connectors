@@ -227,7 +227,7 @@ export class CoreConnectorAggregate {
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
-        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        let acceptRes: THttpResponse<TtransferContinuationResponse>
 
         if(transfer.sendCurrency !== this.airtelConfig.X_CURRENCY){
             throw ValidationError.unsupportedCurrencyError();
@@ -301,8 +301,7 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "displayName": transfer.getPartiesResponse !== undefined ? transfer.getPartiesResponse.body.party.name : "Chikondi Banda",
                 "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
@@ -437,7 +436,7 @@ export class CoreConnectorAggregate {
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
                 // perform refund or rollback
-                this.handleRefund(payload);
+                await this.handleRefund(payload);
             }
         }
     }

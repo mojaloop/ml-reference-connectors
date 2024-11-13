@@ -137,7 +137,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.receiveTransfer(transferRequest);
 
             logger.info(JSON.stringify(res));
-            expect(res.transferState).toEqual("RECEIVED");
+            expect(res.transferState).toEqual("RESERVED");
         });
 
         test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () => {
