@@ -156,7 +156,7 @@ export type TGetQuotesDeps = {
 
 export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
-    cbsClient: INBMClient;
+    nbmClient: INBMClient;
     cbsConfig: TNBMConfig;
     IdType: string;
     logger: ILogger;

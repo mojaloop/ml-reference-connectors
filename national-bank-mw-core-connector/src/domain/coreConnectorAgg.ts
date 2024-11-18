@@ -69,7 +69,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     constructor(
         readonly sdkClient: ISDKClient,
-        readonly cbsClient: INBMClient,
+        readonly nbmClient: INBMClient,
         readonly cbsConfig: TNBMConfig,
         logger: ILogger,
     ) {
@@ -84,12 +84,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedIdTypeError();
         }
         
-        const res = await this.cbsClient.getKyc({ msisdn: id });
+        const res = await this.nbmClient.getKyc({ msisdn: id });
         const party = {
             data: {
                firstName: res.data.first_name,
                lastName: res.data.last_name,
-               idType: this.cbsClient.cbsConfig.SUPPORTED_ID_TYPE,
+               idType: this.nbmClient.cbsConfig.SUPPORTED_ID_TYPE,
                idValue: id,
                type: PartyType.CONSUMER
             }
@@ -118,7 +118,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
-        const res = await this.cbsClient.getKyc({ msisdn: quoteRequest.to.idValue });
+        const res = await this.nbmClient.getKyc({ msisdn: quoteRequest.to.idValue });
         const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount)
         // check if account is blocked if possible
         const quoteExpiration = this.cbsConfig.EXPIRATION_DURATION;
@@ -229,7 +229,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private async checkAccountBarred(msisdn: string): Promise<void> {
-        const res = await this.cbsClient.getKyc({ msisdn: msisdn });
+        const res = await this.nbmClient.getKyc({ msisdn: msisdn });
         if (res.data.is_barred) {
             throw ValidationError.accountBarredError();
         }
@@ -242,7 +242,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferNotCompletedError();
         }
         const makePaymentRequest: TCbsDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.cbsClient.sendMoney(makePaymentRequest);
+        await this.nbmClient.sendMoney(makePaymentRequest);
     }
 
     private async initiateCompensationAction() {
@@ -276,6 +276,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     // Payer
     async sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
+        console.log(`Received send money request for payer with ID ${transfer.payerAccount}`);
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
             return await this.checkAndRespondToConversionTerms(res);
@@ -417,9 +418,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
-        const res = await this.cbsClient.getKyc({
+        const res = await this.nbmClient.getKyc({
             msisdn: transfer.payerAccount
         });
+        
         return {
             'homeTransactionId': randomUUID(),
             'from': {
@@ -448,7 +450,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        return await this.cbsClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
+        return await this.nbmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
     }
 
     private getTCbsCollectMoneyRequest(collection: TCBSUpdateSendMoneyRequest, transferId: string): TCbsCollectMoneyRequest {

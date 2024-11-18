@@ -35,34 +35,71 @@ import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { NBMClientFactory, INBMClient } from '../../../src/domain/CBSClient';
+import { sdkInitiateTransferResponseDto, sdkUpdateTransferResponseDto, sendMoneyDTO, updateSendMoneyDTO } from '../../fixtures';
+
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
 const cbsConfig = config.get("cbs");
 const SDK_URL = 'http://localhost:4040';
 
+const idType = "ACCOUNT_ID";
+const ACCOUNT_ID = "1003486415";
+
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: INBMClient;
+    let nbmClient: INBMClient;
     let sdkClient: ISDKClient;
 
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = NBMClientFactory.createClient({cbsConfig,httpClient,logger});
-        ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
+        nbmClient = NBMClientFactory.createClient({ cbsConfig, httpClient, logger });
+        ccAggregate = new CoreConnectorAggregate(sdkClient, nbmClient, cbsConfig, logger);
     });
 
-    describe("Payee Tests", ()=>{
-        test("test", async ()=>{
+    describe("Payee Tests", () => {
+        test("test", async () => {
             logger.info("Write payee tests");
         });
     });
 
-    describe("Payer Tests", ()=>{
-        test("test", async ()=>{
-            logger.info("Write payer tests")
+    describe("Payer Tests", () => {
+        test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+
+            //TODO: Implement NBM Mock function before send money and update send money. First we call KYC
+
+            nbmClient.getKyc = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "John Doe"
+                }
+
+            });
+
+            const sendMoneyResponse = nbmClient.mockSendMoney(ACCOUNT_ID, ACCOUNT_ID, 100000)
+            logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
+
+
+            // sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+            //     ...sdkInitiateTransferResponseDto(ACCOUNT_ID, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            // });
+
+            // sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+            //     ...sdkUpdateTransferResponseDto(ACCOUNT_ID, "1000")
+            // });
+            // jest.spyOn(sdkClient, "updateTransfer");
+            logger.info("Update Send Money tests request");
+            const updateMoneyRequestBody = updateSendMoneyDTO((await sendMoneyResponse).amount, true, ACCOUNT_ID);
+            logger.info(`Update Send Money request body ${updateMoneyRequestBody}`)
+            const res = await ccAggregate.updateSendMoney(updateMoneyRequestBody, ACCOUNT_ID);
+           
+            // logger.info("Response fromm send money", res);
+            // expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
         });
     });
 });

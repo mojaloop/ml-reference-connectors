@@ -121,7 +121,7 @@ export class NBMClient implements INBMClient {
         }
     }
     async collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse> {
-        this.logger.info("Collecting Money from Airtel");
+        this.logger.info("Collecting Money from National Bank");
         const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {

@@ -225,6 +225,11 @@ export type TNBMTransactionResponse = {
     timestamp: string;
   };
 
+//Mock Send Money Type
+export type TNBMMockSendMoneyRequest ={
+    
+}
+
 export interface INBMClient {
     cbsConfig: TNBMConfig;
     httpClient: IHTTPClient;
@@ -234,4 +239,5 @@ export interface INBMClient {
     sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse>;
     collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse>;
     refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse>;
+    mockSendMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse>
 }
