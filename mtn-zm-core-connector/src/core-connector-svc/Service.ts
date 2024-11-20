@@ -38,7 +38,7 @@ import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
-import { MTNClientFactory } from 'src/domain/CBSClient/MTNClientFactory';
+import { MTNClientFactory } from '../../src/domain/CBSClient/MTNClientFactory';
 
 export const logger = loggerFactory({ context: 'MTN CC' });
 

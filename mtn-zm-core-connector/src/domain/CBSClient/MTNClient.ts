@@ -27,7 +27,7 @@
 
 'use strict';
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger} from '../interfaces';
 import { MTNError } from './errors';
 import {
     IMTNClient,
@@ -39,9 +39,6 @@ import {
     TMTNTransactionEnquiryResponse,
     TMTNTransactionEnquiryRequest,
     TMTNCollectMoneyRequest,
-    TMTNCollectMoneyResponse,
-    TGetTokenRequest,
-
 } from './types';
 
 
@@ -107,7 +104,7 @@ async getToken(): Promise<TGetTokenResponse> {
     this.logger.info(`Request URL: ${url}`);
     try {
         // Send the POST request with an empty body (since no request payload is required)
-        const res = await this.httpClient.post<TGetTokenResponse, any>(url, undefined, {
+        const res = await this.httpClient.post<unknown, TGetTokenResponse>(url, undefined, {
             headers: this.getDefaultHeader()
         });
 
@@ -123,7 +120,6 @@ async getToken(): Promise<TGetTokenResponse> {
         throw error;
     }
 }
-
 
 
     
@@ -160,7 +156,7 @@ async getToken(): Promise<TGetTokenResponse> {
         const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.sendMoney}`;
         
         try {
-            const res = await this.httpClient.post<TMTNDisbursementRequestBody, any>(url, deps, {
+            const res = await this.httpClient.post<TMTNDisbursementRequestBody, unknown>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
@@ -206,11 +202,11 @@ async getToken(): Promise<TGetTokenResponse> {
 
     // Request To Pay
 
-    async collectMoney(deps: TMTNCollectMoneyRequest): Promise<TMTNCollectMoneyResponse> {
+    async collectMoney(deps: TMTNCollectMoneyRequest): Promise<void> {
         this.logger.info("Collecting Money from MTN");
         const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.collectMoney}`;
         try {
-            const res = await this.httpClient.post<TMTNCollectMoneyRequest, any>(url, deps, {
+            const res = await this.httpClient.post<TMTNCollectMoneyRequest, unknown>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
@@ -221,7 +217,6 @@ async getToken(): Promise<TGetTokenResponse> {
                 throw MTNError.collectMoneyError();
             }
             this.logger.info("Money collection request accepted.");
-            return res.data;
         } catch (error) {
             this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
             throw error;

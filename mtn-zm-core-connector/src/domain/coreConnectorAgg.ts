@@ -318,29 +318,6 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(res.data);
     }
 
-    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
-        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
-
-        if (!(transferAccept.acceptQuote)) {
-            throw ValidationError.quoteNotAcceptedError();
-        }
-        const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, randomUUID())); // todo fix this back to have the transferId
-      
-        // Transaction id from response 
-        const transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
-            transactionId: mtnRes.financialTransactionId
-        });
-
-
-        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
-            transactionEnquiry,
-            transferId,
-            mtnRes,
-            transferAccept
-        });
-
-        return sdkRes.data;
-    }
 
 
     private async checkTransactionAndRespondToMojaloop(deps:TtransactionEnquiryDeps): Promise<THttpResponse<TtransferContinuationResponse>>{
@@ -388,7 +365,7 @@ export class CoreConnectorAggregate {
         throw new Error('Method not implemented.');
     }
 
-    private getTMTNCollectMoneyRequest(collection: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
+    private getTMTNCollectMoneyRequest(collection: TMTNUpdateSendMoneyRequest): TMTNCollectMoneyRequest {
         return {
             "amount": collection.amount,
             "currency": this.mtnConfig.X_CURRENCY,
@@ -401,6 +378,31 @@ export class CoreConnectorAggregate {
             "payeeNote": "Payee Note"
         };
     }
+
+    // async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
+    //     this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
+
+    //     if (!(transferAccept.acceptQuote)) {
+    //         throw ValidationError.quoteNotAcceptedError();
+    //     }
+    //     const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept)); // todo fix this back to have the transferId
+      
+    //     // Transaction id from response 
+    //     const transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
+    //         transactionId: mtnRes.financialTransactionId
+    //     });
+
+
+    //     const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
+    //         transactionEnquiry,
+    //         transferId,
+    //         mtnRes,
+    //         transferAccept
+    //     });
+
+    //     return sdkRes.data;
+    // }
+    
 }
 
 

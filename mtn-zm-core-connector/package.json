@@ -73,7 +73,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.10", 
+    "@hapi/hapi": "^21.3.10",
     "@mojaloop/central-services-logger": "^11.3.1",
     "axios": "^1.6.8",
     "convict": "^6.2.4",

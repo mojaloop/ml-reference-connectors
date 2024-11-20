@@ -1,5 +1,4 @@
-import { Config } from 'convict';
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger} from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 export enum IdType {
@@ -27,14 +26,9 @@ export type TCBSClientFactoryDeps = {
     logger: ILogger;
 }
 
-export type TGetCustomerInfoDeps = {
+export type TGetCustomerInfoDeps = unknown;
 
-}
-
-export type TGetCustomerResponse = {
-
-
-}
+export type TGetCustomerResponse = unknown;
 
 export interface ICbsClient {
     cbsConfig: TCBSConfig;
@@ -90,9 +84,7 @@ export type TGetTokenResponse = {
 }
 
 
-export type TGetTokenRequest = {
-
-}
+export type TGetTokenRequest = unknown
 
 export type TGetKycArgs = {
  "msisdn" : string;
@@ -222,7 +214,7 @@ export interface IMTNClient{
     logger: ILogger;
     getToken(): Promise<TGetTokenResponse>;
     getKyc(deps: TGetKycArgs): Promise<TMTNKycResponse>;
-    collectMoney(deps: TMTNCollectMoneyRequest): Promise<TMTNCollectMoneyResponse>;
+    collectMoney(deps: TMTNCollectMoneyRequest): Promise<void>;
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
     getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
     getDisbursementTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
