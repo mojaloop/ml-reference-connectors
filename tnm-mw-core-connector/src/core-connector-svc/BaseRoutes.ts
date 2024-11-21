@@ -68,7 +68,7 @@ export class BaseRoutes {
             if (error.response) {
                 // The request was made and the server responded with a status code
                 // that falls out of the range of 2xx
-                logger.error(error.response.data);
+                logger.error(`${JSON.stringify(error.response.data)}`);
                 logger.error(`${error.response.status}`);
                 logger.error(`${error.response.headers}`);
               } else if (error.request) {
@@ -80,7 +80,7 @@ export class BaseRoutes {
                 // Something happened in setting up the request that triggered an Error
                 logger.error('Error', error.message);
               }
-              logger.error(`${error.config}`);
+              logger.error(`${JSON.stringify(error.config)}`);
         }
         return h.response({ status, message, details }).code(httpCode);
     }
