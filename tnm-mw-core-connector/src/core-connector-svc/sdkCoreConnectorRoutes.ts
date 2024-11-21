@@ -33,6 +33,7 @@ import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 import config from '../config';
+import { AxiosError } from 'axios';
 
 const API_SPEC_FILE = config.get("server.SDK_API_SPEC_FILE");
 
@@ -106,6 +107,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const Id = params['idValue'] as string;
             const IdType = params['idType'] as string;
             const result = await this.aggregate.getParties(Id,IdType);
+            this.logger.info(`Get party for ${IdType} ${Id}`);
             return this.handleResponse(result.data, h);
         } catch (error) {
             return this.handleError(error, h);
@@ -116,6 +118,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         try {
             const quoteRequest = request.payload as TQuoteRequest;
             const quote = await this.aggregate.quoteRequest(quoteRequest);
+            this.logger.info(`Quote request ${quoteRequest}`);
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -126,6 +129,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TtransferRequest;
         try {
             const result = await this.aggregate.receiveTransfer(transfer);
+            this.logger.info(`Transfers ${transfer}`);
             return this.handleResponse(result, h, 201);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -138,6 +142,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const { params } = context.request;
             const transferId = params['transferId'] as string;
             const result = await this.aggregate.updateTransfer(transfer, transferId);
+            this.logger.info(`Transfers ${transfer}`);
+            this.logger.info(`Transfer Id ${transferId}`);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             return this.handleError(error, h);
