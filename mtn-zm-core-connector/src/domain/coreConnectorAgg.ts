@@ -379,29 +379,29 @@ export class CoreConnectorAggregate {
         };
     }
 
-    // async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
-    //     this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
+    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
+        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
-    //     if (!(transferAccept.acceptQuote)) {
-    //         throw ValidationError.quoteNotAcceptedError();
-    //     }
-    //     const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept)); // todo fix this back to have the transferId
+        if (!(transferAccept.acceptQuote)) {
+            throw ValidationError.quoteNotAcceptedError();
+        }
+        const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept)); // todo fix this back to have the transferId
       
-    //     // Transaction id from response 
-    //     const transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
-    //         transactionId: mtnRes.financialTransactionId
-    //     });
+        // Transaction id from response 
+        const transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
+            transactionId: mtnRes.financialTransactionId
+        });
 
 
-    //     const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
-    //         transactionEnquiry,
-    //         transferId,
-    //         mtnRes,
-    //         transferAccept
-    //     });
+        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
+            transactionEnquiry,
+            transferId,
+            mtnRes,
+            transferAccept
+        });
 
-    //     return sdkRes.data;
-    // }
+        return sdkRes.data;
+    }
     
 }
 
