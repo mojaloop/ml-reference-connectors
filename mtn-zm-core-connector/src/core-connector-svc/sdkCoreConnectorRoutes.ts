@@ -97,8 +97,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
-            const Id = params['ID'] as string;
-            const IdType = params['IdType'] as string;
+            const Id = params['idValue'] as string;
+            const IdType = params['idType'] as string;
             const result = await this.aggregate.getParties(Id,IdType);
             return this.handleResponse(result.data, h);
         } catch (error) {
@@ -132,7 +132,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const { params } = context.request;
             const transferId = params['transferId'] as string;
             const result = await this.aggregate.updateTransfer(transfer, transferId);
-            this.logger.info(`Transfers ${transfer}`);
+            this.logger.info(`Transfers ${JSON.stringify(transfer)}`);
             this.logger.info(`Transfer Id ${transferId}`);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
