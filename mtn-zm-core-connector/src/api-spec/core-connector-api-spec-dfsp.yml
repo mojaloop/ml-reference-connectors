@@ -42,6 +42,7 @@ paths:
             is running.
   /send-money:
     post:
+      operationId: SendMoney
       summary: Send Money endpoint 
       description: >- 
         The Endpoint used by the DFSP Operations application to initiate send money 
@@ -76,6 +77,7 @@ paths:
   /send-money/{id}:
     put:
       summary: Confirm send money
+      operationId: UpdateSendMoney
       parameters:
         - name: id
           in: path
@@ -157,7 +159,22 @@ paths:
           description: Send money confirmed successfully
         '400':
           description: Bad request
-
+  /callback:
+    post:
+      summary: Callback for transfer status notification
+      operationId: Callback
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallbackRequest'
+      tags: 
+        - Callback 
+      responses:
+        '200': 
+          description: Callback received successfully
+        
 
 components:
   schemas:
@@ -196,7 +213,6 @@ components:
           example: "9876543210"
         dateOfBirth:
           type: string
-          format: date
           example: "1985-04-12"
         geoLocationData:
           description: >-
@@ -249,7 +265,6 @@ components:
           example: "1.10"
         expiryDateTime:
           type: string
-          format: date-time
           example: "2024-08-01T12:00:00Z"
     sendMoneyResponse:
       type: object
@@ -274,7 +289,6 @@ components:
           example: "1.10"
         expiryDateTime:
           type: string
-          format: date-time
           example: "2024-08-01T12:00:00Z"
     sendMoneyRequest:
       type: object
@@ -311,7 +325,6 @@ components:
           example: "9876543210"
         dateOfBirth:
           type: string
-          format: date
           example: "1985-04-12"
         geoLocationData:
           description: >-
@@ -345,3 +358,43 @@ components:
       properties:
         acceptQuote:
           type: boolean
+    CallbackRequest:
+      type: object
+      properties:
+        financialTransactionId:
+          type: string
+          description: Unique identifier for the financial transaction.
+        externalId:
+          type: string
+          description: External reference identifier.
+        amount:
+          type: string
+          description: Amount of the transaction.
+        currency:
+          type: string
+          description: Currency code for the transaction (e.g., USD, EUR).
+        payee:
+          type: object
+          properties:
+            partyIdType:
+              type: string
+              description: Type of party identifier (e.g., MSISDN, email).
+            partyId:
+              type: string
+              description: Identifier of the payee party.
+          required:
+            - partyIdType
+            - partyId
+        payeeNote:
+          type: string
+          description: Additional note for the payee.
+        status:
+          type: string
+          description: Current status of the transaction.
+      required:
+        - financialTransactionId
+        - externalId
+        - amount
+        - currency
+        - payee
+        - status

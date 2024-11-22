@@ -2219,6 +2219,7 @@ components:
     transferStatus:
       type: string
       enum:
+        - WAITING_FOR_CONVERSION_ACCEPTANCE
         - ERROR_OCCURRED
         - WAITING_FOR_PARTY_ACCEPTANCE
         - WAITING_FOR_QUOTE_ACCEPTANCE
