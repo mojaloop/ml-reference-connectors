@@ -139,7 +139,7 @@ export class CoreConnectorAggregate {
         }
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
-        this.checkAccountBarred(quoteRequest.to.idValue);
+        await this.checkAccountBarred(quoteRequest.to.idValue);
         const quoteExpiration = config.get("mtn.EXPIRATION_DURATION");
         const expiration = new Date();
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
@@ -203,10 +203,13 @@ export class CoreConnectorAggregate {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
         }
+        if(!requestBody.transferId){
+            throw ValidationError.transferIdNotDefinedError("TransferId Not Defined",'5000', 500);
+        }
         return {
-           "amount": String(requestBody.quoteRequest.body.amount),
+           "amount": requestBody.quoteRequest.body.amount.amount,
            "currency": this.mtnConfig.X_CURRENCY,
-           "externalId" : requestBody.quoteRequest.body.transactionId,
+           "externalId" : requestBody.transferId,
            "payee": {
            "partyIdType": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdType,
             "partyId": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier
@@ -315,17 +318,17 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(res.data);
     }
 
-    private getTMTNCollectMoneyRequest(collection: TMTNUpdateSendMoneyRequest): TMTNCollectMoneyRequest {
+    private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
         return {
-            "amount": collection.amount,
+            "amount": deps.amount,
             "currency": this.mtnConfig.X_CURRENCY,
-            "externalId": randomUUID(),
+            "externalId": transferId,
             "payer" :{
-                "partyId": collection.msisdn,
-                "partyIdType": "MSISDN",
+                "partyId": deps.msisdn,
+                "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
             },
-            "payerMessage": "Payer Message",
-            "payeeNote": "Payee Note"
+            "payerMessage": deps.payerMessage,
+            "payeeNote": deps.payeeNote
         };
     }
 
@@ -335,7 +338,7 @@ export class CoreConnectorAggregate {
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept));
+        await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
     }
 
     async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
