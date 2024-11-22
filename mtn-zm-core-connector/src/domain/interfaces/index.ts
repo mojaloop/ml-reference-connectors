@@ -20,8 +20,8 @@
  optionally within square brackets <email>.
 
 
- - Okello Ivan Elijah <elijahokello90@gmail.com>
-
+ * Niza Tembo <mcwayzj@gmail.com>
+ * Elijah Okello <elijahokello90@gmail.com>
  --------------
  ******/
 

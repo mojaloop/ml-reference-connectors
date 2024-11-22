@@ -26,7 +26,7 @@
 
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { MTNError, IMTNClient, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload } from '../../../src/domain/CBSClient';
+import { IMTNClient, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload } from '../../../src/domain/CBSClient';
 import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
 import {
     ISDKClient,
