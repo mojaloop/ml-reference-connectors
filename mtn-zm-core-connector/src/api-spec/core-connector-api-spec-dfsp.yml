@@ -74,12 +74,12 @@ paths:
         '504':
           description: >-
             Response for a timed out transfer 
-  /send-money/{id}:
+  /send-money/{transferId}:
     put:
       summary: Confirm send money
       operationId: UpdateSendMoney
       parameters:
-        - name: id
+        - name: transferId
           in: path
           required: true
           description: The ID of the transaction
@@ -358,6 +358,14 @@ components:
       properties:
         acceptQuote:
           type: boolean
+        msisdn:
+          type: string
+        amount: 
+          type: string 
+        payerMessage:
+          type: string
+        payeeNote: 
+          type: string 
     CallbackRequest:
       type: object
       properties:
