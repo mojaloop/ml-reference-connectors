@@ -30,10 +30,11 @@ optionally within square brackets <email>.
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
-import { ILogger, TQuoteRequest, TtransferRequest } from '../domain';
+import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
+import config from '../config';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec.-sdk.yml';
+const API_SPEC_FILE = config.get('server.SDK_API_SPEC_FILE');
 
 export class CoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;
@@ -51,9 +52,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
             handlers: {
-                getParties: this.getParties.bind(this),
-                quoteRequests: this.quoteRequests.bind(this),
-                transfers: this.transfers.bind(this),
+                BackendPartiesGetByTypeAndID: this.getParties.bind(this),
+                BackendQuoteRequest: this.quoteRequests.bind(this),
+                BackendTransfersPost: this.transfers.bind(this),
+                BackendTransfersPut: this.updateTransfers.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
@@ -119,6 +121,20 @@ export class CoreConnectorRoutes extends BaseRoutes {
         try {
             const result = await this.aggregate.receiveTransfer(transfer);
             return this.handleResponse(result, h, 201);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async updateTransfers(context: Context, request: Request, h: ResponseToolkit) {
+        const transfer = request.payload as TtransferPatchNotificationRequest;
+        try {
+            const { params } = context.request;
+            const transferId = params['transferId'] as string;
+            const result = await this.aggregate.updateTransfer(transfer, transferId);
+            this.logger.info(`Transfers ${transfer}`);
+            this.logger.info(`Transfer Id ${transferId}`);
+            return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             return this.handleError(error, h);
         }

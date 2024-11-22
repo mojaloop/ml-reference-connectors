@@ -178,8 +178,20 @@ export type TMTNSendMoneyRequest = {
     "dateOfBirth": string;
 }
 
+export type TMTNCallbackPayload = {
+    financialTransactionId: string;
+    externalId: string;
+    amount: string;
+    currency: string;
+    payee:{
+        partyIdType: string;
+        partyId: string;
+    },
+    payeeNote: string;
+    status: string;
+}
 
-export type TMTNSendMoneyResponse ={
+export type TMTNSendMoneyResponse = {
     "payeeDetails": {
         "idType": string;
         "idValue": string;

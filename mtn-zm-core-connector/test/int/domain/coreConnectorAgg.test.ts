@@ -83,23 +83,6 @@
  
      describe('MTN Test', () => {
  
-         test('Test Get Parties Happy Path', async () => {
-             const res = await ccAggregate.getParties('56733123450', 'MSISDN');
-             expect(res.statusCode).toEqual(200);
-         });
- 
-         test('Test Get Parties With a Number That Does not Exist', async () => {
-             try {
-                 await ccAggregate.getParties('987503758', 'MSISDN');
-             } catch (error) {
-                 if (error instanceof MTNError) {
-                     expect(error.httpCode).toEqual(500);
-                     expect(error.mlCode).toEqual('5000');
-                 }
-             }
- 
-         });
- 
          // Get Parties Test  - Payee
          test('Get /parties/MSISDN/{id}: sdk-server - Should return party info if it exists in MTN', async () => {
              const url = `${ML_URL}/parties/MSISDN/${MSISDN}`;

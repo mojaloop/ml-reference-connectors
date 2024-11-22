@@ -42,6 +42,8 @@ import {
     TMTNSendMoneyResponse,
     TMTNCollectMoneyRequest,
     TMTNUpdateSendMoneyRequest,
+    TMTNKycResponse,
+    TMTNCallbackPayload,
 } from './CBSClient';
 import {
     ILogger,
@@ -98,7 +100,6 @@ export class CoreConnectorAggregate {
         return true;
     }
 
-
     //Payee
     async getParties(id: string, idType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Get Parties for ${id}`);
@@ -107,21 +108,25 @@ export class CoreConnectorAggregate {
         }
 
         const lookupRes = await this.mtnClient.getKyc({ msisdn: id });
-        const party = {
-            data: {
-                displayName: `${lookupRes.given_name} ${lookupRes.family_name}`,
-                firstName: lookupRes.given_name,
-                idType: config.get("mtn.SUPPORTED_ID_TYPE"),
-                idValue: id,
-                lastName: lookupRes.family_name,
-                middleName: " ",
-                type: PartyType.CONSUMER,
-                kycInformation: `${JSON.stringify(lookupRes)}`,
-            },
-            statusCode: Number(lookupRes.status),
-        };
+        const party = this.getPartyResponse(lookupRes,id);
         this.logger.info(`Party found`, { party });
         return party;
+    }
+
+    private getPartyResponse(mtnKycResponse: TMTNKycResponse, idValue: string):TLookupPartyInfoResponse{
+        return {
+            data: {
+                displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
+                firstName: mtnKycResponse.given_name,
+                idType: config.get("mtn.SUPPORTED_ID_TYPE"),
+                idValue: idValue,
+                lastName: mtnKycResponse.family_name,
+                middleName: " ",
+                type: PartyType.CONSUMER,
+                kycInformation: `${JSON.stringify(mtnKycResponse)}`,
+            },
+            statusCode: Number(mtnKycResponse.status),
+        }
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -129,42 +134,34 @@ export class CoreConnectorAggregate {
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-
         if (quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
-
-        const res = await this.mtnClient.getKyc({
-            msisdn: quoteRequest.to.idValue,
-
-        });
-
-        if (res.status == "NOT FOUND") {
-            throw MTNError.payeeBlockedError("Account is barred ", 500, "5400");
-        }
-
-        const serviceCharge = config.get("mtn.SERVICE_CHARGE");
-
+        const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
+        const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
         this.checkAccountBarred(quoteRequest.to.idValue);
-
         const quoteExpiration = config.get("mtn.EXPIRATION_DURATION");
         const expiration = new Date();
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
         const expirationJSON = expiration.toJSON();
+        return this.getQuoteResponse(quoteRequest, fees.toString() ,expirationJSON);
+    }
 
+
+    private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse{
         return {
-            expiration: expirationJSON,
+            expiration: expiration,
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
-            payeeFspFeeAmount: serviceCharge,
+            payeeFspFeeAmount: fees ,
             payeeFspFeeAmountCurrency: quoteRequest.currency,
             payeeReceiveAmount: quoteRequest.amount,
             payeeReceiveAmountCurrency: quoteRequest.currency,
             quoteId: quoteRequest.quoteId,
             transactionId: quoteRequest.transactionId,
-            transferAmount: quoteRequest.amount,
+            transferAmount: (Number(quoteRequest.amount) + Number(fees).toString()),
             transferAmountCurrency: quoteRequest.currency,
-        };
+        }
     }
 
 
@@ -258,7 +255,7 @@ export class CoreConnectorAggregate {
             msisdn: transfer.payerAccount
         });
         return {
-            'homeTransactionId': randomUUID(),
+            'homeTransactionId': transfer.homeTransactionId,
             'from': {
                 'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
                 'idValue': transfer.payerAccount,
@@ -318,53 +315,6 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(res.data);
     }
 
-
-
-    private async checkTransactionAndRespondToMojaloop(deps:TtransactionEnquiryDeps): Promise<THttpResponse<TtransferContinuationResponse>>{
-        this.logger.info("Checking transaction and responding mojaloop");
-        let sdkRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
-        let counter = 0;
-        while (deps.transactionEnquiry.status === ETransactionStatus.PENDING) {
-            this.logger.info(`Waiting for transaction status`);
-            if(counter>1){
-                this.logger.info(`Checking timed out. Transaction is unsuccessful,Responding with false`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: true, //todo: fix back after demo
-                }, deps.transferId);
-                break;
-            }
-            // todo: make the number of seconds configurable
-            await new Promise(r => setTimeout(r, this.mtnConfig.TRANSACTION_ENQUIRY_WAIT_TIME));
-            deps.transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
-                transactionId: deps.transferId
-            });
-
-            if (deps.transactionEnquiry.status === ETransactionStatus.SUCCESSFUL) {
-                this.logger.info(`Transaction is successful, Responding with true`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: deps.transferAccept.acceptQuote
-                },deps.transferId);
-                break;
-            } else if (deps.transactionEnquiry.status === ETransactionStatus.FAILED) {
-                this.logger.info(`Transaction is unsuccessful,Responding with false`);
-                sdkRes = await this.sdkClient.updateTransfer({
-                    acceptQuote: true, //todo: fix back after demo
-                }, deps.transferId);
-                break;
-            }
-            counter+=1;
-        }
-        if (!sdkRes) {
-            throw SDKClientError.updateTransferRequestNotDefinedError();
-        }
-        return sdkRes;
-    }
-
-    updatesendMoney(updateSendMoneyDeps: TupdateSendMoneyDeps): Promise<TtransferContinuationResponse> {
-        this.logger.info(`${updateSendMoneyDeps.transferId}`);
-        throw new Error('Method not implemented.');
-    }
-
     private getTMTNCollectMoneyRequest(collection: TMTNUpdateSendMoneyRequest): TMTNCollectMoneyRequest {
         return {
             "amount": collection.amount,
@@ -379,28 +329,22 @@ export class CoreConnectorAggregate {
         };
     }
 
-    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse> {
+    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
         if (!(transferAccept.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept)); // todo fix this back to have the transferId
-      
-        // Transaction id from response 
-        const transactionEnquiry = await this.mtnClient.getCollectionTransactionEnquiry({
-            transactionId: mtnRes.financialTransactionId
-        });
+        const mtnRes = await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept));
+    }
 
-
-        const sdkRes: THttpResponse<TtransferContinuationResponse> = await this.checkTransactionAndRespondToMojaloop({
-            transactionEnquiry,
-            transferId,
-            mtnRes,
-            transferAccept
-        });
-
-        return sdkRes.data;
+    async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
+        this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
+        if(payload.status === "SUCCESSFUL"){
+            await this.sdkClient.updateTransfer({acceptQuote: true},payload.externalId);
+        }else{
+            await this.sdkClient.updateTransfer({acceptQuote: false},payload.externalId);
+        }
     }
     
 }

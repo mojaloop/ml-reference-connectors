@@ -3,16 +3,15 @@ import Convict from 'convict';
 import { TMTNConfig } from './domain/CBSClient';
 import { TSDKSchemeAdapterConfig } from './domain/SDKClient';
 
-
-
 interface IConfigSchema {
     server: {
         SDK_SERVER_HOST: string;
         SDK_SERVER_PORT: number;
         DFSP_SERVER_HOST: string;
         DFSP_SERVER_PORT: number;
+        SDK_API_SPEC_FILE: string;
     };
-    mtn:TMTNConfig;
+    mtn: TMTNConfig;
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
 }
 
@@ -42,6 +41,18 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'DFSP_SERVER_PORT',
         },
+        SDK_API_SPEC_FILE: {
+            doc: 'Path to SDK Backend API Spec',
+            format: String,
+            default: null, // required
+            env: 'SDK_API_SPEC_FILE',
+        },
+        DFSP_API_SPEC_FILE: {
+            doc: 'Path to Send Money API Spec',
+            format: String,
+            default: null, // required
+            env: 'DFSP_API_SPEC_FILE',
+        },
     },
     sdkSchemeAdapter: {
         SDK_BASE_URL: {
@@ -65,7 +76,7 @@ const config = Convict<IConfigSchema>({
             env: 'MTN_API_KEY',
         },
         MTN_CLIENT_ID: {
-            doc: 'MTN CLIENT ID', 
+            doc: 'MTN CLIENT ID',
             format: String,
             default: null, // required
             env: 'MTN_CLIENT_ID',
@@ -129,9 +140,8 @@ const config = Convict<IConfigSchema>({
             format: Number,
             default: 30, // default wait time
             env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
-        }
-    }
-    
+        },
+    },
 });
 
 config.validate({ allowed: 'strict' });
