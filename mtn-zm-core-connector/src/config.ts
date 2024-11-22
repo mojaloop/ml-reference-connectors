@@ -10,6 +10,7 @@ interface IConfigSchema {
         DFSP_SERVER_HOST: string;
         DFSP_SERVER_PORT: number;
         SDK_API_SPEC_FILE: string;
+        DFSP_API_SPEC_FILE: string;
     };
     mtn: TMTNConfig;
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
@@ -69,23 +70,41 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'MTN_BASE_URL',
         },
-        MTN_API_KEY: {
-            doc: 'MTN API KEY',
+        MTN_COLLECTION_API_KEY: {
+            doc: 'MTN COLLECTION API KEY',
             format: String,
             default: null, // required
-            env: 'MTN_API_KEY',
+            env: 'MTN_COLLECTION_API_KEY',
         },
-        MTN_CLIENT_ID: {
-            doc: 'MTN CLIENT ID',
+        MTN_COLLECTION_CLIENT_ID: {
+            doc: 'MTN COLLECTION CLIENT ID',
             format: String,
             default: null, // required
-            env: 'MTN_CLIENT_ID',
+            env: 'MTN_COLLECTION_CLIENT_ID',
         },
-        MTN_SUBSCRIPTION_KEY: {
-            doc: 'MTN SUBSCRIPTION KEY',
+        MTN_COLLECTION_SUBSCRIPTION_KEY: {
+            doc: 'MTN COLLECTION_SUBSCRIPTION KEY',
             format: String,
             default: null, // required
-            env: 'MTN_SUBSCRIPTION_KEY',
+            env: 'MTN_COLLECTION_SUBSCRIPTION_KEY',
+        },
+        MTN_DISBURSEMENT_API_KEY: {
+            doc: 'MTN DISBURSEMENT API KEY',
+            format: String,
+            default: null, // required
+            env: 'MTN_DISBURSEMENT_API_KEY',
+        },
+        MTN_DISBURSEMENT_CLIENT_ID: {
+            doc: 'MTN DISBURSEMENT CLIENT ID',
+            format: String,
+            default: null, // required
+            env: 'MTN_DISBURSEMENT_CLIENT_ID',
+        },
+        MTN_DISBURSEMENT_SUBSCRIPTION_KEY: {
+            doc: 'MTN DISBURSEMENT_SUBSCRIPTION KEY',
+            format: String,
+            default: null, // required
+            env: 'MTN_DISBURSEMENT_SUBSCRIPTION_KEY',
         },
         X_COUNTRY: {
             doc: 'Country Name',
@@ -128,12 +147,6 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null, // required
             env: 'MTN_TARGET_ENVIRONMENT',
-        },
-        MTN_ENCODED_CREDENTIALS: {
-            doc: 'MTN Encoded Credentials',
-            format: String,
-            default: null, // required
-            env: 'MTN_ENCODED_CREDENTIALS',
         },
         TRANSACTION_ENQUIRY_WAIT_TIME: {
             doc: 'Transaction Enquiry Wait Time (in seconds)',
