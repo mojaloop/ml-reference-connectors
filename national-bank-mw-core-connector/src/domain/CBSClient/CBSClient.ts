@@ -182,7 +182,7 @@ export class NBMClient implements INBMClient {
     }
 
     //Mock Function for NBM to simulate debiting the customer
-    async mockSendMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse> {
+    async mockCollectMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse> {
         return new Promise((resolve) => {
             setTimeout(() => {
                 const response: TNBMTransactionResponse = {

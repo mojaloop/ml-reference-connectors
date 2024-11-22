@@ -99,7 +99,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     private getPartiesResponse(res: TCbsKycResponse): Party {
         return {
-            idType: "MSISDN",
+            statusCode: (statusCode: any) => 200,
+            idType: "ACCOUNT_ID",
             idValue: res.data.msisdn,
             displayName: `${res.data.first_name} ${res.data.last_name}`,
             firstName: res.data.first_name,

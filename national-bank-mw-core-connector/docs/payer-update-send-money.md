@@ -15,7 +15,7 @@ sequenceDiagram
   autoNumber
   Customer ->> DFSP Customer App: Click Continue
   DFSP Customer App->> DFSP Customer App: Debit Customer Account.
-  DFSP Customer App->>CC: PUT /send-money/{id}/acceptQuote=true | false]
+  DFSP Customer App->>CC: PUT /send-money/{id}/acceptQuote=true | false
   CC->>CC: Check acceptQuote
   Alt If Quote not Accepted
   CC-->>DFSP Customer App: Response 500 OK

@@ -234,7 +234,6 @@ export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString(),
-
 });
 
 
@@ -278,7 +277,7 @@ export const sdkUpdateTransferResponseDto = (idValue: string, amount: string): T
   }
 });
 
-export const tnmUpdateSendMoneyRequestDto = (idValue: string, amount: string): TCBSUpdateSendMoneyRequest => ({
+export const nbmUpdateSendMoneyRequestDto = (idValue: string, amount: string): TCBSUpdateSendMoneyRequest => ({
   "acceptQuote": true,
   "msisdn": idValue,
   "amount": amount,

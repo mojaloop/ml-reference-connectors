@@ -227,7 +227,7 @@ export type TNBMTransactionResponse = {
 
 //Mock Send Money Type
 export type TNBMMockSendMoneyRequest ={
-    
+
 }
 
 export interface INBMClient {
@@ -239,5 +239,5 @@ export interface INBMClient {
     sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse>;
     collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse>;
     refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse>;
-    mockSendMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse>
+    mockCollectMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse>
 }

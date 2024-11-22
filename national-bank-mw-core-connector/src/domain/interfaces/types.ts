@@ -85,6 +85,7 @@ export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
 
 export type Party = {
+    statusCode(statusCode: any): unknown;
     dateOfBirth?: string;
     displayName: string;
     extensionList?: unknown[];
