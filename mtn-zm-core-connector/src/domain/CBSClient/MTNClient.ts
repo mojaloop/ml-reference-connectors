@@ -27,7 +27,8 @@
 
 'use strict';
 
-import { IHTTPClient, ILogger} from '../interfaces';
+import config from '../../config';
+import { IHTTPClient, ILogger } from '../interfaces';
 import { MTNError } from './errors';
 import {
     IMTNClient,
@@ -39,19 +40,21 @@ import {
     TMTNTransactionEnquiryResponse,
     TMTNTransactionEnquiryRequest,
     TMTNCollectMoneyRequest,
+    TAuthParameters,
 } from './types';
 
 
 export const MTN_ROUTES = Object.freeze({
     getToken: '/collection/token/',
+    getDisbursementToken: '/disbursement/token/',
     sendMoney: '/disbursement/v1_0/transfer',
     collectMoney: '/collection/v1_0/requesttopay',
-    getKyc: '/collection/v1_0/accountholder/msisdn/',
+    getKyc: `/collection/v1_0/accountholder/${config.get("mtn.SUPPORTED_ID_TYPE")}/`,
     transactionCollectionEnquiry: '/collection/v2_0/payment/',
     transactionDisbursementEnquiry: '/disbursement/v1_0/transfer/'
 });
 
-export class MTNClient implements IMTNClient{
+export class MTNClient implements IMTNClient {
     mtnConfig: TMTNConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
@@ -65,29 +68,21 @@ export class MTNClient implements IMTNClient{
 
     // Get Default Header
 
-
-    private getDefaultHeader() {
+    private getDefaultHeader(subscriptionKey: string, apiClient: string, apiKey: string) {
         return {
             'Content-Type': 'application/json',
             'Accept': '*/*',
-            'Ocp-Apim-Subscription-Key': this.mtnConfig.MTN_SUBSCRIPTION_KEY,
-            'Authorization': `Basic ${this.mtnConfig.MTN_ENCODED_CREDENTIALS}`
-        };
-    }
-    private getDefaultHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Accept': '*/*',
-            'Ocp-Apim-Subscription-Key': this.mtnConfig.MTN_SUBSCRIPTION_KEY
+            'Ocp-Apim-Subscription-Key': subscriptionKey,
+            'X-Target-Environment': this.mtnConfig.MTN_TARGET_ENVIRONMENT,
         };
     }
 
     // Authentication Header
-    
-    async getAuthHeader(): Promise<string> {
+
+    async getAuthHeader(deps: TAuthParameters): Promise<string> {
         this.logger.info("Getting Authorization Header");
         try {
-            const tokenResponse = await this.getToken();
+            const tokenResponse = await this.getToken(deps);
             return `Bearer ${tokenResponse.access_token}`;
         } catch (error) {
             this.logger.error(`Error Retrieving Auth Header: ${error}`);
@@ -96,47 +91,57 @@ export class MTNClient implements IMTNClient{
     }
 
 
-// Getting Access Token
+    // Getting Access Token
 
-async getToken(): Promise<TGetTokenResponse> {
-    this.logger.info("Getting Access Token from MTN");
-    const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`;
-    this.logger.info(`Request URL: ${url}`);
-    try {
-        // Send the POST request with an empty body (since no request payload is required)
-        const res = await this.httpClient.post<unknown, TGetTokenResponse>(url, undefined, {
-            headers: this.getDefaultHeader()
-        });
+    async getToken(deps: TAuthParameters): Promise<TGetTokenResponse> {
+        this.logger.info("Getting Access Token from MTN");
+        // const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`;
+        this.logger.info(`Request URL: ${deps.tokenUrl}`);
+        try {
+            // Send the POST request with an empty body (since no request payload is required)
+            const res = await this.httpClient.post<unknown, TGetTokenResponse>(deps.tokenUrl, undefined, {
+                headers: {
+                    ...this.getDefaultHeader(deps.subscriptionKey, deps.apiClient, deps.apiKey),
+                    'Authorization': `Basic ${Buffer.from(`${deps.apiClient}:${deps.apiKey}`).toString("base64")}`
+                } 
+            });
 
-        // Check if the status code is not 200 (OK)
-        if (res.statusCode !== 200) {
-            this.logger.error(`Failed To Get Token: ${res.statusCode} - ${res.data}`);
-            throw MTNError.getTokenFailedError();
+            // Check if the status code is not 200 (OK)
+            if (res.statusCode !== 200) {
+                this.logger.error(`Failed To Get Token: ${res.statusCode} - ${res.data}`);
+                throw MTNError.getTokenFailedError();
+            }
+            this.logger.info('Token Retrieved Successfully');
+            return res.data;  // Return the token response
+        } catch (error) {
+            this.logger.error(`Error Getting Token: ${error}`, deps.tokenUrl);
+            throw error;
         }
-        this.logger.info('Token Retrieved Successfully');
-        return res.data;  // Return the token response
-    } catch (error) {
-        this.logger.error(`Error Getting Token: ${error}`, { url });
-        throw error;
     }
-}
 
-
-    
     // Get KYC Information
 
 
     async getKyc(deps: TGetKycArgs): Promise<TMTNKycResponse> {
         this.logger.info("Getting KYC Information");
         try {
-            const authHeader = await this.getAuthHeader();
+            const authHeader = await this.getAuthHeader({
+                subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
+                apiClient: this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                apiKey: this.mtnConfig.MTN_COLLECTION_API_KEY
+            });
             const res = await this.httpClient.get<TMTNKycResponse>(`https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getKyc}${deps.msisdn}/basicuserinfo`, {
                 headers: {
-                    ...this.getDefaultHeaders(),
-                    'Authorization': authHeader
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                        this.mtnConfig.MTN_COLLECTION_API_KEY
+                    ),
+                    'Authorization': `${authHeader}`
                 }
             });
-            if (res.data.status !== '200') {
+            if (res.statusCode !== 200) {
                 this.logger.error(`Failed to get KYC Information: ${res.data}`);
                 throw MTNError.getKycError();
             }
@@ -154,12 +159,22 @@ async getToken(): Promise<TGetTokenResponse> {
     async sendMoney(deps: TMTNDisbursementRequestBody): Promise<void> {
         this.logger.info("Sending Disbursement Body To MTN");
         const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.sendMoney}`;
-        
+
         try {
             const res = await this.httpClient.post<TMTNDisbursementRequestBody, unknown>(url, deps, {
                 headers: {
-                    ...this.getDefaultHeader(),
-                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                        this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
+                        this.mtnConfig.MTN_DISBURSEMENT_API_KEY
+                    ),
+                    'Authorization': `${await this.getAuthHeader({
+                        subscriptionKey: this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getDisbursementToken}`,
+                        apiClient: this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
+                        apiKey: this.mtnConfig.MTN_DISBURSEMENT_API_KEY
+                    })}`,
+                    'X-Reference-Id': deps.externalId
                 }
             });
             if (res.statusCode !== 202) {
@@ -172,11 +187,11 @@ async getToken(): Promise<TGetTokenResponse> {
             throw error;
         }
     }
-    
+
 
     //  Transaction Enquiry (Disbursement) 
 
-    
+
     async getDisbursementTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse> {
         this.logger.info("Getting Transaction Status Enquiry from MTN");
         const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.transactionDisbursementEnquiry}${deps.transactionId}`;
@@ -184,8 +199,17 @@ async getToken(): Promise<TGetTokenResponse> {
         try {
             const res = await this.httpClient.get<TMTNTransactionEnquiryResponse>(url, {
                 headers: {
-                    ...this.getDefaultHeader(),
-                    'Authorization': `Bearer ${await this.getAuthHeader()}`
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                        this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
+                        this.mtnConfig.MTN_DISBURSEMENT_API_KEY
+                    ),
+                    'Authorization': `${await this.getAuthHeader({
+                        subscriptionKey: this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
+                        apiClient: this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
+                        apiKey: this.mtnConfig.MTN_DISBURSEMENT_API_KEY
+                    })}`
                 }
             });
             if (res.data.status !== 'SUCCESSFUL' && res.data.status !== 'PENDING') {
@@ -198,7 +222,7 @@ async getToken(): Promise<TGetTokenResponse> {
             throw error;
         }
     }
-    
+
 
     // Request To Pay
 
@@ -208,8 +232,18 @@ async getToken(): Promise<TGetTokenResponse> {
         try {
             const res = await this.httpClient.post<TMTNCollectMoneyRequest, unknown>(url, deps, {
                 headers: {
-                    ...this.getDefaultHeader(),
-                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                        this.mtnConfig.MTN_COLLECTION_API_KEY
+                    ),
+                    'Authorization': `${await this.getAuthHeader({
+                        subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
+                        apiClient: this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                        apiKey: this.mtnConfig.MTN_COLLECTION_API_KEY
+                    })}`,
+                    'X-Reference-Id': deps.externalId
                 }
             });
             if (res.statusCode !== 202) {
@@ -223,7 +257,7 @@ async getToken(): Promise<TGetTokenResponse> {
         }
     }
 
-    
+
     //  Transaction Enquiry (Collection) 
 
 
@@ -234,8 +268,17 @@ async getToken(): Promise<TGetTokenResponse> {
         try {
             const res = await this.httpClient.get<TMTNTransactionEnquiryResponse>(url, {
                 headers: {
-                    ...this.getDefaultHeader(),
-                    'Authorization': `Bearer ${await this.getAuthHeader()}`
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                        this.mtnConfig.MTN_COLLECTION_API_KEY
+                    ),
+                    'Authorization': `${await this.getAuthHeader({
+                        subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
+                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
+                        apiClient: this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
+                        apiKey: this.mtnConfig.MTN_COLLECTION_API_KEY
+                    })}`
                 }
             });
             if (res.data.status !== 'SUCCESSFUL' && res.data.status !== 'PENDING') {
@@ -248,6 +291,6 @@ async getToken(): Promise<TGetTokenResponse> {
             throw error;
         }
     }
-    
-    
+
+
 }

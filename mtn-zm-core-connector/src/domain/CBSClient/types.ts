@@ -63,14 +63,16 @@ export type TMTNConfig = {
     FSP_ID: string;
     X_COUNTRY: string;
     X_CURRENCY: string;
-    MTN_API_KEY: string;
+    MTN_COLLECTION_API_KEY: string;
+    MTN_COLLECTION_CLIENT_ID: string;
+    MTN_COLLECTION_SUBSCRIPTION_KEY: string;
+    MTN_DISBURSEMENT_API_KEY: string;
+    MTN_DISBURSEMENT_CLIENT_ID: string;
+    MTN_DISBURSEMENT_SUBSCRIPTION_KEY: string;
     MTN_BASE_URL: string;
-    MTN_CLIENT_ID: string;
     SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string;
-    MTN_SUBSCRIPTION_KEY: string;
     MTN_TARGET_ENVIRONMENT: string;
-    MTN_ENCODED_CREDENTIALS: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
 }
@@ -161,6 +163,8 @@ export type TMTNUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
     "amount": string;
+    "payerMessage": string;
+    "payeeNote": string;
 }
 
 
@@ -212,19 +216,25 @@ export type TMTNCollectMoneyRequest = {
     "currency": string;
     "externalId": string;
     "payer": {
-        "partyIdType": "MSISDN",
+        "partyIdType": string,
         "partyId": string;
     },
     "payerMessage": string;
     "payeeNote": string;
 }
 
+export type TAuthParameters = {
+    subscriptionKey: string;
+    apiKey: string;
+    apiClient: string;
+    tokenUrl: string;
+}
 
 export interface IMTNClient{
     mtnConfig: TMTNConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
-    getToken(): Promise<TGetTokenResponse>;
+    getToken(deps: TAuthParameters): Promise<TGetTokenResponse>;
     getKyc(deps: TGetKycArgs): Promise<TMTNKycResponse>;
     collectMoney(deps: TMTNCollectMoneyRequest): Promise<void>;
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
