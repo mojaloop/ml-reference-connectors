@@ -27,19 +27,30 @@
 
 'use strict';
 
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+import { IHTTPClient, ILogger } from '../interfaces';
+import { CBSError } from './errors';
 import {
     ICbsClient,
+    TCbsCollectMoneyRequest,
+    TCbsCollectMoneyResponse,
     TCBSConfig,
-    TGetCustomerInfoDeps,
-    TGetCustomerResponse,
+    TCbsDisbursementRequestBody,
+    TCbsDisbursementResponse,
+    TCbsKycResponse,
+    TCbsRefundMoneyRequest,
+    TCbsRefundMoneyResponse,
+    TGetKycArgs,
+    TGetTokenArgs,
+    TGetTokenResponse,
 } from './types';
 
 export const CBS_ROUTES = Object.freeze({
-    search: 'search',
-    savingsAccount: 'savingsaccounts',
-    clients: 'clients',
-    charges: 'charges',
+    getToken: '/auth/oauth2/token',
+    getKyc: '/standard/v1/users/',
+    sendMoney: '/standard/v3/disbursements',
+    collectMoney: '/merchant/v2/payments/',
+    refundMoney: '/standard/v2/payments/refund',
+    transactionEnquiry: '/standard/v1/payments/'
 });
 
 export class CBSClient implements ICbsClient{
@@ -52,13 +63,120 @@ export class CBSClient implements ICbsClient{
         this.httpClient = httpClient;
         this.logger = logger;
     }
-    async getCustomer(deps: TGetCustomerInfoDeps): Promise<THttpResponse<TGetCustomerResponse>> {
-        this.logger.info(`Getting customer information ${deps}`);
-        return {
-            data:{
+    
+    async getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse> {
+        this.logger.info("Getting KYC Information");
+        const res = await this.httpClient.get<TCbsKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.msisdn}`, {
+            headers: {
+                ...this.getDefaultHeader(),
+                'Authorization': `Bearer ${await this.getAuthHeader()}`
+            }
+        });
+        if (res.data.status.code !== '200') {
+            throw CBSError.getKycError();
+        }
+        return res.data;
+    }
 
-            },
-            statusCode: 200
+    async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
+        this.logger.info("Getting Access Token from Airtel");
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getToken}`;
+        this.logger.info(url);
+        try {
+            const res = await this.httpClient.post<TGetTokenArgs, TGetTokenResponse>(url, deps, {
+                headers: this.getDefaultHeader()
+            });
+            if (res.statusCode !== 200) {
+                this.logger.error(`Failed to get token: ${res.statusCode} - ${res.data}`);
+                throw CBSError.getTokenFailedError();
+            }
+            return res.data;
+        } catch (error) {
+            this.logger.error(`Error getting token: ${error}`, { url, data: deps });
+            throw error;
+        }
+    }
+
+    async sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse> {
+        this.logger.info("Sending Disbursement Body To Airtel");
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.sendMoney}`;
+        try {
+            const res = await this.httpClient.post<TCbsDisbursementRequestBody, TCbsDisbursementResponse>(url, deps,
+                {
+                    headers: {
+                        ...this.getDefaultHeader(),
+                        'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                    }
+                }
+            );
+
+            if (res.data.status.code !== '200') {
+                throw CBSError.disbursmentError();
+            }
+            return res.data;
+        } catch (error) {
+            this.logger.error(`Error Sending Money: ${error}`, { url, data: deps });
+            throw error;
+        }
+    }
+    async collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse> {
+        this.logger.info("Collecting Money from Airtel");
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
+
+        try {
+            const res = await this.httpClient.post<TCbsCollectMoneyRequest, TCbsCollectMoneyResponse>(url, deps, {
+                headers: {
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                }
+            });
+            if (res.data.status.code !== '200') {
+                throw CBSError.collectMoneyError();
+            }
+            return res.data;
+            
+        }catch(error){
+            this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
+            throw error;
+        }
+    }
+
+    async refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse> {
+        this.logger.info("Refunding Money to Customer in Airtel");
+        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
+
+        try{
+            const res = await this.httpClient.post<TCbsRefundMoneyRequest,TCbsRefundMoneyResponse>(url, deps,{
+                headers: {
+                    ...this.getDefaultHeader(),
+                    'Authorization': `Bearer ${await this.getAuthHeader()}`,
+                }
+            });
+            if (res.data.status.code !== '200') {
+                throw CBSError.refundMoneyError();
+            }
+            return res.data;
+        }catch(error){
+            this.logger.error(`Error Refunding Money: ${error}`, { url, data: deps });
+            throw error;
+        }
+    }
+
+    private getDefaultHeader() {
+        return {
+            'Content-Type': 'application/json',
+            'X-Country': this.cbsConfig.X_COUNTRY,
+            'X-Currency': this.cbsConfig.X_CURRENCY,
         };
+    }
+
+
+    private async getAuthHeader(): Promise<string> {
+        const res = await this.getToken({
+            client_secret: this.cbsConfig.CLIENT_SECRET,
+            client_id: this.cbsConfig.CLIENT_ID,
+            grant_type: this.cbsConfig.GRANT_TYPE
+        });
+        return res.access_token;
     }
 }

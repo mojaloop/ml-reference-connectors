@@ -1,0 +1,16 @@
+networks:
+  mojaloop-net:
+    name: mojaloop-net
+
+
+services:
+  core-connector:
+    image: mojaloop/core-connector:latest
+    build:
+      context: .
+    networks:
+      - mojaloop-net
+    env_file: .env
+    ports:
+      - "3003:3003"
+      - "3004:3004"

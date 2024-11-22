@@ -5,8 +5,8 @@ networks:
 
 
 services:
-  mifos-core-connector:
-    image: mojaloop/mifos-core-connector:latest
+  core-connector-template:
+    image: mojaloop/core-connector-template:latest
     build:
       context: .
     networks:

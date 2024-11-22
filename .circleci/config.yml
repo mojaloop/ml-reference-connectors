@@ -95,8 +95,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci 
                 cd -
@@ -121,14 +121,14 @@ jobs:
                 cd "$dir_no_slash" 
                 echo "Building Docker image: local"
                 docker build -t $DOCKER_ORG/$dir_no_slash:local .
-                docker save -o /tmp/docker-image-local.tar $DOCKER_ORG/$dir_no_slash:local
+                docker save -o /tmp/$dir_no_slash.tar $DOCKER_ORG/$dir_no_slash:local
                 cd -
               fi
             done
       - persist_to_workspace:
           root: /tmp
           paths:
-            - ./docker-image-local.tar
+            - ./*.tar
 
   test-unit:
     executor: default-docker
@@ -142,14 +142,15 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run test:unit
                 cd -
               fi
             done
+
       - restore_cache:
           key: dependency-cache-{{ .Environment.CIRCLE_SHA1 }}
 
@@ -161,7 +162,10 @@ jobs:
           at: /tmp
       - run:
           name: Load the pre-built docker local image from workspace
-          command: docker load -i /tmp/docker-image-local.tar
+          command: |
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run: 
           name: Execute Functional Tests
           command: |
@@ -194,8 +198,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run dep:check
@@ -241,8 +245,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 npm run lint
@@ -264,8 +268,8 @@ jobs:
           command: |
             source $(pwd)/.circleci/pipeline.sh
             for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
+              if [ "${dir%-core-connector/}" != "$dir" ]; then
+                cd $dir
                 defaults_configure_nvm
                 npm ci
                 cd -
@@ -279,14 +283,8 @@ jobs:
       - run: 
           name: Generate changelog and bump package version
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                npm run release -- --no-verify
-                cd -
-              fi
-            done
+            git tag -d $(git tag)
+            npm run release -- --no-verify
       - run:
           name: Push the release
           command: git push --follow-tags origin ${CIRCLE_BRANCH}
@@ -307,29 +305,16 @@ jobs:
           command: |
             git fetch origin
             git checkout origin/${CIRCLE_BRANCH}
-      - run: 
-          name: Format the changelog into the github release body and get release tag
+      - run:
+          <<: *defaults_export_version_from_package
+      - run:
+          name: Check the release changes
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                defaults_export_version_from_package
-                echo "Changes are: ${RELEASE_CHANGES}"
-                cd -
-              fi
-            done
-      - run: 
+            echo "Changes are: ${RELEASE_CHANGES}"
+      - run:
           name: Create Release
           command: |
-            source $(pwd)/.circleci/pipeline.sh
-            for dir in */; do
-              if [[ $dir == *-core-connector/ ]]; then
-                cd $dir 
-                gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
-                cd -
-              fi
-            done
+            gh release create "v${RELEASE_TAG}" --title "v${RELEASE_TAG} Release" --draft=false --notes "${RELEASE_CHANGES}" ./CHANGELOG.md
 
   publish:
     executor: default-machine
@@ -340,7 +325,9 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: | 
-            docker load -i /tmp/docker-image-local.tar
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -377,7 +364,9 @@ jobs:
       - run:
           name: Load the pre-built docker image from workspace
           command: | 
-            docker load -i /tmp/docker-image-local.tar
+            for file in /tmp/*.tar; do
+              docker load -i "$file"
+            done
       - run:
           name: Login to Docker Hub
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -449,17 +438,17 @@ workflows:
                 - /feature*/
                 - /bugfix*/
 
-      - test-func:
-          context: org-global
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+      # - test-func:
+      #     context: org-global
+      #     requires:
+      #       - setup
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore:
+      #           - /feature*/
+      #           - /bugfix*/
 
       - test-unit:
           context: org-global
@@ -492,7 +481,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
           filters:
             branches:
               only:
@@ -513,7 +502,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
             - build-local
           filters:
             tags:
@@ -527,7 +516,7 @@ workflows:
             - pr-tools/pr-title-check
             - test-dependencies
             - test-lint
-#           - test-func
+            - test-unit
             - build-local
           filters:
             tags:

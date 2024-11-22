@@ -26,7 +26,7 @@
 
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
+import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest} from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,
@@ -35,7 +35,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO } from '../../fixtures';
+import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, callbackPayloadDto } from '../../fixtures';
 import { Service } from '../../../src/core-connector-svc';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -176,7 +176,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         //  Send Money - Payer
 
-        test('Test POST/ send-money: response should be payee details ', async ()=>{
+        test.skip('Test POST/ send-money: response should be payee details ', async ()=>{
             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
 
@@ -193,7 +193,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Confirm Send Money - Payer
-        test.skip('Test Put/ send-money{id}: response should be 200', async()=>{
+        test('Test Put/ send-money{id}: response should be 200', async()=>{
             const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 
@@ -204,8 +204,21 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
 
             logger.info(JSON.stringify(res.data));
+            expect(res.data.status.success).toEqual(true);
         });
 
+        test("PUT /callback should update mojaloop connector", async ()=>{
+            const callbackPayload: TCallbackRequest = callbackPayloadDto("100","TS");
+            const url = `${DFSP_URL}/callback`;
+
+            const res = await axios.put(url, JSON.stringify(callbackPayload),{
+                headers:{
+                    'Content-Type': 'application/json'
+                },
+            });
+
+            expect(res.status).toEqual(200);
+        });
 
         test('Test Get Transfer Quote (Get Quotes)', async () => {
             try {

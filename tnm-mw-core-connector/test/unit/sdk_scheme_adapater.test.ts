@@ -122,7 +122,7 @@ describe('SDK Scheme Adapter Unit Tests', () => {
 
         //act
         mockAxios.onAny().reply(200, {});
-        const res = await sdkClient.updateTransfer(continueTransfer, 1);
+        const res = await sdkClient.updateTransfer(continueTransfer, "1");
 
         // assert
         expect(res.statusCode).toEqual(200);

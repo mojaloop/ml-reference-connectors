@@ -1,11 +1,13 @@
 {
   "name": "ml-reference-connectors",
-  "version": "1.0.0",
+  "version": "1.11.0",
   "description": "Collection of reference mojaloop connectors",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'ci(release): {{currentTag}} [skip ci]'",
+    "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'ci(snapshot): {{currentTag}}'"
   },
   "repository": {
     "type": "git",

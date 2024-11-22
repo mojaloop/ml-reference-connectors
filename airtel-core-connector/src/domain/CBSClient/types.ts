@@ -407,13 +407,13 @@ export type TAirtelDisbursementResponse = {
     }
 }
 
+
 export type TAirtelSendMoneyResponse = {
     "payeeDetails": {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "firstName": string;
-        "lastName": string;
+        "displayName": string;
         "dateOfBirth": string;
       };
     "receiveAmount": string;
@@ -421,9 +421,7 @@ export type TAirtelSendMoneyResponse = {
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
-
 }
-
 
 
 export type TAirtelSendMoneyRequest = {
@@ -534,6 +532,16 @@ export enum ETransactionStatus {
 }
 
 
+// Callback Type
+export type TCallbackRequest = {
+    "transaction": {
+        "id": string;
+        "message": string;
+        "status_code": string;
+        "airtel_money_id": string;
+    }
+}
+
 // Interface for IAirtelClient with methods to be implemented in IAirtel
 export interface IAirtelClient {
     airtelConfig: TAirtelConfig;
@@ -546,4 +554,5 @@ export interface IAirtelClient {
     refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>;
     getTransactionEnquiry(deps:TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse>;
 }
+
 
