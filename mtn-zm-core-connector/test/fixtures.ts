@@ -315,17 +315,17 @@ export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue
   "payeeNote": "School Fees"
 });
 
-export const TMTNCallbackPayloadDto = () => (
+export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (
   {
-    "financialTransactionId": "string",
-    "externalId": "string",
-    "amount": "string",
-    "currency": "string",
+    "financialTransactionId": crypto.randomUUID(),
+    "externalId": "fb07739b-8438-44cc-b693-58453dc088b1",
+    "amount": "5000",
+    "currency": currency,
     "payee": {
-      "partyIdType": "string",
-      "partyId": "string"
+      "partyIdType": "MSISDN",
+      "partyId": idValue
     },
-    "payeeNote": "string",
-    "status": "string"
+    "payeeNote": "Fees",
+    "status": "Fees"
   }
 );

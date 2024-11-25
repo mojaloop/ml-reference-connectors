@@ -144,8 +144,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Callback
-        test('Test PUT /callback; response should be 200', async () => {
-            const callbackRequestPayload: TMTNCallbackPayload = TMTNCallbackPayloadDto();
+        test('Test POST /callback; response should be 200', async () => {
+            const callbackRequestPayload: TMTNCallbackPayload = TMTNCallbackPayloadDto("ZMW", MSISDN);
             const url = `${DFSP_URL}/callback`;
 
             const res = await axios.post(url, JSON.stringify(callbackRequestPayload), {
