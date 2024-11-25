@@ -33,7 +33,6 @@ import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 import config from '../config';
-import { AxiosError } from 'axios';
 
 const API_SPEC_FILE = config.get("server.SDK_API_SPEC_FILE");
 
