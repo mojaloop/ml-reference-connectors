@@ -28,7 +28,6 @@
 
 'use strict';
 
-import { randomUUID } from 'crypto';
 import config from '../config';
 
 import {
@@ -36,8 +35,6 @@ import {
     TMTNConfig,
     TMTNDisbursementRequestBody,
     PartyType,
-    MTNError,
-    ETransactionStatus,
     TMTNSendMoneyRequest,
     TMTNSendMoneyResponse,
     TMTNCollectMoneyRequest,
@@ -53,14 +50,11 @@ import {
     TtransferResponse,
     TtransferRequest,
     TtransferPatchNotificationRequest,
-    TupdateSendMoneyDeps,
     ValidationError,
     THttpResponse,
-    TtransactionEnquiryDeps,
 } from './interfaces';
 import {
     ISDKClient,
-    SDKClientError,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
@@ -126,7 +120,7 @@ export class CoreConnectorAggregate {
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
             },
             statusCode: Number(mtnKycResponse.status),
-        }
+        };
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -161,7 +155,7 @@ export class CoreConnectorAggregate {
             transactionId: quoteRequest.transactionId,
             transferAmount: (Number(quoteRequest.amount) + Number(fees).toString()),
             transferAmountCurrency: quoteRequest.currency,
-        }
+        };
     }
 
 

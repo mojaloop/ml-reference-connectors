@@ -328,4 +328,4 @@ export const TMTNCallbackPayloadDto = () => (
     "payeeNote": "string",
     "status": "string"
   }
-)
+);

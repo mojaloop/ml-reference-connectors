@@ -68,7 +68,7 @@ export class MTNClient implements IMTNClient {
 
     // Get Default Header
 
-    private getDefaultHeader(subscriptionKey: string, apiClient: string, apiKey: string) {
+    private getDefaultHeader(subscriptionKey: string) {
         return {
             'Content-Type': 'application/json',
             'Accept': '*/*',
@@ -101,7 +101,7 @@ export class MTNClient implements IMTNClient {
             // Send the POST request with an empty body (since no request payload is required)
             const res = await this.httpClient.post<unknown, TGetTokenResponse>(deps.tokenUrl, undefined, {
                 headers: {
-                    ...this.getDefaultHeader(deps.subscriptionKey, deps.apiClient, deps.apiKey),
+                    ...this.getDefaultHeader(deps.subscriptionKey),
                     'Authorization': `Basic ${Buffer.from(`${deps.apiClient}:${deps.apiKey}`).toString("base64")}`
                 } 
             });
@@ -135,8 +135,6 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(
                         this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
-                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
-                        this.mtnConfig.MTN_COLLECTION_API_KEY
                     ),
                     'Authorization': `${authHeader}`
                 }
@@ -165,8 +163,6 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(
                         this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
-                        this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
-                        this.mtnConfig.MTN_DISBURSEMENT_API_KEY
                     ),
                     'Authorization': `${await this.getAuthHeader({
                         subscriptionKey: this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
@@ -201,8 +197,6 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(
                         this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
-                        this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
-                        this.mtnConfig.MTN_DISBURSEMENT_API_KEY
                     ),
                     'Authorization': `${await this.getAuthHeader({
                         subscriptionKey: this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
@@ -234,8 +228,6 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(
                         this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
-                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
-                        this.mtnConfig.MTN_COLLECTION_API_KEY
                     ),
                     'Authorization': `${await this.getAuthHeader({
                         subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
@@ -270,8 +262,6 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(
                         this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
-                        this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
-                        this.mtnConfig.MTN_COLLECTION_API_KEY
                     ),
                     'Authorization': `${await this.getAuthHeader({
                         subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,

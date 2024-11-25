@@ -25,27 +25,16 @@
  **********/
 
 
-import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { MTNError, IMTNClient, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload } from '../../../src/domain/CBSClient';
-import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
-import {
-    ISDKClient,
-    SDKClientFactory,
-
-} from '../../../src/domain/SDKClient';
-import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
+import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
+import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload } from '../../../src/domain/CBSClient';
 import { loggerFactory } from '../../../src/infra/logger';
-import config from '../../../src/config';
 import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto } from '../../fixtures';
 import { Service } from '../../../src/core-connector-svc';
 import axios from 'axios';
 import { randomUUID } from 'crypto';
 
 
-jest.setTimeout(20000);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const mtnConfig = config.get('mtn');
-const SDK_URL = 'http://localhost:4010';
 const ML_URL = 'http://0.0.0.0:3003';
 const DFSP_URL = 'http://0.0.0.0:3004';
 
@@ -55,9 +44,6 @@ const idType = "MSISDN";
 
 
 describe('CoreConnectorAggregate Tests -->', () => {
-    let ccAggregate: CoreConnectorAggregate;
-    let mtnClient: IMTNClient;
-    let sdkClient: ISDKClient;
 
     beforeAll(async () => {
         await Service.start();
@@ -69,15 +55,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     beforeEach(() => {
-        // mockAxios.reset();
-        const httpClient = AxiosClientFactory.createAxiosClientInstance();
-        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        mtnClient = MTNClientFactory.createClient({
-            mtnConfig,
-            httpClient,
-            logger,
-        });
-        ccAggregate = new CoreConnectorAggregate(sdkClient, mtnClient, mtnConfig, logger);
     });
 
     describe('MTN Test', () => {
@@ -167,7 +144,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Callback
-        test.skip('Test PUT /callback; response should be 200', async () => {
+        test('Test PUT /callback; response should be 200', async () => {
             const callbackRequestPayload: TMTNCallbackPayload = TMTNCallbackPayloadDto();
             const url = `${DFSP_URL}/callback`;
 
