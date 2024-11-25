@@ -94,6 +94,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TMTNSendMoneyRequest;
+        this.logger.info(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendTransfer(transfer);
             return this.handleResponse(result, h);
@@ -106,6 +107,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const { params } = context.request;
         const transferId = params["transferId"] as string;
         const transferAccept = request.payload as TMTNUpdateSendMoneyRequest;
+        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept,transferId);
             return this.handleResponse(updateTransferRes, h);
@@ -116,6 +118,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async callbackHandler(context: Context, request: Request, h:ResponseToolkit){
         const callbackPayload = request.payload as TMTNCallbackPayload;
+        this.logger.info(`Transfer Callback ${callbackPayload}`);
         try{
             const callbackRes = await this.aggregate.handleCallback(callbackPayload);
             return this.handleResponse(callbackRes,h);
