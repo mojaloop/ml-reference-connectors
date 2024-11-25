@@ -20,20 +20,22 @@
  optionally within square brackets <email>.
 
 
- - Okello Ivan Elijah <elijahokello90@gmail.com>
-
+ * Niza Tembo <mcwayzj@gmail.com>
+ * Elijah Okello <elijahokello90@gmail.com>
  --------------
  ******/
 
 'use strict';
 
+
+import { ILogger } from './infrastructure';
 import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
-import { ILogger } from './infrastructure';
-import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
-import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { TMTNUpdateSendMoneyRequest, TMTNTransactionEnquiryResponse, TMTNCollectMoneyResponse } from '../CBSClient';
+import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
+
 
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson> | unknown; 
