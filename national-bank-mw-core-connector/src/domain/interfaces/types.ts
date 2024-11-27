@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { INBMClient, TCbsCollectMoneyResponse, TNBMConfig, TCbsKycResponse, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { INBMClient, TNBMCollectMoneyResponse, TNBMConfig, TNBMKycResponse, TNBMSendMoneyRequest, TNBMSendMoneyResponse, TNBMUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -87,16 +87,16 @@ export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferRe
 export type Party = {
     statusCode(statusCode: any): unknown;
     dateOfBirth?: string;
-    displayName: string;
+  
     extensionList?: unknown[];
-    firstName: string;
+  
     fspId?: string;
     idSubValue?: string;
     idType: string;
     idValue: string;
-    lastName: string;
+  
     merchantClassificationCode?: string;
-    middleName: string;
+  
     type: string;
     supportedCurrencies?: string;
     kycInformation: string;
@@ -149,7 +149,7 @@ export type TtransferPatchNotificationRequest = {
 };
 
 export type TGetQuotesDeps = {
-    res: TCbsKycResponse;
+    res: TNBMKycResponse;
     fees: number;
     expiration: string;
     quoteRequest: TQuoteRequest
@@ -165,6 +165,6 @@ export interface ICoreConnectorAggregate {
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse>
-    updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse>
+    sendMoney(transfer: TNBMSendMoneyRequest): Promise<TNBMSendMoneyResponse>
+    updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TNBMCollectMoneyResponse>
 }

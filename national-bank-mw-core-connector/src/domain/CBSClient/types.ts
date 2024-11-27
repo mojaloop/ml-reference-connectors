@@ -78,6 +78,7 @@ export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
     "amount": string;
+    "description": string;
 }
 
 export type TCallbackRequest = {
@@ -154,7 +155,6 @@ export type TNBMCollectMoneyRequest = {
     "reference": string,
     "credit_account": string
     "currency": string
-   
 }
 
 export type TNBMCollectMoneyResponse = {

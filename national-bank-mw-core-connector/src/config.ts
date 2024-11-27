@@ -14,7 +14,7 @@ interface IConfigSchema {
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
     }
-    cbs:TNBMConfig;
+    nbm:TNBMConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -64,8 +64,8 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    cbs:{
-        CBS_NAME: {
+    nbm:{
+        NBM_NAME: {
             doc: 'Name of the DFSP',
             format: String,
             default: null, // required

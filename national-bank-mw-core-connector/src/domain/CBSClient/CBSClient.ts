@@ -31,14 +31,14 @@ import { IHTTPClient, ILogger } from '../interfaces';
 import { CBSError } from './errors';
 import {
     INBMClient,
-    TCbsCollectMoneyRequest,
-    TCbsCollectMoneyResponse,
+    TNBMCollectMoneyRequest,
+    TNBMCollectMoneyResponse,
     TNBMConfig,
-    TCbsDisbursementRequestBody,
-    TCbsDisbursementResponse,
-    TCbsKycResponse,
-    TCbsRefundMoneyRequest,
-    TCbsRefundMoneyResponse,
+    TNBMDisbursementRequestBody,
+    TNBMDisbursementResponse,
+    TNBMKycResponse,
+    TNBMRefundMoneyRequest,
+    TNBMRefundMoneyResponse,
     TGetKycArgs,
     TGetTokenArgs,
     TGetTokenResponse,
@@ -64,16 +64,17 @@ export class NBMClient implements INBMClient {
         this.httpClient = httpClient;
         this.logger = logger;
     }
+    NBMConfig!: TNBMConfig;
 
-    async getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse> {
+    async getKyc(deps: TGetKycArgs): Promise<TNBMKycResponse> {
         this.logger.info("Getting KYC Information");
-        const res = await this.httpClient.get<TCbsKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.msisdn}`, {
+        const res = await this.httpClient.get<TNBMKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.account_number}`, {
             headers: {
                 ...this.getDefaultHeader(),
                 'Authorization': `Bearer ${await this.getAuthHeader()}`
             }
         });
-        if (res.data.status.code !== '200') {
+        if (res.data.message== '200') {
             throw CBSError.getKycError();
         }
         return res.data;
@@ -98,11 +99,11 @@ export class NBMClient implements INBMClient {
         }
     }
 
-    async sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse> {
+    async sendMoney(deps: TNBMDisbursementRequestBody): Promise<TNBMDisbursementResponse> {
         this.logger.info("Sending Disbursement Body To Airtel");
         const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.sendMoney}`;
         try {
-            const res = await this.httpClient.post<TCbsDisbursementRequestBody, TCbsDisbursementResponse>(url, deps,
+            const res = await this.httpClient.post<TNBMDisbursementRequestBody, TNBMDisbursementResponse>(url, deps,
                 {
                     headers: {
                         ...this.getDefaultHeader(),
@@ -120,18 +121,18 @@ export class NBMClient implements INBMClient {
             throw error;
         }
     }
-    async collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse> {
+    async collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse> {
         this.logger.info("Collecting Money from National Bank");
         const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {
-            const res = await this.httpClient.post<TCbsCollectMoneyRequest, TCbsCollectMoneyResponse>(url, deps, {
+            const res = await this.httpClient.post<TNBMCollectMoneyRequest, TNBMCollectMoneyResponse>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
                 }
             });
-            if (res.data.status.code !== '200') {
+            if (res.data.message !== '200') {
                 throw CBSError.collectMoneyError();
             }
             return res.data;
@@ -142,12 +143,12 @@ export class NBMClient implements INBMClient {
         }
     }
 
-    async refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse> {
+    async refundMoney(deps: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse> {
         this.logger.info("Refunding Money to Customer in Airtel");
         const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
 
         try {
-            const res = await this.httpClient.post<TCbsRefundMoneyRequest, TCbsRefundMoneyResponse>(url, deps, {
+            const res = await this.httpClient.post<TNBMRefundMoneyRequest, TNBMRefundMoneyResponse>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
@@ -176,7 +177,7 @@ export class NBMClient implements INBMClient {
         const res = await this.getToken({
             client_secret: this.cbsConfig.CLIENT_SECRET,
             client_id: this.cbsConfig.CLIENT_ID,
-            grant_type: this.cbsConfig.GRANT_TYPE
+           
         });
         return res.access_token;
     }

@@ -40,7 +40,7 @@ import { nbmUpdateSendMoneyRequestDto, sdkInitiateTransferResponseDto, sdkUpdate
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const cbsConfig = config.get("cbs");
+const NBMConfig = config.get("nbm");
 const SDK_URL = 'http://localhost:4040';
 
 const idType = "ACCOUNT_ID";
@@ -55,8 +55,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        nbmClient = NBMClientFactory.createClient({ cbsConfig, httpClient, logger });
-        ccAggregate = new CoreConnectorAggregate(sdkClient, nbmClient, cbsConfig, logger);
+        nbmClient = NBMClientFactory.createClient({ NBMConfig, httpClient, logger });
+        ccAggregate = new CoreConnectorAggregate(sdkClient, nbmClient, NBMConfig, logger);
     });
 
     describe("Payee Tests", () => {
@@ -118,7 +118,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
            
             jest.spyOn(nbmClient, "mockCollectMoney");
-            const updateSendMoneyReqBody = nbmUpdateSendMoneyRequestDto(ACCOUNT_ID, "1000");
+            const updateSendMoneyReqBody = nbmUpdateSendMoneyRequestDto(ACCOUNT_ID, "1000", "test");
             logger.info(`Update Send Money request body ${updateSendMoneyReqBody}`)
             // expect(nbmClient.mockCollectMoney).toHaveBeenCalled();
         });

@@ -31,7 +31,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TCallbackRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TCallbackRequest, TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
@@ -100,7 +100,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TCbsSendMoneyRequest;
+        const transfer = request.payload as TNBMSendMoneyRequest;
         try {
             const result = await this.aggregate.sendMoney(transfer);
             return this.handleResponse(result, h);
@@ -111,7 +111,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
-        const transferAccept = request.payload as TCBSUpdateSendMoneyRequest;
+        const transferAccept = request.payload as TNBMUpdateSendMoneyRequest;
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,

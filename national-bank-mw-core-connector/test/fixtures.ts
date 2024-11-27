@@ -1,8 +1,9 @@
 import { TSDKOutboundTransferResponse, TtransferContinuationResponse, } from '../src/domain/SDKClient';
-import {TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
+import {TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
+import { stringify } from 'node:querystring';
 
 type TransferAcceptInputDto = {
   fineractAccountId?: number;
@@ -214,7 +215,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 
 // Send Money DTO
-export const sendMoneyDTO = (idValue: string, amount: string,): TCbsSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "1003486415",
   "payeeIdType": "ACCOUNT_ID",
@@ -230,10 +231,11 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TCbsSendMoneyReq
 
 
 
-export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TCBSUpdateSendMoneyRequest => ({
+export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string, description: string): TNBMUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString(),
+  "description": description
 });
 
 
@@ -277,11 +279,11 @@ export const sdkUpdateTransferResponseDto = (idValue: string, amount: string): T
   }
 });
 
-export const nbmUpdateSendMoneyRequestDto = (idValue: string, amount: string): TCBSUpdateSendMoneyRequest => ({
+export const nbmUpdateSendMoneyRequestDto = (idValue: string, amount: string, description: string): TNBMUpdateSendMoneyRequest => ({
   "acceptQuote": true,
   "msisdn": idValue,
   "amount": amount,
-  
+  "description": description,
 });
 
 // export const TNMCallbackPayloadDto = ():TNMCallbackPayload => ({

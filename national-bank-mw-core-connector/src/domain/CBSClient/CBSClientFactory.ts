@@ -27,12 +27,12 @@
 'use strict';
 
 import { NBMClient } from './CBSClient';
-import { TCBSClientFactoryDeps } from './types';
+import { TNBMClientFactoryDeps } from './types';
 
 export class NBMClientFactory {
-    static createClient(cbsClientfactoryDeps: TCBSClientFactoryDeps) {
+    static createClient(cbsClientfactoryDeps: TNBMClientFactoryDeps) {
         return new NBMClient(
-            cbsClientfactoryDeps.cbsConfig,
+            cbsClientfactoryDeps.NBMConfig,
             cbsClientfactoryDeps.httpClient,
             cbsClientfactoryDeps.logger
         );

@@ -31,14 +31,14 @@ import { randomUUID } from 'crypto';
 import {
     INBMClient,
     TCallbackRequest,
-    TCbsCollectMoneyRequest,
-    TCbsCollectMoneyResponse,
+    TNBMCollectMoneyRequest,
+    TNBMCollectMoneyResponse,
     TNBMConfig,
-    TCbsDisbursementRequestBody,
-    TCbsKycResponse,
-    TCbsSendMoneyRequest,
-    TCbsSendMoneyResponse,
-    TCBSUpdateSendMoneyRequest,
+    TNBMDisbursementRequestBody,
+    TNBMKycResponse,
+    TNBMSendMoneyRequest,
+    TNBMSendMoneyResponse,
+    TNBMUpdateSendMoneyRequest,
     PartyType
 } from './CBSClient';
 import {
@@ -84,12 +84,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedIdTypeError();
         }
         
-        const res = await this.nbmClient.getKyc({ msisdn: id });
+        const res = await this.nbmClient.getKyc({
+            account_number: id,
+           
+        });
         const party = {
             data: {
-               firstName: res.data.first_name,
-               lastName: res.data.last_name,
-               idType: this.nbmClient.cbsConfig.SUPPORTED_ID_TYPE,
+               accountNumber: res.data.account_number,
+               idType: this.nbmClient.NBMConfig.SUPPORTED_ID_TYPE,
                idValue: id,
                type: PartyType.CONSUMER
             }
@@ -97,17 +99,16 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return this.getPartiesResponse(res);
     }
 
-    private getPartiesResponse(res: TCbsKycResponse): Party {
+    private getPartiesResponse(res: TNBMKycResponse): Party {
         return {
             statusCode: (statusCode: any) => 200,
             idType: "ACCOUNT_ID",
-            idValue: res.data.msisdn,
-            displayName: `${res.data.first_name} ${res.data.last_name}`,
-            firstName: res.data.first_name,
-            middleName: res.data.first_name,
+            idValue: res.data.account_number,
+            
+    
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-            lastName: res.data.last_name
+           
         }
     }
 
@@ -119,7 +120,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
-        const res = await this.nbmClient.getKyc({ msisdn: quoteRequest.to.idValue });
+        const res = await this.nbmClient.getKyc({ account_number: quoteRequest.to.idValue });
         const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount)
         // check if account is blocked if possible
         const quoteExpiration = this.cbsConfig.EXPIRATION_DURATION;
@@ -230,8 +231,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private async checkAccountBarred(msisdn: string): Promise<void> {
-        const res = await this.nbmClient.getKyc({ msisdn: msisdn });
-        if (res.data.is_barred) {
+        const res = await this.nbmClient.getKyc({ account_number: msisdn });
+        // Add Logic for Barred Account
+        if (res.data.locked_amount) {
             throw ValidationError.accountBarredError();
         }
     }
@@ -242,7 +244,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             await this.initiateCompensationAction();
             throw ValidationError.transferNotCompletedError();
         }
-        const makePaymentRequest: TCbsDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
+        const makePaymentRequest: TNBMDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
         await this.nbmClient.sendMoney(makePaymentRequest);
     }
 
@@ -250,7 +252,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         // todo function implementation to be defined.
     }
 
-    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TCbsDisbursementRequestBody {
+    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMDisbursementRequestBody {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
         }
@@ -275,7 +277,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    async sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse> {
+    async sendMoney(transfer: TNBMSendMoneyRequest): Promise<TNBMSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
         console.log(`Received send money request for payer with ID ${transfer.payerAccount}`);
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
@@ -288,7 +290,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return this.getTCbsSendMoneyResponse(res.data);
     }
 
-    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TCbsSendMoneyResponse> {
+    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TNBMSendMoneyResponse> {
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
         if (!this.validateConversionTerms(res.data)) {
             if (!res.data.transferId) {
@@ -399,7 +401,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return result;
     }
 
-    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TCbsSendMoneyResponse {
+    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TNBMSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -418,9 +420,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TNBMSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.nbmClient.getKyc({
-            msisdn: transfer.payerAccount
+            account_number: transfer.payerAccount
         });
         
         return {
@@ -429,10 +431,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idType': this.cbsConfig.SUPPORTED_ID_TYPE,
                 'idValue': transfer.payerAccount,
                 'fspId': this.cbsConfig.FSP_ID,
-                "displayName": `${res.data.first_name} ${res.data.last_name}`,
-                "firstName": res.data.first_name,
-                "middleName": res.data.first_name,
-                "lastName": res.data.last_name,
+                "displayName": `${res.data.account_number}`,
+                
                 "merchantClassificationCode": "123",
             },
             'to': {
@@ -445,7 +445,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             'transactionType': transfer.transactionType,
         };
     }
-    async updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse> {
+    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TNBMCollectMoneyResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
@@ -454,20 +454,13 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return await this.nbmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
     }
 
-    private getTCbsCollectMoneyRequest(collection: TCBSUpdateSendMoneyRequest, transferId: string): TCbsCollectMoneyRequest {
+    private getTCbsCollectMoneyRequest(collection: TNBMUpdateSendMoneyRequest, transferId: string): TNBMCollectMoneyRequest {
         return {
             "reference": "string",
-            "subscriber": {
-                "country": this.cbsConfig.X_COUNTRY,
                 "currency": this.cbsConfig.X_CURRENCY,
-                "msisdn": collection.msisdn,
-            },
-            "transaction": {
                 "amount": Number(collection.amount),
-                "country": this.cbsConfig.X_COUNTRY,
-                "currency": this.cbsConfig.X_CURRENCY,
-                "id": transferId,
-            }
+                "description": collection.description,
+                "credit_account": collection.msisdn
         };
     }
 
