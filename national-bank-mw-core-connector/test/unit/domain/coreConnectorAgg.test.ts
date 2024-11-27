@@ -34,7 +34,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { NBMClientFactory, INBMClient } from '../../../src/domain/CBSClient';
+import { NBMClientFactory, INBMClient, TNBMCollectMoneyRequest } from '../../../src/domain/CBSClient';
 import { nbmUpdateSendMoneyRequestDto, sdkInitiateTransferResponseDto, sdkUpdateTransferResponseDto, sendMoneyDTO, transferPatchNotificationRequestDto, updateSendMoneyDTO } from '../../fixtures';
 
 
@@ -46,11 +46,19 @@ const SDK_URL = 'http://localhost:4040';
 const idType = "ACCOUNT_ID";
 const ACCOUNT_ID = "1003486415";
 
+const collectMoneyRequest: TNBMCollectMoneyRequest = {
+    amount: 12000,
+    description: "Test Transaction",
+    reference: "INV/2003/202930",
+    credit_account: ACCOUNT_ID,
+    currency: "MWK"
+};
+
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
     let nbmClient: INBMClient;
     let sdkClient: ISDKClient;
-
+    
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
@@ -66,60 +74,21 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     describe("NBM Payer Tests", () => {
-        // test("POST /send-money: should return payee details and fees with correct info provided", async () => {
-
-        //     //TODO: Implement NBM Mock function before send money and update send money. First we call KYC
-
-        //     nbmClient.getKyc = jest.fn().mockResolvedValue({
-        //         "message": "Completed successfully",
-        //         "errors": [],
-        //         "trace": [],
-        //         "data": {
-        //             "full_name": "John Doe"
-        //         }
-
-        //     });
-
-        //     const sendMoneyResponse = nbmClient.mockCollectMoney(ACCOUNT_ID, ACCOUNT_ID, 100000)
-        //     logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
-
-
-        //     // sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-        //     //     ...sdkInitiateTransferResponseDto(ACCOUNT_ID, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-        //     // });
-
-        //     // sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-        //     //     ...sdkUpdateTransferResponseDto(ACCOUNT_ID, "1000")
-        //     // });
-        //     // jest.spyOn(sdkClient, "updateTransfer");
-        //     logger.info("Update Send Money tests request");
-        //     const updateMoneyRequestBody = updateSendMoneyDTO((await sendMoneyResponse).amount, true, ACCOUNT_ID);
-        //     logger.info(`Update Send Money request body ${updateMoneyRequestBody}`)
-        //     const res = await ccAggregate.updateSendMoney(updateMoneyRequestBody, (await sendMoneyResponse).transactionId);
-           
-        //     // logger.info("Response fromm send money", res);
-        //     // expect(sdkClient.updateTransfer).toHaveBeenCalled();
-
-        // });
-
+               
         test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
+
             nbmClient.getToken = jest.fn().mockResolvedValue({
-                "message": "Completed successfully",
-                "status": 201,
-                "errors": [],
-                "trace": [],
-                "data": {
+               
                     "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
                     "expires_at": "2023-07-13 10:56:45"
-                }
+                
             });
-
-            const sendMoneyResponse = nbmClient.mockCollectMoney(ACCOUNT_ID, ACCOUNT_ID, 100000)
+            const sendMoneyResponse = nbmClient.collectMoney(collectMoneyRequest)
             logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
            
             jest.spyOn(nbmClient, "mockCollectMoney");
-            const updateSendMoneyReqBody = nbmUpdateSendMoneyRequestDto(ACCOUNT_ID, "1000", "test");
-            logger.info(`Update Send Money request body ${updateSendMoneyReqBody}`)
+            // const updateSendMoneyReqBody = nbmUpdateSendMoneyRequestDto(ACCOUNT_ID, "1000", "test");
+            // logger.info(`Update Send Money request body ${updateSendMoneyReqBody}`)
             // expect(nbmClient.mockCollectMoney).toHaveBeenCalled();
         });
     });

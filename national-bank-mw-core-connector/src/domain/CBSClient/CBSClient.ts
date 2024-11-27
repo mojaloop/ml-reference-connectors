@@ -46,10 +46,10 @@ import {
 } from './types';
 
 export const CBS_ROUTES = Object.freeze({
-    getToken: '/auth/oauth2/token',
-    getKyc: '/standard/v1/users/',
-    sendMoney: '/standard/v3/disbursements',
-    collectMoney: '/merchant/v2/payments/',
+    getToken: '/auth/token',
+    getKyc: '/api/',
+    // sendMoney: '/standard/v3/disbursements',
+    collectMoney: '/api/transfer',
     refundMoney: '/standard/v2/payments/refund',
     transactionEnquiry: '/standard/v1/payments/'
 });
@@ -81,8 +81,8 @@ export class NBMClient implements INBMClient {
     }
 
     async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
-        this.logger.info("Getting Access Token from Airtel");
-        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getToken}`;
+        this.logger.info("Getting Access Token from National Bank");
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getToken}`;
         this.logger.info(url);
         try {
             const res = await this.httpClient.post<TGetTokenArgs, TGetTokenResponse>(url, deps, {
@@ -100,8 +100,8 @@ export class NBMClient implements INBMClient {
     }
 
     async sendMoney(deps: TNBMDisbursementRequestBody): Promise<TNBMDisbursementResponse> {
-        this.logger.info("Sending Disbursement Body To Airtel");
-        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.sendMoney}`;
+        this.logger.info("Sending Disbursement Body To National Bank");
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
         try {
             const res = await this.httpClient.post<TNBMDisbursementRequestBody, TNBMDisbursementResponse>(url, deps,
                 {
@@ -123,7 +123,7 @@ export class NBMClient implements INBMClient {
     }
     async collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse> {
         this.logger.info("Collecting Money from National Bank");
-        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {
             const res = await this.httpClient.post<TNBMCollectMoneyRequest, TNBMCollectMoneyResponse>(url, deps, {
@@ -144,8 +144,8 @@ export class NBMClient implements INBMClient {
     }
 
     async refundMoney(deps: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse> {
-        this.logger.info("Refunding Money to Customer in Airtel");
-        const url = `https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
+        this.logger.info("Refunding Money to Customer in National Bank");
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
 
         try {
             const res = await this.httpClient.post<TNBMRefundMoneyRequest, TNBMRefundMoneyResponse>(url, deps, {

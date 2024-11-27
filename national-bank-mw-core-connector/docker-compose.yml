@@ -1,4 +1,4 @@
-version: "3.8"
+
 networks:
   mojaloop-net:
     name: mojaloop-net
@@ -15,3 +15,16 @@ services:
     ports:
       - "3003:3003"
       - "3004:3004"
+  
+  national-bank-sandbox-mock:
+    image: stoplight/prism:4
+    networks:
+      - mojaloop-net
+    command: mock -h 0.0.0.0 "/tmp/nat-bank-api-spec.yml"
+    volumes:
+      - ./src/api-spec:/tmp
+    ports:
+      - "5010:5010"
+    init: true
+    container_name: nat-bank-sandbox-mock
+    restart: unless-stopped

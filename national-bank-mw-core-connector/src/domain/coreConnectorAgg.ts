@@ -104,8 +104,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             statusCode: (statusCode: any) => 200,
             idType: "ACCOUNT_ID",
             idValue: res.data.account_number,
-            
-    
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
            
