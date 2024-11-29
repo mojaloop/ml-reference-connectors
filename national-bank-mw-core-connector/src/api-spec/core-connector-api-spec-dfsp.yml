@@ -40,7 +40,7 @@ paths:
           description: >-
             Returns empty body if the scheme adapter outbound transfers service
             is running.
-  /send-money-update:
+  /send-money:
     post:
       summary: Send Money endpoint
       description: >- 
@@ -75,18 +75,18 @@ paths:
         '504':
           description: >-
             Response for a timed out transfer
-  /send-money:
-    post:
+  /send-money/{transferId}:
+    put:
       summary: Confirm send money
       operationId: sendMoneyUpdate
-      # parameters:
-      #   - name: transferId
-      #     in: path
-      #     required: true
-      #     description: The ID of the transaction
-      #     schema:
-      #       type: string
-      #       example: "HTX987654321"
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          description: The ID of the transaction
+          schema:
+            type: string
+            example: "HTX987654321"
       requestBody:
         required: true
         content:
@@ -97,22 +97,7 @@ paths:
         - Send Money
       responses:
         '200':
-          description: Account information retrieved successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Success"
-                  data:
-                    type: object
-                    properties:
-                      account_number:
-                        type: string
-                    example:
-                      reference: "FT24928459824"
+          description: Send money confirmed successfully
         '400':
           description: Bad request
 
