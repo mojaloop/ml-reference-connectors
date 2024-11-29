@@ -115,7 +115,6 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
-                params.transferId as string,
             );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {

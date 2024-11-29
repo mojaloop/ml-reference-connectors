@@ -277,7 +277,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     // Payer
     async sendMoney(transfer: TNBMSendMoneyRequest): Promise<TNBMSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
-        console.log(`Received send money request for payer with ID ${transfer.payerAccount}`);
+        
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
             return await this.checkAndRespondToConversionTerms(res);
@@ -443,16 +443,16 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             'transactionType': transfer.transactionType,
         };
     }
-    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TNBMCollectMoneyResponse> {
-        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
+    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, ): Promise<TNBMCollectMoneyResponse> {
+        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} `);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        return await this.nbmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
+        return await this.nbmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps));
     }
 
-    private getTCbsCollectMoneyRequest(collection: TNBMUpdateSendMoneyRequest, transferId: string): TNBMCollectMoneyRequest {
+    private getTCbsCollectMoneyRequest(collection: TNBMUpdateSendMoneyRequest,): TNBMCollectMoneyRequest {
         return {
             "reference": "string",
                 "currency": this.cbsConfig.X_CURRENCY,

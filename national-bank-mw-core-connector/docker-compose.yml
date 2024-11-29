@@ -20,7 +20,7 @@ services:
     image: stoplight/prism:4
     networks:
       - mojaloop-net
-    command: mock -h 0.0.0.0 "/tmp/nat-bank-api-spec.yml"
+    command: mock -h 0.0.0.0 -p 5010 "/tmp/nat-bank-api-spec.yml"
     volumes:
       - ./src/api-spec:/tmp
     ports:
