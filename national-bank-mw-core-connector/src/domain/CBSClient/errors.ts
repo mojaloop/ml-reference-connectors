@@ -30,7 +30,7 @@ import { BasicError } from '../interfaces';
 
 export class CBSError extends BasicError {
     static getTokenFailedError() {
-        return new CBSError("Get Token Failed From Airtel", {
+        return new CBSError("Get Token Failed From National Bank", {
             httpCode: 500,
             mlCode: '5000',
         });
@@ -50,13 +50,13 @@ export class CBSError extends BasicError {
         });
     }
     static collectMoneyError() {
-        return new CBSError("Collect Money from Airtel Failed", {
+        return new CBSError("Collect Money from National Bank Failed", {
             httpCode: 500,
             mlCode: '4000',
         });
     }
     static refundMoneyError() {
-        return new CBSError("Refund Money to Airtel Customer Failed", {
+        return new CBSError("Refund Money to National Bank Customer Failed", {
             httpCode: 500,
             mlCode: '4000',
         });

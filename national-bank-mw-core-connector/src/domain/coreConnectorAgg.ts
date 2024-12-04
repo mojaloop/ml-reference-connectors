@@ -86,7 +86,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         
         const res = await this.nbmClient.getKyc({
             account_number: id,
-           
         });
         const party = {
             data: {
