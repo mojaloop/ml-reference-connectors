@@ -103,8 +103,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
-            const Id = params['ID'] as string;
-            const IdType = params['IdType'] as string;
+            const Id = params['idValue'] as string;
+            const IdType = params['idType'] as string;
             const result = await this.aggregate.getParties(Id,IdType);
             return this.handleResponse(result, h);
         } catch (error) {

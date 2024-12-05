@@ -87,14 +87,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         const res = await this.nbmClient.getKyc({
             account_number: id,
         });
-        const party = {
-            data: {
-               accountNumber: res.data.account_number,
-               idType: this.nbmClient.NBMConfig.SUPPORTED_ID_TYPE,
-               idValue: id,
-               type: PartyType.CONSUMER
-            }
-        }
+        
         return this.getPartiesResponse(res);
     }
 
@@ -105,7 +98,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             idValue: res.data.account_number,
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-           
         }
     }
 
