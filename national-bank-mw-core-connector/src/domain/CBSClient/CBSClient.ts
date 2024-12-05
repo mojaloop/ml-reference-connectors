@@ -68,13 +68,13 @@ export class NBMClient implements INBMClient {
 
     async getKyc(deps: TGetKycArgs): Promise<TNBMKycResponse> {
         this.logger.info("Getting KYC Information");
-        const res = await this.httpClient.get<TNBMKycResponse>(`https://${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.account_number}`, {
+        const res = await this.httpClient.get<TNBMKycResponse>(`${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.getKyc}${deps.account_number}`, {
             headers: {
                 ...this.getDefaultHeader(),
                 'Authorization': `Bearer ${await this.getAuthHeader()}`
             }
         });
-        if (res.data.message== '200') {
+        if (!(res.data.message == 'Success')) {
             throw CBSError.getKycError();
         }
         return res.data;
@@ -175,8 +175,8 @@ export class NBMClient implements INBMClient {
 
     private async getAuthHeader(): Promise<string> {
         const res = await this.getToken({
-            client_secret: this.cbsConfig.CLIENT_SECRET,
-            client_id: this.cbsConfig.CLIENT_ID,
+            clientSecret: this.cbsConfig.CLIENT_SECRET,
+            clientId: this.cbsConfig.CLIENT_ID,
            
         });
         return res.access_token;

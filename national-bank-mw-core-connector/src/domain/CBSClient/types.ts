@@ -106,10 +106,10 @@ export type TNBMKycResponse = {
     };
     "message": string
 }
-
+3
 export type TGetTokenArgs = {
-    client_id: string;
-    client_secret: string;
+    clientId: string;
+    clientSecret: string;
 }
 
 export type TGetTokenResponse = {
