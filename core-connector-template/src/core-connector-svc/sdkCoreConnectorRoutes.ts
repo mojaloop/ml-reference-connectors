@@ -103,8 +103,9 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
-            const Id = params['ID'] as string;
-            const IdType = params['IdType'] as string;
+            const Id = params['idValue'] as string;
+            const IdType = params['idType'] as string;
+            this.logger.info(`Get party for ${IdType} ${Id}`);
             const result = await this.aggregate.getParties(Id,IdType);
             return this.handleResponse(result, h);
         } catch (error) {
@@ -115,6 +116,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async quoteRequests(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const quoteRequest = request.payload as TQuoteRequest;
+            this.logger.info(`Quote request ${quoteRequest}`);
             const quote = await this.aggregate.quoteRequest(quoteRequest);
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
@@ -125,6 +127,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async transfers(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TtransferRequest;
         try {
+            this.logger.info(`Transfer Payload ${transfer}`);
             const result = await this.aggregate.receiveTransfer(transfer);
             return this.handleResponse(result, h, 201);
         } catch (error: unknown) {
@@ -137,6 +140,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
         const { params } = context.request;
         const transferId = params['transferId'] as string;
         try{
+            this.logger.info(`Transfers ${transferNotificatioPayload}`);
+            this.logger.info(`Transfer Id ${transferId}`);
             const result = await this.aggregate.updateTransfer(transferNotificatioPayload, transferId);
             return this.handleResponse(result,h);
         }catch(error: unknown){

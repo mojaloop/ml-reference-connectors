@@ -37,6 +37,10 @@ import {
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
 import { SDKClientError } from './errors';
 
+export const SDK_ROUTES = Object.freeze({
+    transfers: "transfers",
+});
+
 export class SDKClient implements ISDKClient {
     private readonly logger: ILogger;
     private readonly httpClient: IHTTPClient;
@@ -54,7 +58,7 @@ export class SDKClient implements ISDKClient {
         this.logger.info('SDKClient initiate receiveTransfer', transfer);
         try {
             const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
+                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}`,
                 transfer,
                 {
                     headers: {
@@ -80,7 +84,7 @@ export class SDKClient implements ISDKClient {
         this.logger.info('SDKClient initiate update receiveTransfer %s', transferAccept);
         try {
             const res = await this.httpClient.put<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers/${id}`,
+                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}/${id}`,
                 transferAccept,
                 {
                     headers: {
