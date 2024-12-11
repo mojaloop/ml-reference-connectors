@@ -35,7 +35,7 @@ import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { NBMClientFactory, INBMClient, TNBMCollectMoneyRequest } from '../../../src/domain/CBSClient';
-import { nbmUpdateSendMoneyRequestDto, sdkInitiateTransferResponseDto, sdkUpdateTransferResponseDto, sendMoneyDTO, transferPatchNotificationRequestDto, updateSendMoneyDTO } from '../../fixtures';
+import { sdkInitiateTransferResponseDto, sdkUpdateTransferResponseDto, sendMoneyDTO, transferPatchNotificationRequestDto, updateSendMoneyDTO } from '../../fixtures';
 
 
 const mockAxios = new MockAdapter(axios);
