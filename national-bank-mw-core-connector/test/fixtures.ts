@@ -113,13 +113,13 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 });
 
 
-export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "0881544547", amount: string = "1"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string = "0881544547", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
   currency: "MWK",
   from: {
-    idType: "MSISDN",
+    idType: "ACCOUNT_NO",
     idValue: "978034884"
   },
   initiator: "PAYER",
@@ -231,11 +231,8 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyReq
 
 
 
-export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string, description: string): TNBMUpdateSendMoneyRequest => ({
+export const updateSendMoneyDTO = ( acceptQuote: boolean,): TNBMUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "msisdn": idValue,
-  "amount": amount.toString(),
-  "description": description
 });
 
 
@@ -279,12 +276,7 @@ export const sdkUpdateTransferResponseDto = (idValue: string, amount: string): T
   }
 });
 
-export const nbmUpdateSendMoneyRequestDto = (idValue: string, amount: string, description: string): TNBMUpdateSendMoneyRequest => ({
-  "acceptQuote": true,
-  "msisdn": idValue,
-  "amount": amount,
-  "description": description,
-});
+
 
 // export const TNMCallbackPayloadDto = ():TNMCallbackPayload => ({
 //   receipt_number: crypto.randomUUID(),

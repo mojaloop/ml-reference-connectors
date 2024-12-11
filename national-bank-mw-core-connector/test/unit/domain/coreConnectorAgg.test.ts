@@ -84,7 +84,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 
             });
             const sendMoneyResponse = nbmClient.collectMoney(collectMoneyRequest)
-            logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
+            // logger.info(`Send Money Response ${(await sendMoneyResponse).message}`)
            
             jest.spyOn(nbmClient, "mockCollectMoney");
             // const updateSendMoneyReqBody = nbmUpdateSendMoneyRequestDto(ACCOUNT_ID, "1000", "test");

@@ -59,6 +59,7 @@ import {
     SDKClientError,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
+    TSDKTransferContinuationRequest,
     TtransferContinuationResponse,
 } from './SDKClient';
 
@@ -150,7 +151,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
-        this.checkAccountBarred(transfer.to.idValue);
+        // this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
@@ -174,17 +175,18 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkSendAmounts(transfer: TtransferRequest): boolean {
-        this.logger.info('Validating Type Send Quote...', { transfer });
         let result = true;
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
         ) {
+            this.logger.error(`Invalid amount ${transfer.amount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspCommissionAmount}`);
             result = false;
         }
 
         if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
+            this.logger.error(`transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined`);
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
         }
 
@@ -193,7 +195,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.transferAmount) -
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
+            this.logger.error(`Invalid payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspFeeAmount}`);
             result = false;
+
         }
         return result;
     }
@@ -202,6 +206,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
+            this.logger.error(`transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined`);
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
         }
         if (
@@ -210,10 +215,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.payeeFspCommissionAmount || '0') +
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
+            this.logger.error(`Invalid amount ${transfer.amount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspCommissionAmount} + ${transfer.quote.payeeFspFeeAmount}`);
             result = false;
         }
 
         if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
+            this.logger.error(`Invalid payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} != ${transfer.quote.transferAmount}`);
             result = false;
         }
         return result;
@@ -434,38 +441,13 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             'transactionType': transfer.transactionType,
         };
     }
-    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, ): Promise<TNBMCollectMoneyResponse> {
-        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} `);
+    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse> {
+        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps} `);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        return await this.nbmClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps));
-    }
-
-    private getTCbsCollectMoneyRequest(collection: TNBMUpdateSendMoneyRequest,): TNBMCollectMoneyRequest {
-        return {
-            "reference": "string",
-                "currency": this.cbsConfig.X_CURRENCY,
-                "amount": Number(collection.amount),
-                "description": collection.description,
-                "credit_account": collection.msisdn
-        };
-    }
-
-    async handleCallback(payload: TCallbackRequest): Promise<void> {
-        this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
-        try {
-            if (payload.transaction.status_code === "TS") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
-            } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
-            }
-        } catch (error: unknown) {
-            if (error instanceof SDKClientError) {
-                // perform refund or rollback
-                // const rollbackRes = await this.cbsClient.refundMoney();
-            }
-        }
+        const res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId);
+        return res.data;
     }
 }

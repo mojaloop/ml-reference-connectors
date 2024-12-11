@@ -376,9 +376,4 @@ components:
       properties:
         acceptQuote:
           type: boolean
-        msisdn:
-          type: string
-          example: "777503758"
-        amount:
-          type: string
-          example: "500"
+          example: true

@@ -122,7 +122,7 @@ export class NBMClient implements INBMClient {
         }
     }
     async collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse> {
-        this.logger.info("Collecting Money from National Bank");
+        this.logger.info("Collecting Money from National Bank", deps.description);
         const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {
@@ -132,7 +132,7 @@ export class NBMClient implements INBMClient {
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
                 }
             });
-            if (res.data.message !== '200') {
+            if (res.data.message !== 'Success') {
                 throw CBSError.collectMoneyError();
             }
             return res.data;

@@ -45,7 +45,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly handlers = {
         sendMoney: this.initiateTransfer.bind(this),
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
-        callback: this.callbackHandler.bind(this),
+        
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -111,11 +111,13 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
+        const transferId = params['transferId'] as string;
         const transferAccept = request.payload as TNBMUpdateSendMoneyRequest;
+        this.logger.info("Update Send Money Request", transferAccept);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
-                params.transferId as string
+                transferId
             );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
@@ -123,13 +125,4 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         }
     }
 
-    private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){
-        const callbackRequestBody: TCallbackRequest = request.payload as TCallbackRequest;
-        try{
-            const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
-            return this.handleResponse(callbackHandledRes,h);
-        }catch (error: unknown){
-            return this.handleError(error, h);
-        }
-    }
 }

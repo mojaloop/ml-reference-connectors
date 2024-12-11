@@ -50,7 +50,7 @@ const DFSP_URL = 'http://0.0.0.0:3004';
 
 // Happy Path variables
 const ACCOUNT_NO = "100100200";
-const idType = "ACCOUNT_ID";
+const idType = "ACCOUNT_NO";
 
 
 describe('CoreConnectorAggregate Tests -->', () => {
@@ -75,16 +75,30 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         // Get Parties Test  - Payee
         test('Get /parties/ACCOUNT_ID/{id}: sdk-server - Should return party info if it exists in National Bank', async () => {
-            const url = `${ML_URL}/parties/ACCOUNT_ID/${ACCOUNT_NO}`;
+            const url = `${ML_URL}/parties/ACCOUNT_NO/${ACCOUNT_NO}`;
             const res = await axios.get(url);
             logger.info("Get Parties Data ==>>>", res.data);
             logger.info(res.status.toString());
             expect(res.status).toEqual(200);
         });
+        //Qoute Requests
+        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
+            const quoteRequest: TQuoteRequest = quoteRequestDto();
+            const url = `${ML_URL}/quoterequests`;
+
+            const res = await axios.post(url, JSON.stringify(quoteRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+        });
 
         // Transfer Requests Test  - Payee
         test('POST /transfers: sdk-server - Should return receiveTransfer if party in national bank', async () => {
-            const transferRequest: TtransferRequest = transferRequestDto(idType, ACCOUNT_NO, "500");
+            const transferRequest: TtransferRequest = transferRequestDto(idType, ACCOUNT_NO, "103");
             const url = `${ML_URL}/transfers`;
             const res = await axios.post(url, JSON.stringify(transferRequest), {
                 headers: {
@@ -92,7 +106,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 },
             });
             logger.info(JSON.stringify(res.data));
-            expect(res.status).toEqual(200);
+            expect(res.status).toEqual(201);
         });
 
         // Patch Transfer Requests Test - Payee
@@ -131,8 +145,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         //  Send Money - Payer
-        test.skip('Test POST/ send-money: response should be payee details ', async ()=>{
-            const sendMoneyRequest: TNBMSendMoneyRequest= sendMoneyDTO(ACCOUNT_NO, "500");
+        test('Test POST/ send-money: response should be payee details ', async ()=>{
+            const sendMoneyRequest: TNBMSendMoneyRequest= sendMoneyDTO(ACCOUNT_NO, "103");
             const url = `${DFSP_URL}/send-money`;
     
             const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
@@ -144,6 +158,23 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info(JSON.stringify(res.data));
             expect(res.status).toEqual(200);
         });
+
+        test('Test Put/ send-money{id}: response should be 200', async()=>{
+            const updateSendMoneyRequest: TNBMUpdateSendMoneyRequest = updateSendMoneyDTO(true);
+            const url = `${DFSP_URL}/send-money/${randomUUID()}`;
+
+            const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(res.status.toString());
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
+
+        
+
 
     });
 });

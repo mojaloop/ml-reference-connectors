@@ -52,25 +52,24 @@ export class SDKClient implements ISDKClient {
         transfer: TSDKOutboundTransferRequest,
     ): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
         this.logger.info('SDKClient initiate receiveTransfer', transfer);
-        try {
-            const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
-                transfer,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+        const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
+            `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
+            transfer,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-            );
-            if (res.statusCode != 200) {
-                throw new Error(`Invalid response statusCode: ${res.statusCode}`);
-            }
-            return res;
-        } catch (error: unknown) {
-            const errMessage = (error as Error).message || 'Unknown Error';
-            this.logger.error(`error in initiateTransfer: ${errMessage}`);
-            throw SDKClientError.initiateTransferError(errMessage);
+            },
+        );
+        
+        this.logger.info('initiateTransfer response', res);
+        
+        if (res.statusCode != 200) {
+            throw new Error(`Invalid response statusCode: ${res.statusCode}`);
         }
+        
+        return res;
+        
     }
 
     async updateTransfer(

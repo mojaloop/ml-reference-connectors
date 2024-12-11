@@ -76,9 +76,6 @@ export type TNBMSendMoneyResponse = {
 
 export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
-    "msisdn": string;
-    "amount": string;
-    "description": string;
 }
 
 export type TCallbackRequest = {
