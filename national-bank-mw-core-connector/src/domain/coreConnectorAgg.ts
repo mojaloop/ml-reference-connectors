@@ -312,38 +312,47 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount${transferRes.amount}`);
+        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);   
         let result = true;
         if (
             !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
+            this.logger.error(`X_CURRENCY ${this.cbsConfig.X_CURRENCY} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             result = false;
         }
         if (transferRes.amountType === 'SEND') {
             if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount)) {
+                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount}`);
                 result = false;
             }
             if (!transferRes.to.supportedCurrencies) {
+                this.logger.error(`Payee Supported Currency not defined`);
                 throw SDKClientError.genericQuoteValidationError("Payee Supported Currency not defined", { httpCode: 500, mlCode: "4000" });
             }
             if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                this.logger.error(`Payee Supported Currency ${transferRes.to.supportedCurrencies} does not contain ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
             }
             if (!(transferRes.currency === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)) {
+                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency}`);
                 result = false;
             }
         } else if (transferRes.amountType === 'RECEIVE') {
             if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount)) {
+                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount}`);
                 result = false;
             }
             if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
             }
             if (transferRes.fxQuotesResponse) {
                 if (!transferRes.from.supportedCurrencies) {
+                    this.logger.error(`Payee Supported Currency not defined`);
                     throw ValidationError.unsupportedCurrencyError();
                 }
                 if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency))) {
+                    this.logger.error(`Payee Supported Currency ${transferRes.from.supportedCurrencies} does not contain ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency}`);
                     result = false;
                 }
             }
@@ -352,46 +361,57 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Retunred Quote with transfer response amount${outboundTransferRes.amount}`);
+        this.logger.info(`Validating Retunred Quote with transfer response amount ${outboundTransferRes.amount}`);
+
         let result = true;
         if (!this.validateConversionTerms(outboundTransferRes)) {
             result = false;
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
         const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body
-        if (!quoteResponseBody) {
+        if (!quoteResponseBody) { 
+            this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();
         }
         if (outboundTransferRes.amountType === "SEND") {
             if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
+                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
                 result = false;
             }
             if (!quoteResponseBody.payeeReceiveAmount) {
+                this.logger.error(`Payee Receive Amount not defined`);
                 throw SDKClientError.genericQuoteValidationError("Payee Receive Amount not defined", { httpCode: 500, mlCode: "4000" });
             }
             if (!(parseFloat(quoteResponseBody.payeeReceiveAmount.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || '0'))) {
+                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
                 result = false;
             }
             if (!(fxQuoteResponseBody?.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
+                this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
             }
         } else if (outboundTransferRes.amountType === "RECEIVE") {
             if (!outboundTransferRes.quoteResponse) {
+                this.logger.error(`Quote Response not defined`);
                 throw SDKClientError.noQuoteReturnedError();
             }
             if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0") + parseFloat(quoteResponseBody.payeeFspFee?.amount || "0"))) {
+                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount} + ${quoteResponseBody.payeeFspFee?.amount}`);
                 result = false;
             }
 
             if (!(quoteResponseBody.payeeReceiveAmount?.amount === quoteResponseBody.transferAmount.amount)) {
+                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount?.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
             }
             if (fxQuoteResponseBody) {
                 if (!(fxQuoteResponseBody.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
+                    this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                     result = false;
                 }
             }
         } else {
+            this.logger.error(`Invalid amountType received ${outboundTransferRes.amountType}`);
             SDKClientError.genericQuoteValidationError("Invalid amountType received", { httpCode: 500, mlCode: "4000" });
         }
         return result;
