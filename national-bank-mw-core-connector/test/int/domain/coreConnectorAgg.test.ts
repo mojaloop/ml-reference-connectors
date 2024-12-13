@@ -173,8 +173,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
             expect(res.status).toEqual(200);
         });
 
-        
-
 
     });
 });
