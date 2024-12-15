@@ -23,10 +23,6 @@
  * Elijah Okello <elijahokello90@gmail.com>
  --------------
  **********/
-
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-
 import { CoreConnectorAggregate } from '../../../src/domain';
 import {
     ISDKClient,
@@ -69,7 +65,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "locale": "en",
                 "gender": "male",
                 "status": "OK"
-            })
+            });
             //Act
             const res = await ccAggregate.getParties(idValue, idType);
 
@@ -123,7 +119,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             //Act
             const res =  await ccAggregate.updateTransfer(patchNotificationPayload,randomUUID());
             //Assert
-            expect(res).resolves
+            expect(res).resolves;
         });
     });
 

@@ -127,7 +127,7 @@ export class CoreConnectorAggregate {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
-            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
         if (
             parseFloat(transfer.amount) !==
@@ -336,7 +336,7 @@ export class CoreConnectorAggregate {
             result = false;
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
-        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body
+        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
         if (!quoteResponseBody) {
             throw SDKClientError.noQuoteReturnedError();
         }
