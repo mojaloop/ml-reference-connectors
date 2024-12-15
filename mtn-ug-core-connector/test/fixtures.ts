@@ -1,7 +1,8 @@
-import { TUpdateTransferDeps } from '../src/domain/SDKClient';
+import { TUpdateTransferDeps, TSDKOutboundTransferResponse} from '../src/domain/SDKClient';
 import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
-import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
+import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 type TransferAcceptInputDto = {
   fineractAccountId?: number;
@@ -66,20 +67,108 @@ export const fineractGetSavingsAccountResponseDto = (
   },
 });
 
-export const sdkInitiateTransferResponseDto = (
-  payeeFspCommissionAmount: string | undefined,
-  payeeFspFeeAmount: string | undefined,
-) => ({
-  quoteResponse: {
-    body: {
-      payeeFspCommission: {
-        amount: payeeFspCommissionAmount,
-      },
-      payeeFspFee: {
-        amount: payeeFspFeeAmount,
-      },
+export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
+  statusCode: 200,
+  data: {
+    homeTransactionId: crypto.randomUUID(),
+    from: {
+      idType: "MSISDN",
+      idValue: idValue
     },
-  },
+    to: {
+      idType: "MSISDN",
+      idValue: idValue,
+      supportedCurrencies: [
+        "MWK"
+      ]
+    },
+    amountType: "SEND",
+    currency: "EUR",
+    amount: "1000",
+    transactionType: "TRANSFER",
+    currentState: currentState,
+    quoteResponse: {
+      "body": {
+        "transferAmount": {
+          "currency": "MWK",
+          "amount": "123.45"
+        },
+        "payeeReceiveAmount": {
+          "currency": "AED",
+          "amount": "123.45"
+        },
+        "payeeFspFee": {
+          "currency": "AED",
+          "amount": "123.45"
+        },
+        "payeeFspCommission": {
+          "currency": "AED",
+          "amount": "0"
+        },
+        "expiration": "2016-05-24T08:38:08.699-04:00",
+        "geoCode": {
+          "latitude": "+45.4215",
+          "longitude": "+75.6972"
+        },
+        "ilpPacket": "AYIBgQAAAAAAAASwNGxldmVsb25lLmRmc3AxLm1lci45T2RTOF81MDdqUUZERmZlakgyOVc4bXFmNEpLMHlGTFGCAUBQU0svMS4wCk5vbmNlOiB1SXlweUYzY3pYSXBFdzVVc05TYWh3CkVuY3J5cHRpb246IG5vbmUKUGF5bWVudC1JZDogMTMyMzZhM2ItOGZhOC00MTYzLTg0NDctNGMzZWQzZGE5OGE3CgpDb250ZW50LUxlbmd0aDogMTM1CkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbgpTZW5kZXItSWRlbnRpZmllcjogOTI4MDYzOTEKCiJ7XCJmZWVcIjowLFwidHJhbnNmZXJDb2RlXCI6XCJpbnZvaWNlXCIsXCJkZWJpdE5hbWVcIjpcImFsaWNlIGNvb3BlclwiLFwiY3JlZGl0TmFtZVwiOlwibWVyIGNoYW50XCIsXCJkZWJpdElkZW50aWZpZXJcIjpcIjkyODA2MzkxXCJ9IgA",
+        "condition": "string",
+        "extensionList": {
+          "extension": [
+            {
+              "key": "string",
+              "value": "string"
+            }
+          ]
+        }
+      },
+      "headers": {}
+    },
+    fxQuotesResponse:{
+      "body": {
+        "homeTransactionId": "string",
+        "condition": "string",
+        "conversionTerms": {
+          "conversionId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "determiningTransferId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "initiatingFsp": "string",
+          "counterPartyFsp": "string",
+          "amountType": "RECEIVE",
+          "sourceAmount": {
+            "currency": "EUR",
+            "amount": "1000"
+          },
+          "targetAmount": {
+            "currency": "AED",
+            "amount": "123.45"
+          },
+          "expiration": "2016-05-24T08:38:08.699-04:00",
+          "charges": [
+            {
+              "chargeType": "string",
+              "sourceAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              },
+              "targetAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              }
+            }
+          ],
+          "extensionList": {
+            "extension": [
+              {
+                "key": "string",
+                "value": "string"
+              }
+            ]
+          }
+        }
+      },
+      "headers": {}
+    },
+    transferId: crypto.randomUUID()
+  }
 });
 
 export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;

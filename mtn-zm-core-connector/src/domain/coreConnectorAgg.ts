@@ -276,7 +276,7 @@ export class CoreConnectorAggregate {
 
     // Payer
     async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
-        this.logger.info(`Transfer from mtn account with ID${transfer.payerAccount}`);
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);

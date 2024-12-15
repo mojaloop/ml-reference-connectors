@@ -123,6 +123,13 @@ export class ValidationError extends BasicError {
         });
     }
 
+    static notEnoughInformationError(message: string, mlCode: string){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: 500,
+        });
+    }
+
     static quoteNotDefinedError(message: string, mlCode: string, httpCode: number){
         return new ValidationError(message, {
             mlCode: mlCode,

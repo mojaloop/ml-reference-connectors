@@ -55,6 +55,7 @@ import {
 } from './interfaces';
 import {
     ISDKClient,
+    SDKClientError,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
@@ -72,7 +73,7 @@ export class CoreConnectorAggregate {
         logger: ILogger,
     ) {
         // todo: set the IdType from here 
-        this.IdType = "MSISDN";
+        this.IdType = config.get("mtn.SUPPORTED_ID_TYPE");
         this.logger = logger;
     }
 
@@ -83,15 +84,64 @@ export class CoreConnectorAggregate {
         }
     }
     private validateQuote(transfer: TtransferRequest): boolean {
-        // todo define implmentation
-        this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
-        return true;
+        this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
+        let result = true;
+        if (transfer.amountType === 'SEND') {
+            if (!this.checkSendAmounts(transfer)) {
+                result = false;
+            }
+        } else if (transfer.amountType === 'RECEIVE') {
+            if (!this.checkReceiveAmounts(transfer)) {
+                result = false;
+            }
+        }
+        return result;
     }
 
-    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
-        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
-        // todo define implmentation
-        return true;
+    private checkSendAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Send Quote...', { transfer });
+        let result = true;
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
+            // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
+        ) {
+            result = false;
+        }
+
+        if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
+        }
+
+        if (
+            parseFloat(transfer.quote.payeeReceiveAmount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+        return result;
+    }
+
+    private checkReceiveAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Receive Quote...', { transfer });
+        let result = true;
+        if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+        }
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspCommissionAmount || '0') +
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+
+        if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
+            result = false;
+        }
+        return result;
     }
 
     //Payee
@@ -102,12 +152,12 @@ export class CoreConnectorAggregate {
         }
 
         const lookupRes = await this.mtnClient.getKyc({ msisdn: id });
-        const party = this.getPartyResponse(lookupRes,id);
+        const party = this.getPartyResponse(lookupRes, id);
         this.logger.info(`Party found`, { party });
         return party;
     }
 
-    private getPartyResponse(mtnKycResponse: TMTNKycResponse, idValue: string):TLookupPartyInfoResponse{
+    private getPartyResponse(mtnKycResponse: TMTNKycResponse, idValue: string): TLookupPartyInfoResponse {
         return {
             data: {
                 displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
@@ -119,7 +169,7 @@ export class CoreConnectorAggregate {
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
             },
-            statusCode: Number(mtnKycResponse.status),
+            statusCode: 200,
         };
     }
 
@@ -138,16 +188,16 @@ export class CoreConnectorAggregate {
         const expiration = new Date();
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
         const expirationJSON = expiration.toJSON();
-        return this.getQuoteResponse(quoteRequest, fees.toString() ,expirationJSON);
+        return this.getQuoteResponse(quoteRequest, fees.toString(), expirationJSON);
     }
 
 
-    private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse{
+    private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
-            payeeFspFeeAmount: fees ,
+            payeeFspFeeAmount: fees,
             payeeFspFeeAmountCurrency: quoteRequest.currency,
             payeeReceiveAmount: quoteRequest.amount,
             payeeReceiveAmountCurrency: quoteRequest.currency,
@@ -171,7 +221,7 @@ export class CoreConnectorAggregate {
             throw ValidationError.invalidQuoteError();
         }
 
-        this.checkAccountBarred(transfer.to.idValue);
+        await this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
@@ -179,37 +229,42 @@ export class CoreConnectorAggregate {
         };
     }
 
-    
+
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
             throw ValidationError.transferNotCompletedError();
         }
-        if (!this.validatePatchQuote(updateTransferPayload)) {
-            throw ValidationError.invalidQuoteError();
-        }
         const mtnDisbursementRequest: TMTNDisbursementRequestBody = this.getDisbursementRequestBody(updateTransferPayload);
-        await this.mtnClient.sendMoney(mtnDisbursementRequest);
+        try {
+            await this.mtnClient.sendMoney(mtnDisbursementRequest);
+        } catch (error: unknown) {
+            await this.performRefundTransfer();
+        }
     }
 
-    
+    async performRefundTransfer() {
+        //todo: to be implemented
+    }
+
+
     private getDisbursementRequestBody(requestBody: TtransferPatchNotificationRequest): TMTNDisbursementRequestBody {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
         }
-        if(!requestBody.transferId){
-            throw ValidationError.transferIdNotDefinedError("TransferId Not Defined",'5000', 500);
+        if (!requestBody.transferId) {
+            throw ValidationError.transferIdNotDefinedError("TransferId Not Defined", '5000', 500);
         }
         return {
-           "amount": requestBody.quoteRequest.body.amount.amount,
-           "currency": this.mtnConfig.X_CURRENCY,
-           "externalId" : requestBody.transferId,
-           "payee": {
-           "partyIdType": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdType,
-            "partyId": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier
-           },
-           "payerMessage": "Payer Attached Note For Transactions",
-           "payeeNote" : "Sending Money"
+            "amount": requestBody.quoteRequest.body.amount.amount,
+            "currency": this.mtnConfig.X_CURRENCY,
+            "externalId": requestBody.transferId,
+            "payee": {
+                "partyIdType": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdType,
+                "partyId": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier
+            },
+            "payerMessage": "Payer Attached Note For Transactions",
+            "payeeNote": "Sending Money"
 
         };
 
@@ -220,30 +275,104 @@ export class CoreConnectorAggregate {
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
-                "idValue":transfer.to.idValue,
+                "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
                 "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName":transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth":transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
             "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
 
-    private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount${transferResponse.amount}`);
-        // todo: Define Implementations
-        return true;
+    private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean { 
+        this.logger.info(`Validating Conversion Terms with transfer response amount${transferRes.amount}`);
+        let result = true;
+        if (
+            !(this.mtnConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
+        ) {
+            result = false;
+        }
+        if (transferRes.amountType === 'SEND') {
+            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount)) {
+                result = false;
+            }
+            if (!transferRes.to.supportedCurrencies) {
+                throw SDKClientError.genericQuoteValidationError("Payee Supported Currency not defined", { httpCode: 500, mlCode: "4000" });
+            }
+            if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                result = false;
+            }
+            if (!(transferRes.currency === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)) {
+                result = false;
+            }
+        } else if (transferRes.amountType === 'RECEIVE') {
+            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount)) {
+                result = false;
+            }
+            if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                result = false;
+            }
+            if (transferRes.fxQuotesResponse) {
+                if (!transferRes.from.supportedCurrencies) {
+                    throw ValidationError.unsupportedCurrencyError();
+                }
+                if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency))) {
+                    result = false;
+                }
+            }
+        }
+        return result;
     }
 
-    private validateReturnedQuote(transferResponse: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Retunred Quote with transfer response amount${transferResponse.amount}`);
-        // todo: Define Implementations
-        return true;
+    private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): boolean {
+        this.logger.info(`Validating Retunred Quote with transfer response amount${outboundTransferRes.amount}`);
+        let result = true;
+        if (!this.validateConversionTerms(outboundTransferRes)) {
+            result = false;
+        }
+        const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
+        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body
+        if (!quoteResponseBody) {
+            throw SDKClientError.noQuoteReturnedError();
+        }
+        if (outboundTransferRes.amountType === "SEND") {
+            if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
+                result = false;
+            }
+            if (!quoteResponseBody.payeeReceiveAmount) {
+                throw SDKClientError.genericQuoteValidationError("Payee Receive Amount not defined", { httpCode: 500, mlCode: "4000" });
+            }
+            if (!(parseFloat(quoteResponseBody.payeeReceiveAmount.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || '0'))) {
+                result = false;
+            }
+            if (!(fxQuoteResponseBody?.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
+                result = false;
+            }
+        } else if (outboundTransferRes.amountType === "RECEIVE") {
+            if (!outboundTransferRes.quoteResponse) {
+                throw SDKClientError.noQuoteReturnedError();
+            }
+            if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0") + parseFloat(quoteResponseBody.payeeFspFee?.amount || "0"))) {
+                result = false;
+            }
+
+            if (!(quoteResponseBody.payeeReceiveAmount?.amount === quoteResponseBody.transferAmount.amount)) {
+                result = false;
+            }
+            if (fxQuoteResponseBody) {
+                if (!(fxQuoteResponseBody.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
+                    result = false;
+                }
+            }
+        } else {
+            SDKClientError.genericQuoteValidationError("Invalid amountType received", { httpCode: 500, mlCode: "4000" });
+        }
+        return result;
     }
 
 
@@ -317,7 +446,7 @@ export class CoreConnectorAggregate {
             "amount": deps.amount,
             "currency": this.mtnConfig.X_CURRENCY,
             "externalId": transferId,
-            "payer" :{
+            "payer": {
                 "partyId": deps.msisdn,
                 "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
             },
@@ -335,15 +464,15 @@ export class CoreConnectorAggregate {
         await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
     }
 
-    async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
+    async handleCallback(payload: TMTNCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-        if(payload.status === "SUCCESSFUL"){
-            await this.sdkClient.updateTransfer({acceptQuote: true},payload.externalId);
-        }else{
-            await this.sdkClient.updateTransfer({acceptQuote: false},payload.externalId);
+        if (payload.status === "SUCCESSFUL") {
+            await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+        } else {
+            await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
         }
     }
-    
+
 }
 
 

@@ -81,6 +81,8 @@ export class BaseRoutes {
                 logger.error('Error', error.message);
               }
               logger.error(`${JSON.stringify(error.config)}`);
+        }else{
+            logger.error(`${message}`)
         }
         return h.response({ status, message, details }).code(httpCode);
     }
