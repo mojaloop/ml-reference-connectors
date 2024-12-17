@@ -486,6 +486,7 @@ workflows:
             branches:
               only:
                 - main
+                - dev
                 - /release\/v.*/
       - github-release:
           context: org-global
@@ -495,6 +496,7 @@ workflows:
             branches:
               only:
                 - main
+                - dev
                 - /release\/v.*/
       - publish:
           context: org-global
