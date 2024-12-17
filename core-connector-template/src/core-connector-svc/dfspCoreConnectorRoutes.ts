@@ -101,6 +101,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest;
+        this.logger.info(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendMoney(transfer);
             return this.handleResponse(result, h);
@@ -112,6 +113,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest;
+        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
@@ -125,6 +127,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){
         const callbackRequestBody: TCallbackRequest = request.payload as TCallbackRequest;
+        this.logger.info(`Transfer Callback ${callbackRequestBody}`);
         try{
             const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
             return this.handleResponse(callbackHandledRes,h);
