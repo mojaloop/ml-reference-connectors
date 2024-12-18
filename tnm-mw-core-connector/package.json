@@ -79,7 +79,7 @@
     "convict": "^6.2.4",
     "dotenv": "^16.4.7",
     "fast-safe-stringify": "^2.1.1",
-    "openapi-backend": "^5.10.6",
+    "openapi-backend": "^5.11.1",
     "tslib": "^2.6.3"
   },
   "lint-staged": {
