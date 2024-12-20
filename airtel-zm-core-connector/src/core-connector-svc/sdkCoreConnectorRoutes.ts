@@ -103,7 +103,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(result.data, h);
         } catch (error) {
             if(error instanceof Error){
-                this.logger.error(error,error)
+                this.logger.error(error,error);
             }
             return this.handleError(error, h);
         }
@@ -116,7 +116,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
             if(error instanceof Error){
-                this.logger.error(error,error)
+                this.logger.error(error,error);
             }
             return this.handleError(error, h);
         }
@@ -129,7 +129,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             if(error instanceof Error){
-                this.logger.error(error,error)
+                this.logger.error(error,error);
             }
             return this.handleError(error, h);
         }
@@ -145,7 +145,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             if(error instanceof Error){
-                this.logger.error(error,error)
+                this.logger.error(error,error);
             }
             return this.handleError(error, h);
         }
