@@ -32,13 +32,14 @@ export type TCBSConfig = {
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    FSP_ID:string
+    FSP_ID: string
 }
 
 
 export type TCbsSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
+    "amountType": "RECEIVE" | "SEND",
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
     "sendCurrency": components['schemas']['Currency'];
@@ -49,6 +50,8 @@ export type TCbsSendMoneyRequest = {
     "payerAccount": string;
     "dateOfBirth": string;
 }
+
+export type TMerchantPaymentRequest = TCbsSendMoneyRequest;
 
 export type TCbsSendMoneyResponse = {
     "payeeDetails": {
@@ -66,12 +69,15 @@ export type TCbsSendMoneyResponse = {
     "transactionId": string;
 }
 
+export type TMerchantPaymentResponse = TCbsSendMoneyResponse;
 
 export type TCBSUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
     "amount": string;
 }
+
+export type TUpdateMerchantPaymentRequest = TCBSUpdateSendMoneyRequest;
 
 export type TCallbackRequest = {
     "transaction": {

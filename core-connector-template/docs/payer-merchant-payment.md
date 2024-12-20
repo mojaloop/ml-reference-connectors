@@ -1,14 +1,16 @@
-# Payer Send Money
+# Payer Initiate Merchant Payment 
+This sequence diagram details the process of initiating a merchant payment and the steps the core connector takes to initiate a payment in the mojaloop connector.
+
 
 ```mermaid
 sequenceDiagram
   autoNumber
-  DFSP Customer App->>CC: POST /send-money/ {}
+  DFSP Customer App->>CC: POST /merchant-payment/ {}
   CC->>CC: Check Request
   Alt if Checks fail
   CC-->>DFSP Customer App: Response 400
   End
-  CC->>ML Connector: POST /transfer /{amountType: SEND} 
+  CC->>ML Connector: POST /transfer /{amountType: RECEIVE} 
   ML Connector-->>CC: Response
   CC->> CC: Check Response
   Alt if Checks fail
