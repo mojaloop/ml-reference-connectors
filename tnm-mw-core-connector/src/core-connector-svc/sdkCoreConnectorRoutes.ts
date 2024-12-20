@@ -103,9 +103,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
-            const Id = params['ID'] as string;
-            const IdType = params['IdType'] as string;
+            const Id = params['idValue'] as string;
+            const IdType = params['idType'] as string;
             const result = await this.aggregate.getParties(Id,IdType);
+            this.logger.info(`Get party for ${IdType} ${Id}`);
             return this.handleResponse(result.data, h);
         } catch (error) {
             return this.handleError(error, h);
@@ -116,6 +117,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         try {
             const quoteRequest = request.payload as TQuoteRequest;
             const quote = await this.aggregate.quoteRequest(quoteRequest);
+            this.logger.info(`Quote request ${quoteRequest}`);
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -126,6 +128,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TtransferRequest;
         try {
             const result = await this.aggregate.receiveTransfer(transfer);
+            this.logger.info(`Transfers ${transfer}`);
             return this.handleResponse(result, h, 201);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -138,6 +141,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const { params } = context.request;
             const transferId = params['transferId'] as string;
             const result = await this.aggregate.updateTransfer(transfer, transferId);
+            this.logger.info(`Transfers ${transfer}`);
+            this.logger.info(`Transfer Id ${transferId}`);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             return this.handleError(error, h);

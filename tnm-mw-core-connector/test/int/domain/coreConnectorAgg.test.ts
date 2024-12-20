@@ -25,219 +25,144 @@
  **********/
 
 
- import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
- import { TNMClientFactory, TNMError,  ITNMClient, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
- import {
-     ISDKClient,
-     SDKClientFactory,
-
- } from '../../../src/domain/SDKClient';
- import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
- import { loggerFactory } from '../../../src/infra/logger';
- import config from '../../../src/config';
- import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO } from '../../fixtures';
- import { Service } from '../../../src/core-connector-svc';
- import axios from 'axios';
- import MockAdapter from 'axios-mock-adapter';
- import { randomUUID } from 'crypto';
+import {TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
+import {TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, TNMCallbackPayload } from '../../../src/domain/CBSClient';
+import { loggerFactory } from '../../../src/infra/logger';
+import config from '../../../src/config';
+import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TNMCallbackPayloadDto } from '../../fixtures';
+import { Service } from '../../../src/core-connector-svc';
+import axios from 'axios';
+import { randomUUID } from 'crypto';
 
 
- jest.setTimeout(20000);
- const logger = loggerFactory({ context: 'ccAgg tests' });
- const tnmConfig = config.get('tnm');
- const SDK_URL = 'http://localhost:4010';
- const ML_URL = 'http://0.0.0.0:3003';
- const DFSP_URL = 'http://0.0.0.0:3004';
+jest.setTimeout(20000);
+const logger = loggerFactory({ context: 'ccAgg tests' });
+const ML_URL = `http://${config.get("server.SDK_SERVER_HOST")}:${config.get("server.SDK_SERVER_PORT")}`;
+const DFSP_URL = `http://${config.get("server.DFSP_SERVER_HOST")}:${config.get("server.DFSP_SERVER_PORT")}`;
 
- // Happy Path variables
- const MSISDN = "978980797";
- const idType = "MSISDN";
+// Happy Path variables
+const MSISDN = "0882997445";
+const idType = "MSISDN";
 
 
- describe.skip('CoreConnectorAggregate Tests -->', () => {
-     let ccAggregate: CoreConnectorAggregate;
-     let tnmClient: ITNMClient;
-     let sdkClient: ISDKClient;
+describe('CoreConnectorAggregate Tests -->', () => {
 
-     beforeAll(async () => {
-         await Service.start();
-     });
+    beforeAll(async () => {
+        await Service.start();
+    });
 
 
-     afterAll(async () => {
-         await Service.stop();
-     });
+    afterAll(async () => {
+        await Service.stop();
+    });
 
-     beforeEach(() => {
-         // mockAxios.reset();
-         const httpClient = AxiosClientFactory.createAxiosClientInstance();
-         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-         tnmClient = TNMClientFactory.createClient({
-             tnmConfig,
-             httpClient,
-             logger,
-         });
-         ccAggregate = new CoreConnectorAggregate(sdkClient, tnmClient, tnmConfig, logger);
-     });
+    beforeEach(() => {
+    });
 
-     describe('TNM Test', () => {
+    describe('TNM Test', () => {
 
-         // Get Parties Test  - Payee
-         test('Get /parties/MSISDN/{id}: sdk-server - Should return party info if it exists in airtel', async () => {
-             const url = `${ML_URL}/parties/MSISDN/${MSISDN}`;
-             const res = await axios.get(url);
-             logger.info(res.data);
-             expect(res.status).toEqual(200);
+        // Get Parties Test  - Payee
+        test('Get /parties/MSISDN/{id}: sdk-server - Should return party info if it exists in airtel', async () => {
+            const url = `${ML_URL}/parties/MSISDN/${MSISDN}`;
+            const res = await axios.get(url);
+            logger.info(res.data);
+            expect(res.status).toEqual(200);
 
-         });
+        });
 
-         // Quote Requests Test  - Payee
-         test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
-             const quoteRequest: TQuoteRequest = quoteRequestDto();
-             const url = `${ML_URL}/quoterequests`;
+        // Quote Requests Test  - Payee
+        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
+            const quoteRequest: TQuoteRequest = quoteRequestDto();
+            const url = `${ML_URL}/quoterequests`;
 
-             const res = await axios.post(url, JSON.stringify(quoteRequest), {
-                 headers: {
-                     'Content-Type': 'application/json',
-                 },
-             });
-             logger.info(JSON.stringify(res.data));
+            const res = await axios.post(url, JSON.stringify(quoteRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
 
-             expect(res.status).toEqual(200);
-         });
+            expect(res.status).toEqual(200);
+        });
 
-         // Transfer Requests Test  - Payee
-         test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
-             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
-             const url = `${ML_URL}/transfers`;
-             const res = await axios.post(url, JSON.stringify(transferRequest), {
-                 headers: {
-                     'Content-Type': 'application/json',
-                 },
-             });
+        // Transfer Requests Test  - Payee
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
+            const url = `${ML_URL}/transfers`;
 
-             logger.info(JSON.stringify(res.data));
-             expect(res.status).toEqual(200);
-         });
+            const res = await axios.post(url, JSON.stringify(transferRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(201);
+        });
 
 
-         // Patch Transfer Requests Test - Payee
+        // Patch Transfer Requests Test - Payee
 
-         test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
-             const mockAxios = new MockAdapter(axios);
-             mockAxios.onPut().reply(200, {
-                 "data": {
-                     "transaction": {
-                         "reference_id": "a867963f-37b2-4723-9757-26bf1f28902c",
-                         "airtel_money_id": "01101110011",
-                         "id": MSISDN,
-                         "status": "Completed Transaction",
-                         "message": "Working Transaction",
-                     }
-                 },
-                 "status": {
-                     "response_code": "200",
-                     "code": "200",
-                     "success": true,
-                     "message": "Successful",
-                 }
-             });
+        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
+            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "5000000");
+            const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
+            const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500");
-             const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
-             const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
-                 headers: {
-                     'Content-Type': 'application/json',
-                 },
-             });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
 
-             logger.info(JSON.stringify(res.data));
-             mockAxios.restore();
-             expect(res.status).toEqual(200);
-         });
+        //  Send Money - Payer
 
-         //  Send Money - Payer
+        test('Test POST/ send-money: response should be payee details ', async () => {
+            const sendMoneyRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
+            const url = `${DFSP_URL}/send-money`;
 
-         test('Test POST/ send-money: response should be payee details ', async ()=>{
-             const sendMoneyRequest: TNMSendMoneyRequest= sendMoneyDTO(MSISDN, "500");
-             const url = `${DFSP_URL}/send-money`;
+            const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-             const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
-                 headers: {
-                     'Content-Type': 'application/json',
-                 },
-             });
+            logger.info(JSON.stringify(res.data));
 
-             logger.info(JSON.stringify(res.data));
-
-             expect(res.status).toEqual(200);
-         });
+            expect(res.status).toEqual(200);
+        });
 
 
-         // Confirm Send Money - Payer
-         test.skip('Test Put/ send-money{id}: response should be 200', async()=>{
-             const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
-             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
+        // Confirm Send Money - Payer
+        test('Test Put/ send-money{id}: response should be 200', async () => {
+            const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
+            const url = `${DFSP_URL}/send-money/${randomUUID()}`;
 
-             const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
-                 headers: {
-                     'Content-Type': 'application/json',
-                 },
-             });
+            const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-             logger.info(JSON.stringify(res.data));
-         });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
 
+        // TNM Callback
+        test('Test PUT /callback; response should be 200', async () => {
+            const callbackRequestPayload: TNMCallbackPayload = TNMCallbackPayloadDto();
+            const url = `${DFSP_URL}/callback`;
 
-         test('Test Get Transfer Quote (Get Quotes)', async () => {
-             try {
-                  await ccAggregate.quoteRequest(quoteRequestDto());
-             } catch (error) {
-                 if (error instanceof TNMError) {
-                     expect(error.httpCode).toEqual(500);
-                     expect(error.mlCode).toEqual('5000');
-                 }
-             }
+            const res = await axios.put(url, JSON.stringify(callbackRequestPayload), {
+                headers: {
+                    "Content-Type": 'application/json'
+                }
+            });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
 
-         });
+    });
 
-         test('Test Airtel Disbursements (Transfers - Happy Path)', async () => {
-             try {
-                 await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
-             } catch (error) {
-                 if (error instanceof TNMError) {
-                     expect(error.httpCode).toEqual(500);
-                     expect(error.mlCode).toEqual('5000');
-                 }
-             }
-
-         });
-
-         test('Test Airtel Disbursements (Transfers - Unhappy Path)', async () => {
-             try {
-                 await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
-             } catch (error) {
-                 if (error instanceof TNMError) {
-                     expect(error.httpCode).toEqual(500);
-                     expect(error.mlCode).toEqual('5000');
-                 }
-             }
-
-         });
-
-
-         test('Test Airtel Disbursements (Transfers - Unhappy Path)', async () => {
-             try {
-                await ccAggregate.updateTransfer(transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "500"), '47e8a9cd-3d89-55c5-a15a-b57a28ad763e');
-             } catch (error) {
-                 if (error instanceof TNMError) {
-                     expect(error.httpCode).toEqual(500);
-                     expect(error.mlCode).toEqual('5000');
-                 }
-             }
-
-         });
-
-     });
-
- });
+});
