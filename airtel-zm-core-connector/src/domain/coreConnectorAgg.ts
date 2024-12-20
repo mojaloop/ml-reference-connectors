@@ -173,14 +173,69 @@ export class CoreConnectorAggregate {
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
-        // todo define implmentation
-        this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
-        return true;
+        this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
+        let result = true;
+        if (transfer.amountType === 'SEND') {
+            if (!this.checkSendAmounts(transfer)) {
+                result = false;
+            }
+        } else if (transfer.amountType === 'RECEIVE') {
+            if (!this.checkReceiveAmounts(transfer)) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    private checkSendAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Send Quote...', { transfer });
+        let result = true;
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
+            // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
+        ) {
+            result = false;
+        }
+
+        if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
+        }
+
+        if (
+            parseFloat(transfer.quote.payeeReceiveAmount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+        return result;
+    }
+
+    private checkReceiveAmounts(transfer: TtransferRequest): boolean {
+        this.logger.info('Validating Type Receive Quote...', { transfer });
+        let result = true;
+        if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+        }
+        if (
+            parseFloat(transfer.amount) !==
+            parseFloat(transfer.quote.transferAmount) -
+            parseFloat(transfer.quote.payeeFspCommissionAmount || '0') +
+            parseFloat(transfer.quote.payeeFspFeeAmount)
+        ) {
+            result = false;
+        }
+
+        if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
+            result = false;
+        }
+        return result;
     }
 
     private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
