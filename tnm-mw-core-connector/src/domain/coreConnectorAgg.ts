@@ -37,6 +37,7 @@ import {
     TNMError,
     TNMInvoiceRequest,
     TNMInvoiceResponse,
+    TNMMerchantPaymentRequest,
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
     TNMUpdateSendMoneyRequest,
@@ -345,7 +346,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest | TNMMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.tnmClient.getKyc({
             msisdn: transfer.payerAccount
         });
@@ -365,7 +366,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': 'SEND',
+            'amountType': transfer.amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
