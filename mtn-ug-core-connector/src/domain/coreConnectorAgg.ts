@@ -164,7 +164,7 @@ export class CoreConnectorAggregate {
                 idType: config.get("mtn.SUPPORTED_ID_TYPE"),
                 idValue: idValue,
                 lastName: mtnKycResponse.family_name,
-                middleName: " ",
+                middleName: mtnKycResponse.given_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
             },
@@ -202,7 +202,7 @@ export class CoreConnectorAggregate {
             payeeReceiveAmountCurrency: quoteRequest.currency,
             quoteId: quoteRequest.quoteId,
             transactionId: quoteRequest.transactionId,
-            transferAmount: (Number(quoteRequest.amount) + Number(fees).toString()),
+            transferAmount: (Number(quoteRequest.amount) + Number(fees)).toString(),
             transferAmountCurrency: quoteRequest.currency,
         };
     }
