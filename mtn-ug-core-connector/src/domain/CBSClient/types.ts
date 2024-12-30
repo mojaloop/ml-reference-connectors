@@ -168,6 +168,8 @@ export type TMTNUpdateSendMoneyRequest = {
 }
 
 
+export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
+
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
@@ -181,6 +183,12 @@ export type TMTNSendMoneyRequest = {
     "payerAccount": string;
     "dateOfBirth": string;
 }
+
+
+export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest
+
+export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
+
 
 export type TMTNCallbackPayload = {
     financialTransactionId: string;

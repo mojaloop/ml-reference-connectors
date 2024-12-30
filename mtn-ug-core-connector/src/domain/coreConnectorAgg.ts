@@ -40,6 +40,7 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
+    TMTNMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -372,7 +373,7 @@ export class CoreConnectorAggregate {
     }
 
 
-    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.mtnClient.getKyc({
             msisdn: transfer.payerAccount
         });
