@@ -175,6 +175,7 @@ export type TMTNSendMoneyRequest = {
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
+    "amountType": "RECEIVE" | "SEND",
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": string;
     "transactionDescription": string;
