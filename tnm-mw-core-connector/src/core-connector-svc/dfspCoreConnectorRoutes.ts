@@ -30,24 +30,26 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, TNMMerchantPaymentRequest, TNMUpdateMerchantPaymentRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
 
 export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;
-    private readonly routes: ServerRoute[] = [];
-    private readonly logger: ILogger;
-
-    // Register openapi spec operationIds and route handler functions here
-    private readonly handlers = {
-        sendMoney: this.initiateTransfer.bind(this),
-        sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
-        callback: this.callbackHandler.bind(this),
-        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
-        notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
-    };
+     private readonly routes: ServerRoute[] = [];
+     private readonly logger: ILogger;
+ 
+     // Register openapi spec operationIds and route handler functions here
+     private readonly handlers = {
+         sendMoney: this.initiateTransfer.bind(this),
+         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+         initiateMerchantPayment: this.initiateTransfer.bind(this),
+         updateInitiatedMerchantPayment: this.updateInitiatedTransfer.bind(this),
+         callback: this.callbackHandler.bind(this),
+         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
+     };
 
     constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
         super();
@@ -99,7 +101,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TNMSendMoneyRequest;
+        const transfer = request.payload as TNMSendMoneyRequest | TNMMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendMoney(transfer);
@@ -111,7 +113,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
-        const transferAccept = request.payload as TNMUpdateSendMoneyRequest;
+        const transferAccept = request.payload as TNMUpdateSendMoneyRequest | TNMUpdateMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(

@@ -198,6 +198,7 @@ export type TNMSendMoneyResponse = {
 export type TNMSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
+    "amountType": "RECEIVE" | "SEND",
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
     "sendCurrency": components['schemas']['Currency'];
@@ -209,6 +210,7 @@ export type TNMSendMoneyRequest = {
     "dateOfBirth": string;
 }
 
+export type TNMMerchantPaymentRequest = TNMSendMoneyRequest; 
 
 export type TNMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
@@ -216,6 +218,8 @@ export type TNMUpdateSendMoneyRequest = {
     "amount": string;
     "narration": string;
 }
+
+export type TNMUpdateMerchantPaymentRequest = TNMUpdateSendMoneyRequest;
 
 export type TNMCollectMoneyRequest = {
     "reference": string;
