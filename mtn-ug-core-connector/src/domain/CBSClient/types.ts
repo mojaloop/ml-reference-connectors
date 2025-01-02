@@ -168,11 +168,14 @@ export type TMTNUpdateSendMoneyRequest = {
 }
 
 
+export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
+
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
+    "amountType": "RECEIVE" | "SEND",
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": string;
     "transactionDescription": string;
@@ -181,6 +184,12 @@ export type TMTNSendMoneyRequest = {
     "payerAccount": string;
     "dateOfBirth": string;
 }
+
+
+export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest
+
+export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
+
 
 export type TMTNCallbackPayload = {
     financialTransactionId: string;
