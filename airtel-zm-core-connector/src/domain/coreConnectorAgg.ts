@@ -39,6 +39,7 @@ import {
     AirtelError,
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
+    TAirtelMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -275,6 +276,7 @@ export class CoreConnectorAggregate {
         };
     }
 
+    //  Payer
 
     async sendTransfer(transfer: TAirtelSendMoneyRequest): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
@@ -321,7 +323,7 @@ export class CoreConnectorAggregate {
 
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.airtelClient.getKyc({
             msisdn: transfer.payerAccount
         });
