@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.13.0](https://github.com/mojaloop/ml-reference-connectors/compare/v1.12.0...v1.13.0) (2025-01-08)
+
+
+### Features
+
+* added auth and kyc ([93f09ca](https://github.com/mojaloop/ml-reference-connectors/commit/93f09ca78216622c735e7d655a73f7b06a01a6ed))
+* added logging for errors ([d8899bf](https://github.com/mojaloop/ml-reference-connectors/commit/d8899bf5ae621af62fa66573897e8f487a80d660))
+* added logging of request and respone bodies ([60a7e03](https://github.com/mojaloop/ml-reference-connectors/commit/60a7e036a10a31278c01220ff26c5f1d8414610d))
+* added quote validation logic for incoming payments ([5b1ce67](https://github.com/mojaloop/ml-reference-connectors/commit/5b1ce67be3c25431b514c573068014b3e07833fc))
+* change callback req method to post for tnm ([db3180e](https://github.com/mojaloop/ml-reference-connectors/commit/db3180eae26e0f8a456bcfe78a612e14e6b4eb93))
+* create new connector for mtn ug ([651ac79](https://github.com/mojaloop/ml-reference-connectors/commit/651ac79fcf57b4c1f6c21ade8ae9b4c81d67130d))
+* fixed MTN Client to support integration ([089a13c](https://github.com/mojaloop/ml-reference-connectors/commit/089a13c281dd0ff926c6dd8e59cb8a8b7dc16c8f))
+* refactored aggregate and added callback handler ([dfd0bdd](https://github.com/mojaloop/ml-reference-connectors/commit/dfd0bdd943300c09d0c62e9d4b0ce654155d811b))
+
+
+### Bug Fixes
+
+* fix failing tests ([0c1f6d6](https://github.com/mojaloop/ml-reference-connectors/commit/0c1f6d625997101970eb6a64cb8f3603b463fd27))
+* fixed failing callback test ([fd8844c](https://github.com/mojaloop/ml-reference-connectors/commit/fd8844c7e7f8cb1c41381f076367a007ffc4b632))
+* fixed failing integration tests ([e338c28](https://github.com/mojaloop/ml-reference-connectors/commit/e338c281112da0784c74372a77838a3d90737395))
+* fixed liniting errors and tests in airtel-zm connector ([c2a4dff](https://github.com/mojaloop/ml-reference-connectors/commit/c2a4dff0b96119f89823bdbfe568bb27aaf02757))
+* fixed linting errors ([163dbee](https://github.com/mojaloop/ml-reference-connectors/commit/163dbeedb9d2cd741744931ac474d414338f8567))
+* fixed linting errors and fixed failing tests in ci ([0839177](https://github.com/mojaloop/ml-reference-connectors/commit/08391772959d050ec631284e3a004f3a538a54f3))
+* fixed middleName return in getParties call ([a1b7bd0](https://github.com/mojaloop/ml-reference-connectors/commit/a1b7bd0683197ab3fbb0bca2f3b5ee42d37f650e))
+* fixed parameter name in api spce ([f785f2c](https://github.com/mojaloop/ml-reference-connectors/commit/f785f2cda3832cc11db4c1ba1275bc0b7ef179ad))
+* fixed parameter names on get parties ([3b9abcb](https://github.com/mojaloop/ml-reference-connectors/commit/3b9abcb008ed7bab84d406b3cdac6857b9303511))
+* fixed quote validation functions ([c04f729](https://github.com/mojaloop/ml-reference-connectors/commit/c04f72932298b1b7ed85763f527053ad361ea3de))
+* fixing linting errors and environmental variables ([b27ee08](https://github.com/mojaloop/ml-reference-connectors/commit/b27ee089a1ab707292dbdf6d35a9ad065db9102c))
+* refactored code and uncommented updateSentTransfer in agg ([0b33a83](https://github.com/mojaloop/ml-reference-connectors/commit/0b33a83d9dc1e6d0cfe50e576c9cfe671e5a777a))
+* synchronize lock file ([1d0f557](https://github.com/mojaloop/ml-reference-connectors/commit/1d0f5574f91945929a1809b01011e5c264eea638))
+
 ## 1.12.0 (2024-11-12)
 
 
