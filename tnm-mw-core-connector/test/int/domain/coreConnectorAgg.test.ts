@@ -86,7 +86,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfer Requests Test  - Payee
-        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
             const url = `${ML_URL}/transfers`;
 
@@ -102,7 +102,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Patch Transfer Requests Test - Payee
-
         test.skip('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "100");
             const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
