@@ -16,7 +16,7 @@ sequenceDiagram
   Alt if Checks fail
   CC-->>USSD Service: Response 400
   End
-  CC->>ML Connector: POST /transfer /{}
+  CC->>ML Connector: POST /transfer /{amountType: SEND}
   ML Connector-->>CC: Response
   CC->> CC: Check Response
   Alt if Checks fail

@@ -311,9 +311,13 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(res.data);
     }
 
+
+
+
     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
         return {
             "amount": deps.amount,
+            "amountType": "RECEIVE",
             "currency": this.mtnConfig.X_CURRENCY,
             "externalId": transferId,
             "payer" :{
@@ -321,9 +325,12 @@ export class CoreConnectorAggregate {
                 "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
             },
             "payerMessage": deps.payerMessage,
-            "payeeNote": deps.payeeNote
+            "payeeNote": deps.payeeNote,
+            
         };
     }
+
+
 
     async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
