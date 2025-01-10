@@ -28,6 +28,24 @@ This command also creates a new branch for the core connector. For this connecto
 
 > Do not commit directly to main. Only work on the core connector you created or are assigned to. This will prevent merge conflicts
 
+# Developer Commands
+Here are some commands to manage this repo of connectors.
+
+Running pre push checks
+```bash
+npm run check:pre-push
+```
+
+Installing dependencies in all connectors 
+```bash
+npm run dep:install-all
+```
+
+Updating the dependencies in all connectors
+```bash
+npm run dep:update-all
+```
+
 # Customizing the core connector
 To refactor the newly created core connector refer to the core connector template guide [here](./docs/README.md).
 
