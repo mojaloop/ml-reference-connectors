@@ -16,7 +16,7 @@ sequenceDiagram
   Alt if Checks fail
   CC-->>USSD Service: Response 400
   End
-  CC->>ML Connector: POST /transfer /{}
+  CC->>ML Connector: POST /transfer /{amountType: SEND}
   ML Connector-->>CC: Response
   CC->> CC: Check Response
   Alt if Checks fail
@@ -27,10 +27,10 @@ sequenceDiagram
   ML Connector-->>CC: Response: ConversionRate
   CC->>CC: Check Conversion Terms
   Alt if Conversion Terms are invalid
-  CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: false]
+  CC->>ML Connector: PUT /transfers/{id}[acceptConversion: false]
   CC-->>USSD Service: Response 500
   End
-  CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: true]
+  CC->>ML Connector: PUT /transfers/{id}[acceptConversion: true]
   End
   ML Connector-->>CC:Response, Normal Quote
   Alt if response not successful
