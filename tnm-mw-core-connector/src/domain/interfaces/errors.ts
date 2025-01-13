@@ -145,10 +145,7 @@
              httpCode: httpCode,
          });
      }
-<<<<<<< HEAD
  
-=======
->>>>>>> ft/fdh-mw-core-connector
      static notEnoughInformationError(message: string, mlCode: string){
         return new ValidationError(message, {
             mlCode: mlCode,

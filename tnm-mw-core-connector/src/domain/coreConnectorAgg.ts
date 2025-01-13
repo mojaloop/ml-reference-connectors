@@ -200,12 +200,16 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
+            
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
+            
         ) {
+            this.logger.error("transfer.amount !== transfer.quote.transferAmount - transfer.quote.payeeFspCommissionAmount");
             result = false;
         }
 
         if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
+            this.logger.error("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined");
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
         }
 
@@ -214,6 +218,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.transferAmount) -
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
+            this.logger.error("transfer.quote.payeeReceiveAmount !== transfer.quote.transferAmount - transfer.quote.payeeFspFeeAmount");
             result = false;
         }
         return result;
