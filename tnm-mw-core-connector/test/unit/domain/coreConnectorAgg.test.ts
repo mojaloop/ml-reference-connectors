@@ -213,6 +213,54 @@ describe('CoreConnectorAggregate Tests -->', () => {
             expect(tnmClient.collectMoney).toHaveBeenCalled();
         });
 
+        test("POST /merchant-payment: ", async () => {
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+            tnmClient.getKyc = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "full_name": "Promise Mphoola"
+                }
+
+            });
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+            });
+            jest.spyOn(sdkClient, "updateTransfer");
+            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000", "RECEIVE");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
+            logger.info("Response fromm send money", res);
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+        });
+
+        test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
+            tnmClient.getToken = jest.fn().mockResolvedValue({
+                "message": "Completed successfully",
+                "errors": [],
+                "trace": [],
+                "data": {
+                    "token": "3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG",
+                    "expires_at": "2023-07-13 10:56:45"
+                }
+            });
+            tnmClient.collectMoney = jest.fn().mockResolvedValue(
+                {
+                    "message": "Request accepted and processing",
+                    "errors": [],
+                    "trace": [],
+                    "data": []
+                }
+            );
+            jest.spyOn(tnmClient, "collectMoney");
+            const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
+            const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(tnmClient.collectMoney).toHaveBeenCalled();
+        });
+
         test("PUT /callback: should call mojaloop connector with acceptQuote: true if payment was successful", async () => {
             sdkClient.updateTransfer = jest.fn().mockResolvedValue(sdkUpdateTransferResponseDto(MSISDN_NO, "1000"));
             jest.spyOn(sdkClient, "updateTransfer");
