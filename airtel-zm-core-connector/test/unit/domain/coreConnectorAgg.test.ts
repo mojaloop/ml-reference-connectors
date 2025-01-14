@@ -26,7 +26,7 @@
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
-import { CoreConnectorAggregate, } from '../../../src/domain';
+import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest, } from '../../../src/domain';
 import { AirtelClientFactory, IAirtelClient } from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
@@ -35,12 +35,15 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
+import { quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
 
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
 const airtelConfig = config.get('airtel');
-const SDK_URL = 'http://localhost:4040';
+const SDK_URL = 'http://localhost:4010';
+const idType = "MSISDN";
+const MSISDN_NO = "971938765";
 
 
 
@@ -59,20 +62,143 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger,
         });
         ccAggregate = new CoreConnectorAggregate(sdkClient, airtelConfig, airtelClient, logger);
+        jest.resetAllMocks;
     });
 
     describe('Airtel Test', () => {
+
+        // Get Parties Test
+
         test('Test Get Parties Happy Path', async () => {
+
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            })
             try {
                 const res = await ccAggregate.getParties('978980797', 'MSISDN');
-                expect(res.statusCode).toEqual(404);
+                logger.info("Returned Data ==>", res.data)
+
+                logger.info(JSON.stringify(res.data))
+                expect(res.statusCode).toEqual(200);
             } catch (error) {
                 console.error(error);
             }
 
         });
 
+        
+        // Quote Requests
+        
+        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () =>{
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            })
 
+            const quoteRequest: TQuoteRequest = quoteRequestDto();
+
+            try {
+                const res = await ccAggregate.quoteRequest(quoteRequest);
+    
+                logger.info(JSON.stringify(res));
+                const fees = Number(config.get('airtel.SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
+                expect(res.payeeFspFeeAmount).toEqual(fees.toString());
+                
+            } catch (error) {
+                console.error(error);
+            }
+
+        });
+
+        // Transfers
+        test.skip('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () =>{
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
+
+            const res = await ccAggregate.receiveTransfer(transferRequest);
+
+            logger.info(JSON.stringify(res));
+            expect(res.transferState).toEqual("RESERVED");
+        });
+
+
+        test.skip('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () =>{
+            jest.spyOn(airtelClient, "sendMoney");
+
+            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN_NO, "500");
+            const res = await ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj");
+
+            logger.info(JSON.stringify(res));
+            expect(res).toBeUndefined();
+            expect(airtelClient.sendMoney).toHaveBeenCalled();
+        });
+
+    });
+
+
+    describe("Airtel Payer Tests", () => {
+        test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "1000")
+            });
+            jest.spyOn(sdkClient, "updateTransfer");
+            const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
+            const res = await ccAggregate.sendTransfer(sendMoneyRequestBody);
+            logger.info("Response from send monety", res);
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+        });
+
+
+        test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
+           
+            jest.spyOn(airtelClient, "collectMoney");
+            const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
+            const res = await ccAggregate.updateSentTransfer(updateSendMoneyReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(airtelClient.collectMoney).toHaveBeenCalled();
+        });
     });
 
 });

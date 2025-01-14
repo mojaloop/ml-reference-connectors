@@ -210,7 +210,7 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
 });
 
 
-export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978980797", amount: string = "100"): TQuoteRequest => ({
+export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "971938765", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
@@ -289,10 +289,12 @@ note: "Transfer Quote Request",
 });
 
 
+
 // Send Money DTO
 
-export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyRequest => ( {
+export const sendMoneyMerchantPaymentDTO =(idValue:string, amount:string, amountType:"RECEIVE" | "SEND"): TAirtelSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
+  "amountType": amountType,
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -306,7 +308,7 @@ export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyReq
 });
 
 
-export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
+export const updateSendMoneyMerchantPaymentDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString()

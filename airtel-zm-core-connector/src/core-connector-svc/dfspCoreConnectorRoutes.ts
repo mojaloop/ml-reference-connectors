@@ -46,6 +46,8 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         this.aggregate = aggregate;
         this.logger = logger.child({ context: 'MCC Routes' });
     }
+    
+    // Register openapi spec operationIds and route handler functions here
 
     async init() {
         const api = new OpenAPIBackend({
@@ -53,6 +55,8 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             handlers: {
                 sendMoney: this.initiateTransfer.bind(this),
                 updateSendMoney: this.updateInitiatedTransfer.bind(this),
+                initiateMerchantPayment : this.initiateTransfer.bind(this),
+                updateInitiatedMerchantPayment : this.updateInitiatedTransfer.bind(this),
                 callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),

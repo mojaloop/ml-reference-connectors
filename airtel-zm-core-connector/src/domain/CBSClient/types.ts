@@ -64,7 +64,6 @@ export type TFineractConfig = {
     FINERACT_PAYMENT_TYPE_ID: string;
 };
 
-
 export enum FineractLookupStage {
     SEARCH = 'search',
     SAVINGSACCOUNT = 'savingsaccount',
@@ -412,6 +411,7 @@ export type TAirtelDisbursementResponse = {
 // Request coming from Airtel
 export type TAirtelSendMoneyRequest = {
     "homeTransactionId": string;
+    "amountType": "RECEIVE" | "SEND",
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
