@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
   autoNumber
   DFSP Customer App->>CC: POST /merchant-payment/ {}
@@ -31,3 +32,4 @@ sequenceDiagram
   End
   CC-->>DFSP Customer App: Response 200
   DFSP Customer App->>DFSP Customer App:Show terms of transfer to customer
+```
