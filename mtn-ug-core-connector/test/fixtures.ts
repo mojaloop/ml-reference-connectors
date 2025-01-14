@@ -1,5 +1,5 @@
 import { TUpdateTransferDeps, TSDKOutboundTransferResponse} from '../src/domain/SDKClient';
-import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -381,11 +381,12 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
+  "amountType": "SEND",
   "sendCurrency": "UGX",
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
@@ -396,13 +397,43 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
 });
 
 
-export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+// Send Money DTO
+
+export const merchantRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
+  "homeTransactionId": "HTX123456789",
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "amountType": "RECEIVE",
+  "sendCurrency": "UGX",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": "Niza Tembo",
+  "payerAccount": idValue,
+  "dateOfBirth": "1997-04-27"
+});
+
+
+
+export const updateMerchantDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateMerchantPaymentRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString(),
   "payerMessage": "School Fees",
   "payeeNote": "School Fees"
 });
+
+
+
+
+export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+  "acceptQuote": acceptQuote,
+  "msisdn": idValue,
+  "amount": amount.toString(),
+  "payerMessage": "School Fees",
+  "payeeNote": "School Fees"
+})
 
 export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (
   {

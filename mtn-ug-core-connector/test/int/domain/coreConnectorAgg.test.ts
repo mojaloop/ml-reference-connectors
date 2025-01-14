@@ -26,9 +26,9 @@
 
 
 import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload } from '../../../src/domain/CBSClient';
+import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNUpdateMerchantPaymentRequest } from '../../../src/domain/CBSClient';
 import { loggerFactory } from '../../../src/infra/logger';
-import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto } from '../../fixtures';
+import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto, merchantRequestDTO, updateMerchantDTO } from '../../fixtures';
 import { Service } from '../../../src/core-connector-svc';
 import axios from 'axios';
 import { randomUUID } from 'crypto';
@@ -112,12 +112,13 @@ describe('CoreConnectorAggregate Tests -->', () => {
             expect(res.status).toEqual(200);
         });
 
-        //  Send Money - Payer
 
-        test('Test POST/ send-money: response should be payee details ', async () => {
-            const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
-            const url = `${DFSP_URL}/send-money`;
-            const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
+        // Initiate Merchant Payment
+
+        test('Test POST/ transfer: response should be payer details ', async () => {
+            const mtnMerchantPaymentRequest: TMTNMerchantPaymentRequest = merchantRequestDTO(MSISDN, "200");
+            const url = `${DFSP_URL}/transfers`;
+            const res = await axios.post(url, JSON.stringify(mtnMerchantPaymentRequest), {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -125,6 +126,21 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             logger.info(JSON.stringify(res.data));
 
+            expect(res.status).toEqual(200);
+        });
+
+
+        // Confirm Merchant Payment - Payer
+        test('Test Put/ transfer{id}: response should be 200', async () => {
+            const updateSendMoneyRequest: TMTNUpdateMerchantPaymentRequest = updateMerchantDTO(1, true, MSISDN);
+            const url = `${DFSP_URL}/tranfers/${randomUUID()}`;
+            const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
             expect(res.status).toEqual(200);
         });
 
@@ -143,6 +159,25 @@ describe('CoreConnectorAggregate Tests -->', () => {
             expect(res.status).toEqual(200);
         });
 
+
+        //  Send Money - Payer
+
+        test('Test POST/ send-money: response should be payee details ', async () => {
+            const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
+            const url = `${DFSP_URL}/send-money`;
+            const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+        });
+
+
+        
         // Callback
         test('Test POST /callback; response should be 200', async () => {
             const callbackRequestPayload: TMTNCallbackPayload = TMTNCallbackPayloadDto("UGX", MSISDN);
