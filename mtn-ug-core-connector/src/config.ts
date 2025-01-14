@@ -38,6 +38,7 @@ interface IConfigSchema {
         SDK_API_SPEC_FILE: string;
         DFSP_API_SPEC_FILE: string;
         CONNECTOR_NAME: string;
+        HTTP_TIMEOUT: number;
     };
     mtn: TMTNConfig;
     sdkSchemeAdapter: TSDKSchemeAdapterConfig;
@@ -86,6 +87,12 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null, // required
             env: 'CONNECTOR_NAME',
+        },
+        HTTP_TIMEOUT: {
+            doc: 'HTTP Client Timeout in ms',
+            format: Number,
+            default: 5000, // optional,
+            env: 'HTTP_TIMEOUT',
         },
     },
     sdkSchemeAdapter: {
