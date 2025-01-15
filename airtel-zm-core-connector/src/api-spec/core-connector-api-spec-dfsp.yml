@@ -78,7 +78,7 @@ paths:
   /send-money/{transferId}:
     put:
       summary: Confirm send money
-      operationId: sendMoneyUpdate
+      operationId: updateSendMoney
       parameters:
         - name: transferId
           in: path

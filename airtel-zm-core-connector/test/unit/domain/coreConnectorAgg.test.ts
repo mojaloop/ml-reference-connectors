@@ -150,7 +150,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfers
-        test.skip('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () =>{
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () =>{
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
 
             const res = await ccAggregate.receiveTransfer(transferRequest);
@@ -160,7 +160,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
 
-        test.skip('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () =>{
+        test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () =>{
             jest.spyOn(airtelClient, "sendMoney");
 
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN_NO, "500");
