@@ -132,7 +132,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "expires_at": "2023-07-13 10:56:45"
                 }
             });
-            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "103");
 
             const res = await ccAggregate.receiveTransfer(transferRequest);
 

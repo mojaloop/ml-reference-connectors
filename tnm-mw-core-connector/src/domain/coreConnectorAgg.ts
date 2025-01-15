@@ -162,9 +162,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         if (transfer.currency !== config.get("tnm.TNM_CURRENCY")) {
+            this.logger.error("Unsupported currency ", { currency: transfer.currency });
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.validateQuote(transfer)) {
+            this.logger.error("Invalid quote", { quote: transfer });
             throw ValidationError.invalidQuoteError();
         }
 
