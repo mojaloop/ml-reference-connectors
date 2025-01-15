@@ -93,12 +93,12 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "result_code": "DP02200000001",
                     "success": true
                 }
-            })
+            });
             try {
                 const res = await ccAggregate.getParties('978980797', 'MSISDN');
-                logger.info("Returned Data ==>", res.data)
+                logger.info("Returned Data ==>", res.data);
 
-                logger.info(JSON.stringify(res.data))
+                logger.info(JSON.stringify(res.data));
                 expect(res.statusCode).toEqual(200);
             } catch (error) {
                 console.error(error);
@@ -106,10 +106,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         });
 
-        
+
         // Quote Requests
-        
-        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () =>{
+
+        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
             airtelClient.getKyc = jest.fn().mockResolvedValue({
                 "data": {
                     "first_name": "Chimweso Faith Mukoko",
@@ -132,17 +132,17 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "result_code": "DP02200000001",
                     "success": true
                 }
-            })
+            });
 
             const quoteRequest: TQuoteRequest = quoteRequestDto();
 
             try {
                 const res = await ccAggregate.quoteRequest(quoteRequest);
-    
+
                 logger.info(JSON.stringify(res));
                 const fees = Number(config.get('airtel.SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
                 expect(res.payeeFspFeeAmount).toEqual(fees.toString());
-                
+
             } catch (error) {
                 console.error(error);
             }
@@ -150,18 +150,57 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfers
-        test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () =>{
-            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "50");
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            });
+            const airtelClientGetKyc = jest.spyOn(airtelClient, "getKyc");
+
+            const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN_NO, "103");
 
             const res = await ccAggregate.receiveTransfer(transferRequest);
 
             logger.info(JSON.stringify(res));
             expect(res.transferState).toEqual("RESERVED");
+            expect(airtelClientGetKyc).toHaveBeenCalled();
         });
 
 
-        test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () =>{
+        test('PUT /transfers/{id} notification: sdk server - Should return 200  ', async () => {
             jest.spyOn(airtelClient, "sendMoney");
+            airtelClient.sendMoney = jest.fn().mockResolvedValueOnce({
+                "payee": {
+                    "msisdn": "75****26",
+                    "wallet_type": "SALARY or NORMAL"
+                },
+                "reference": "AB***141",
+                "pin": "KYJ************Rsa44",
+                "transaction": {
+                    "amount": 1000,
+                    "id": "AB***141",
+                    "type": "B2C or B2B"
+                }
+            });
 
             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN_NO, "500");
             const res = await ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj");
@@ -176,12 +215,35 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe("Airtel Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            });
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN_NO, "1000")
+                ...sdkInitiateTransferResponseDto(MSISDN_NO,"WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             jest.spyOn(sdkClient, "updateTransfer");
             const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
@@ -192,7 +254,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
-           
+
             jest.spyOn(airtelClient, "collectMoney");
             const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
             const res = await ccAggregate.updateSentTransfer(updateSendMoneyReqBody, "ljzowczj");
