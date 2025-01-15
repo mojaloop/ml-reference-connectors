@@ -58,5 +58,9 @@
              mlCode: '4000',
          });
      }
+
+     static genericQuoteValidationError(message: string, options?: ErrorOptions) {
+        return new SDKClientError(message, options);
+    }
  }
  

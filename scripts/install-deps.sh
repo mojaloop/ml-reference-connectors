@@ -3,8 +3,7 @@
 for dir in */; do
     if [[ $dir == *-core-connector/ ]]; then
     cd $dir 
-        npm run dep:check
-        npm run test:unit
+        npm i
     cd -
     fi
 done
