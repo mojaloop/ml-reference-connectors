@@ -213,11 +213,6 @@ components:
         homeTransactionId:
           type: string
           example: "HTX123456789"
-        amountType: 
-          type: string
-          example: "RECEIVE"
-          enum:
-            - "RECEIVE"
         payeeId:
           type: string
           example: "16135551212"
@@ -240,14 +235,45 @@ components:
           type: string
           example: "TRANSFER"
         payer:
-          type: string
-          example: "John Doe"
-        payerAccount:
-          type: string
-          example: "9876543210"
-        dateOfBirth:
-          type: string
-          example: "1985-04-12"
+          type: object
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            payerId:
+              type: string
+              example: "9876543210"
+            DateAndPlaceOfBirth:
+              type: object
+              properties:
+                BirthDt:
+                  type: string
+                  example: "20-09-2001"
+                PrvcOfBirth:
+                  type: string
+                  example: "ProvinceOfBirth"
+                CityOfBirth:
+                  type: string
+                  example: "Kampala"
+                CtryOfBirth:
+                  type: string
+                  example: "Uganda"
+              required:
+                - BirthDt
+                - CityOfBirth
+                - CtryOfBirth
+          required:
+            - name
+            - payerId
+      required:
+        - homeTransactionId
+        - payeeId
+        - payeeIdType
+        - sendAmount
+        - sendCurrency
+        - receiveCurrency
+        - transactionType
+        - payer
       
 
     merchantPaymentResponse:
@@ -336,11 +362,6 @@ components:
         homeTransactionId:
           type: string
           example: "HTX123456789"
-        amountType: 
-          type: string
-          example: "SEND"
-          enum:
-            - "SEND"
         payeeId:
           type: string
           example: "16135551212"
@@ -363,14 +384,46 @@ components:
           type: string
           example: "TRANSFER"
         payer:
-          type: string
-          example: "John Doe"
-        payerAccount:
-          type: string
-          example: "9876543210"
-        dateOfBirth:
-          type: string
-          example: "1985-04-12"
+          type: object
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            payerId:
+              type: string
+              example: "9876543210"
+            DateAndPlaceOfBirth:
+              type: object
+              properties:
+                BirthDt:
+                  type: string
+                  example: "20-09-2001"
+                PrvcOfBirth:
+                  type: string
+                  example: "ProvinceOfBirth"
+                CityOfBirth:
+                  type: string
+                  example: "Kampala"
+                CtryOfBirth:
+                  type: string
+                  example: "Uganda"
+              required:
+                - BirthDt
+                - CityOfBirth
+                - CtryOfBirth
+          required:
+            - name
+            - payerId
+      required:
+        - homeTransactionId
+        - payeeId
+        - payeeIdType
+        - sendAmount
+        - sendCurrency
+        - receiveCurrency
+        - transactionType
+        - payer
+
     ConfirmSendMoney:
       type: object
       properties:
