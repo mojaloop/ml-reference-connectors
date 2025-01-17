@@ -41,6 +41,7 @@ import {
     TMTNKycResponse,
     TMTNCallbackPayload,
     TMTNMerchantPaymentRequest,
+    TMTNMerchantPaymentResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -288,6 +289,26 @@ export class CoreConnectorAggregate {
              "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
          };
      }
+
+
+     private getTMTNMerchantMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNMerchantPaymentResponse {
+        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
+        return {
+            "payeeDetails": {
+                "idType": transfer.to.idType,
+                "idValue":transfer.to.idValue,
+                "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
+                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
+                "lastName":transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "dateOfBirth":transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+            },
+            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
+            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+        };
+    }
  
      private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferResponse.amount}`);
@@ -443,7 +464,45 @@ export class CoreConnectorAggregate {
      }
  
  
+
+     async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
+        const res = await this.sdkClient.initiateTransfer(transferRequest);
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+
+        if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
+            if (!this.validateConversionTerms(res.data)) {
+                if (!res.data.transferId) {
+                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+                }
+                acceptRes = await this.sdkClient.updateTransfer({
+                    "acceptConversion": false
+                }, res.data.transferId);
+                throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+            }
+            else {
+                if (!res.data.transferId) {
+                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+                }
+                acceptRes = await this.sdkClient.updateTransfer({
+                    "acceptConversion": true
+                }, res.data.transferId);
+            }
+
+            if (!this.validateReturnedQuote(acceptRes.data)) {
+                throw ValidationError.invalidReturnedQuoteError();
+            }
+            return this.getTMTNMerchantMoneyResponse(acceptRes.data);
+        }
+        if (!this.validateReturnedQuote(res.data)) {
+            throw ValidationError.invalidReturnedQuoteError();
+        }
+        return this.getTMTNMerchantMoneyResponse(res.data);
+    }
  
+    
  
      private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
          return {
