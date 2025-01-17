@@ -308,7 +308,6 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
 });
 
 
-
 // Send Money DTO
 
 export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
