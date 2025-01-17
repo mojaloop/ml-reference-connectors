@@ -36,48 +36,49 @@ paths:
       tags:
         - Health
       responses:
-        '200':
+        "200":
           description: >-
             Returns empty body if the scheme adapter outbound transfers service
             is running.
   /send-money:
     post:
-      operationId: SendMoney
-      summary: Send Money endpoint 
-      description: >- 
+      summary: Send Money endpoint
+      description: >-
         The Endpoint used by the DFSP Operations application to initiate send money 
         requests to the mojaloop connector
+
+      operationId: sendMoney
       requestBody:
         description: Send Money request body
         content:
           application/json:
-            schema: 
+            schema:
               $ref: "#/components/schemas/sendMoneyRequest"
       tags:
-        - Send Money  
+        - Send Money
       responses:
-        '200':
+        "200":
           description: >-
             Response for send money request. A quote if it is double 
             integration or a payment status response if it is single
             integration
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/sendMoneyResponse"
-        '400':
+        "400":
           description: >-
             Response for a bad request.
-        '500':
-          description: >- 
-            Response for an internal server error
-        '504':
+        "500":
           description: >-
-            Response for a timed out transfer 
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
   /send-money/{transferId}:
     put:
       summary: Confirm send money
-      operationId: UpdateSendMoney
+      operationId: sendMoneyUpdate
       parameters:
         - name: transferId
           in: path
@@ -91,31 +92,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConfirmSendMoney'
+              $ref: "#/components/schemas/ConfirmSendMoney"
       tags:
-        - Send Money 
+        - Send Money
       responses:
-        '200':
+        "200":
           description: Send money confirmed successfully
-        '400':
+        "400":
           description: Bad request
 
   /merchant-payment:
     post:
-      summary: Send Money endpoint 
-      description: >- 
+      summary: Send Money endpoint
+      operationId: initiateMerchantPayment
+      description: >-
         The Endpoint used by the DFSP Operations application to initiate merchant payment
         requests to the mojaloop connector
       requestBody:
         description: Send Money request body
         content:
           application/json:
-            schema: 
+            schema:
               $ref: "#/components/schemas/merchantPaymentRequest"
       tags:
-        - Merchant Payments 
+        - Merchant Payments
       responses:
-        '200':
+        "200":
           description: >-
             Response for send money request. A quote if it is double 
             integration or a payment status response if it is single
@@ -125,19 +127,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/merchantPaymentResponse"
 
-        '400':
-          description: >- 
-            Response for bad request 
-        '500':
-          description: >- 
+        "400":
+          description: >-
+            Response for bad request
+        "500":
+          description: >-
             Internal Server error
-        '504':
-          description: >- 
+        "504":
+          description: >-
             Transfer Timeout.
-  
+
   /merchant-payment/{id}:
     put:
       summary: Confirm send money
+      operationId: updateInitiatedMerchantPayment
       parameters:
         - name: id
           in: path
@@ -151,151 +154,70 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConfirmSendMoney'
+              $ref: "#/components/schemas/ConfirmSendMoney"
       tags:
-        - Merchant Payments 
+        - Merchant Payments
       responses:
-        '200':
+        "200":
           description: Send money confirmed successfully
-        '400':
+        "400":
           description: Bad request
+
   /callback:
-    post:
-      summary: Callback for transfer status notification
-      operationId: Callback
+    put:
+      operationId: callback
+      tags:
+        - Callback Endpoint
       requestBody:
-        required: true 
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CallbackRequest'
-      tags: 
-        - Callback 
+              $ref: "#/components/schemas/callbackPayload"
       responses:
-        '200': 
-          description: Callback received successfully
-        
+        "200":
+          description: Receipt of callback confirmed
 
 components:
   schemas:
+    callbackPayload:
+      type: object
+      properties:
+        transaction:
+          type: object
+          properties:
+            id:
+              type: string
+              example: BBZMiscxy
+              description: Unique identifier for the transaction.
+            message:
+              type: string
+              example: Paid UGX 5,000 to TECHNOLOGIES LIMITED Charge UGX 140, Trans ID MP210603.1234.L06941.
+              description: Transaction message detailing payment, charges, and transaction ID.
+            status_code:
+              type: string
+              example: TS
+              description: Status code of the transaction.
+            airtel_money_id:
+              type: string
+              example: MP210603.1234.L06941
+              description: Airtel money transaction ID.
+          required:
+            - id
+            - message
+            - status_code
+            - airtel_money_id
     merchantPaymentRequest:
       type: object
       properties:
         homeTransactionId:
           type: string
           example: "HTX123456789"
-        merchantPaymentId:
+        amountType: 
           type: string
-          example: "16135551212"
-        merchantPaymentIdType:
-          type: string
-          example: "MSISDN"
-        receiveAmount:
-          type: string
-          example: "150.00"
-        receiveCurrency:
-          type: string
-          example: "UGX"
-        sendCurrency:
-          type: string
-          example: "KES"
-        transactionDescription:
-          type: string
-          example: "Payment for services"
-        transactionType:
-          type: string
-          example: "TRANSFER"
-        payer:
-          type: string
-          example: "John Doe"
-        payerAccount:
-          type: string
-          example: "9876543210"
-        dateOfBirth:
-          type: string
-          example: "1985-04-12"
-        geoLocationData:
-          description: >-
-            Indicates the geographic location from where the transaction was
-            initiated.
-          properties:
-            latitude:
-              $ref: '#/components/schemas/latitude'
-            longitude:
-              $ref: '#/components/schemas/longitude'
-          required:
-            - latitude
-            - longitude
-          type: object
-    latitude:
-      description: >-
-        The API data type Latitude is a JSON String in a lexical format that is
-        restricted by a regular expression for interoperability reasons.
-      pattern: >-
-        ^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$
-      type: string
-    longitude:
-      description: >-
-        The API data type Longitude is a JSON String in a lexical format that is
-        restricted by a regular expression for interoperability reasons.
-      pattern: >-
-        ^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$
-      type: string
-
-    merchantPaymentResponse:
-      type: object
-      properties:
-        merchantDetails:
-          type: string
-          example: "{\"name\":\"Jane Smith\",\"accountNumber\":\"1234567890\",\"bankName\":\"Example Bank\",\"address\":\"456 Elm Street, Somecity, Country\"}"
-        sendAmount:
-          type: string
-          example: "140.00"
-        sendCurrency:
-          type: string
-          example: "EUR"
-        fees:
-          type: string
-          example: "10.00"
-        feeCurrency:
-          type: string
-          example: "USD"
-        exchangeRate:
-          type: string
-          example: "1.10"
-        expiryDateTime:
-          type: string
-          example: "2024-08-01T12:00:00Z"
-    sendMoneyResponse:
-      type: object
-      properties:
-        payeeDetails:
-          type: string
-          example: "{\"name\":\"Jane Smith\",\"accountNumber\":\"1234567890\",\"bankName\":\"Example Bank\",\"address\":\"456 Elm Street, Somecity, Country\"}"
-        receiveAmount:
-          type: string
-          example: "140.00"
-        receiveCurrency:
-          type: string
-          example: "EUR"
-        fees:
-          type: string
-          example: "10.00"
-        feeCurrency:
-          type: string
-          example: "USD"
-        exchangeRate:
-          type: string
-          example: "1.10"
-        expiryDateTime:
-          type: string
-          example: "2024-08-01T12:00:00Z"
-    sendMoneyRequest:
-      type: object
-      properties:
-        homeTransactionId:
-          type: string
-          example: "HTX123456789"
+          example: "RECEIVE"
+          enum:
+            - "RECEIVE"
         payeeId:
           type: string
           example: "16135551212"
@@ -326,33 +248,129 @@ components:
         dateOfBirth:
           type: string
           example: "1985-04-12"
-        geoLocationData:
-          description: >-
-            Indicates the geographic location from where the transaction was
-            initiated.
-          properties:
-            latitude:
-              $ref: '#/components/schemas/latitude'
-            longitude:
-              $ref: '#/components/schemas/longitude'
-          required:
-            - latitude
-            - longitude
+      
+
+    merchantPaymentResponse:
+      type: object
+      properties:
+        payeeDetails:
           type: object
-        latitude:
-          description: >-
-            The API data type Latitude is a JSON String in a lexical format that is
-            restricted by a regular expression for interoperability reasons.
-          pattern: >-
-            ^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$
+          properties:
+            idType:
+              type: string
+              example: "MSISDN"
+            idValue:
+              type: string
+              example: "990454454"
+            fspId:
+              type: string
+              example: "airtelzambia"
+            firstName:
+              type: string
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
+
+        receiveAmount:
           type: string
-        longitude:
-          description: >-
-            The API data type Longitude is a JSON String in a lexical format that is
-            restricted by a regular expression for interoperability reasons.
-          pattern: >-
-            ^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$
+          example: "140.00"
+        receiveCurrency:
           type: string
+          example: "EUR"
+        fees:
+          type: string
+          example: "10.00"
+        feeCurrency:
+          type: string
+          example: "USD"
+        transactionId:
+          type: string
+          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
+    sendMoneyResponse:
+      type: object
+      properties:
+        payeeDetails:
+          type: object
+          properties:
+            idType:
+              type: string
+              example: "MSISDN"
+            idValue:
+              type: string
+              example: "990454454"
+            fspId:
+              type: string
+              example: "airtelzambia"
+            firstName:
+              type: string
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
+
+        receiveAmount:
+          type: string
+          example: "140.00"
+        receiveCurrency:
+          type: string
+          example: "EUR"
+        fees:
+          type: string
+          example: "10.00"
+        feeCurrency:
+          type: string
+          example: "USD"
+        transactionId:
+          type: string
+          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
+    sendMoneyRequest:
+      type: object
+      properties:
+        homeTransactionId:
+          type: string
+          example: "HTX123456789"
+        amountType: 
+          type: string
+          example: "SEND"
+          enum:
+            - "SEND"
+        payeeId:
+          type: string
+          example: "16135551212"
+        payeeIdType:
+          type: string
+          example: "MSISDN"
+        sendAmount:
+          type: string
+          example: "150.00"
+        sendCurrency:
+          type: string
+          example: "UGX"
+        receiveCurrency:
+          type: string
+          example: "KES"
+        transactionDescription:
+          type: string
+          example: "Payment for services"
+        transactionType:
+          type: string
+          example: "TRANSFER"
+        payer:
+          type: string
+          example: "John Doe"
+        payerAccount:
+          type: string
+          example: "9876543210"
+        dateOfBirth:
+          type: string
+          example: "1985-04-12"
     ConfirmSendMoney:
       type: object
       properties:
@@ -360,49 +378,7 @@ components:
           type: boolean
         msisdn:
           type: string
-        amount: 
-          type: string 
-        payerMessage:
-          type: string
-        payeeNote: 
-          type: string 
-    CallbackRequest:
-      type: object
-      properties:
-        financialTransactionId:
-          type: string
-          description: Unique identifier for the financial transaction.
-        externalId:
-          type: string
-          description: External reference identifier.
+          example: "777503758"
         amount:
           type: string
-          description: Amount of the transaction.
-        currency:
-          type: string
-          description: Currency code for the transaction (e.g., USD, EUR).
-        payee:
-          type: object
-          properties:
-            partyIdType:
-              type: string
-              description: Type of party identifier (e.g., MSISDN, email).
-            partyId:
-              type: string
-              description: Identifier of the payee party.
-          required:
-            - partyIdType
-            - partyId
-        payeeNote:
-          type: string
-          description: Additional note for the payee.
-        status:
-          type: string
-          description: Current status of the transaction.
-      required:
-        - financialTransactionId
-        - externalId
-        - amount
-        - currency
-        - payee
-        - status
+          example: "500"

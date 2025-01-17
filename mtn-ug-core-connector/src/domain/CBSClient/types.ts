@@ -174,8 +174,7 @@ export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "amountType": "RECEIVE" | "SEND",
+    "sendAmount": string;  "amountType": "RECEIVE" | "SEND",
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": string;
     "transactionDescription": string;
@@ -223,6 +222,7 @@ export type TMTNSendMoneyResponse = {
 export type TMTNCollectMoneyRequest = {
     "amount": string;
     "currency": string;
+    "amountType": "RECEIVE" | "SEND",
     "externalId": string;
     "payer": {
         "partyIdType": string,

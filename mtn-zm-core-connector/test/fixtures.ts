@@ -1,5 +1,5 @@
 import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
 
@@ -293,8 +293,9 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 // Send Money DTO
 
 export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
-  "homeTransactionId": "HTX123456789",
-  "payeeId": "07676767676",
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": "SEND",
+  "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
   "sendCurrency": "ZMW",
@@ -307,6 +308,35 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
 });
 
 
+
+// Send Money DTO
+
+export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": "RECEIVE",
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": "Niza Tembo",
+  "payerAccount": idValue,
+  "dateOfBirth": "1997-04-27"
+});
+
+
+export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+  "acceptQuote": acceptQuote,
+  "msisdn": idValue,
+  "amount": amount.toString(),
+  "payerMessage": "Goods Purchase",
+  "payeeNote": "Glocery Store Sells"
+});
+
+
+
 export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
@@ -314,6 +344,8 @@ export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue
   "payerMessage": "School Fees",
   "payeeNote": "School Fees"
 });
+
+
 
 export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (
   {
