@@ -162,7 +162,7 @@
  
          test('Test POST/ merchant-payment: response should be payee details ', async () => {
              const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20");
-             const url = `${ML_URL}/merchant-payment`;
+             const url = `${DFSP_URL}/merchant-payment`;
              const res = await axios.post(url, JSON.stringify(merchantyRequest), {
                  headers: {
                      'Content-Type': 'application/json',
@@ -179,7 +179,7 @@
  
          test('Test Put/merchant-payment{id}: response should be 200', async () => {
              const updateMerchantPaymentRequest: TMTNUpdateMerchantPaymentRequest = updateMerchantPaymentRequestDTO(1, true, MSISDN);
-             const url = `${ML_URL}/merchant-payment/${randomUUID()}`;
+             const url = `${DFSP_URL}/merchant-payment/${randomUUID()}`;
              const res = await axios.put(url, JSON.stringify(updateMerchantPaymentRequest), {
                  headers: {
                      'Content-Type': 'application/json',
