@@ -186,6 +186,7 @@ export type TMTNSendMoneyRequest = {
 
 export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest;
 
+export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
 
 export type TMTNCallbackPayload = {
     financialTransactionId: string;
