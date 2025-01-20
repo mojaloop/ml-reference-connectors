@@ -64,6 +64,7 @@ import {
     TAirtelSendMoneyResponse,
 } from './CBSClient';
 import config from '../config';
+import { throws } from 'assert';
 
 export class CoreConnectorAggregate {
     public IdType: string;
@@ -92,14 +93,14 @@ export class CoreConnectorAggregate {
         const lookupRes = await this.airtelClient.getKyc({ msisdn: id });
         const party = {
             data: {
-                displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
-                firstName: lookupRes.data.first_name,
                 idType: config.get("airtel.SUPPORTED_ID_TYPE"),
                 idValue: id,
-                lastName: lookupRes.data.last_name,
+                displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
+                firstName: lookupRes.data.first_name,
                 middleName: lookupRes.data.first_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(lookupRes)}`,
+                lastName: lookupRes.data.last_name,
             },
             statusCode: Number(lookupRes.status.code),
         };

@@ -35,7 +35,7 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
+import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
 
 
 const mockAxios = new MockAdapter(axios);
@@ -70,6 +70,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
         // Get Parties Test
 
         test('Test Get Parties Happy Path', async () => {
+
+            // mocked response from airtel kyc response
 
             airtelClient.getKyc = jest.fn().mockResolvedValue({
                 "data": {
@@ -212,6 +214,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     });
 
+    // DFSP Route Tests
 
     describe("Airtel Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
@@ -255,12 +258,119 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
 
+            airtelClient.collectMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "id": false,
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "response_code": "DP00800001006",
+                    "success": true
+                }
+            })
             jest.spyOn(airtelClient, "collectMoney");
             const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
             const res = await ccAggregate.updateSentTransfer(updateSendMoneyReqBody, "ljzowczj");
             logger.info("Response ", res);
             expect(airtelClient.collectMoney).toHaveBeenCalled();
         });
+
+
+        test("POST /merchant-payment: should return payee details and fees with correct info provided", async ()=> {
+            airtelClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO,"WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+            jest.spyOn(sdkClient, "updateTransfer");
+            const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "RECEIVE");
+            const res = await ccAggregate.sendTransfer(merchantPaymentRequestBody);
+            logger.info("Response from merchant payment", res);
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+        });
+
+        test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
+
+            airtelClient.collectMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "id": false,
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "response_code": "DP00800001006",
+                    "success": true
+                }
+            })
+            jest.spyOn(airtelClient, "collectMoney");
+            const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
+            const res = await ccAggregate.updateSentTransfer(updateMerchantPaymentReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(airtelClient.collectMoney).toHaveBeenCalled();
+        });
+
+
+        test("PUT /callback: should receive a transacion status code", async () => {
+
+            airtelClient.refundMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "airtel_money_id": "CI2****29",
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "success": false
+                }
+            });
+            const callBackRequest = callbackPayloadDto("1", "TS");
+            const res = await ccAggregate.handleCallback(callBackRequest);
+            logger.info("Response ", res);
+            expect(airtelClient.refundMoney).toHaveBeenCalled();
+
+
+        });
+
+
+
+
     });
 
 });
