@@ -243,7 +243,7 @@
 
             logger.info(JSON.stringify(res.data));
             expect(res.data.status.success).toEqual(true);
-        })
+        });
 
         //  Callback
  

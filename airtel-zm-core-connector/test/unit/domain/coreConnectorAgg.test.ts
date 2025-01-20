@@ -272,7 +272,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "response_code": "DP00800001006",
                     "success": true
                 }
-            })
+            });
             jest.spyOn(airtelClient, "collectMoney");
             const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
             const res = await ccAggregate.updateSentTransfer(updateSendMoneyReqBody, "ljzowczj");
@@ -335,7 +335,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "response_code": "DP00800001006",
                     "success": true
                 }
-            })
+            });
             jest.spyOn(airtelClient, "collectMoney");
             const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
             const res = await ccAggregate.updateSentTransfer(updateMerchantPaymentReqBody, "ljzowczj");

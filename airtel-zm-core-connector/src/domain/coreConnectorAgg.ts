@@ -64,7 +64,6 @@ import {
     TAirtelSendMoneyResponse,
 } from './CBSClient';
 import config from '../config';
-import { throws } from 'assert';
 
 export class CoreConnectorAggregate {
     public IdType: string;
