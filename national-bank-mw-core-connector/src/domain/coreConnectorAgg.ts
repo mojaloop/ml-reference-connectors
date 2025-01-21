@@ -80,7 +80,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     //Payee
     async getParties(id: string, IdType: string): Promise<Party> {
-        this.logger.info(`Getting party information for ${id}`);
+        this.logger.info(`Getting party information for ${id} and IdType ${IdType}`);
+        this.logger.info(`${IdType} === ${this.cbsConfig.SUPPORTED_ID_TYPE} = ${IdType === this.cbsConfig.SUPPORTED_ID_TYPE}`);
         if (!(IdType === this.cbsConfig.SUPPORTED_ID_TYPE)) {
             throw ValidationError.unsupportedIdTypeError();
         }

@@ -48,7 +48,7 @@
  const NBMConfig = config.get("nbm");
  const SDK_URL = 'http://localhost:4040';
  
- const idType = "ACCOUNT_ID";
+ const idType = "ACCOUNT_NO";
  const ACCOUNT_ID = "1003486415";
  
  const collectMoneyRequest: TNBMCollectMoneyRequest = {
@@ -88,6 +88,12 @@
  
      describe("NBM Payer Tests", () => {
          test("PUT /send-money: should initiate request to pay to customer wallet", async () => {
+
+            //Mock Token Request
+            const mockTokenRequst = {
+                "clientId": "C87stk86mED2qG7kFZRwSuady",
+                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
+            }
              // Mock token response
              const mockTokenResponse = {
                  "token": "eyJhbGciOiJSUzI1NjYWZl...",
@@ -104,6 +110,8 @@
                 }
              };
              (nbmClient.collectMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
+
+             await nbmClient.getToken(mockTokenRequst);
  
              const response = await nbmClient.collectMoney(collectMoneyRequest);
              
@@ -112,34 +120,43 @@
              expect(response).toEqual(mockCollectMoneyResponse);
          });
 
-         test("PUT /merchant-payment: should initiate request to pay to merchant wallet", async () => {
-            // Mock token response
-            const mockTokenResponse = {
-                "token": "eyJhbGciOiJSUzI1NjYWZl...",
-                "expires_in": "300"
-            };
-            
-            (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
+         test("POST /merchant-payment: should initiate request to pay to customer wallet", async () => {
 
-         
-            const mockCollectMoneyResponse = {
-               "message": "Success",
-               "data": {
-                     "reference": "FT24928459824"
-               }
-            };
-            (nbmClient.sendMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
+            //Mock Token Request
+            const mockTokenRequst = {
+                "clientId": "C87stk86mED2qG7kFZRwSuady",
+                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
+            }
+             // Mock token response
+             const mockTokenResponse = {
+                 "token": "eyJhbGciOiJSUzI1NjYWZl...",
+                 "expires_in": "300"
+             };
+             
+             (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
+ 
+             // Mock collect money response
+             const mockCollectMoneyResponse = {
+                "message": "Success",
+                "data": {
+                      "reference": "FT24928459824"
+                }
+             };
+             (nbmClient.collectMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
 
-            const response = await nbmClient.collectMoney(collectMoneyRequest);
-            
-            // expect(nbmClient.getToken).toHaveBeenCalled();
-            expect(nbmClient.collectMoney).toHaveBeenCalledWith(collectMoneyRequest);
-            expect(response).toEqual(mockCollectMoneyResponse);
-        });
+             await nbmClient.getToken(mockTokenRequst);
+ 
+             const response = await nbmClient.collectMoney(collectMoneyRequest);
+             
+             expect(nbmClient.getToken).toHaveBeenCalled();
+             expect(nbmClient.collectMoney).toHaveBeenCalledWith(collectMoneyRequest);
+             expect(response).toEqual(mockCollectMoneyResponse);
+         });
      });
  
      describe("NBM Payee Test", () => {
          test("Get Parties Happy Path", async () => {
+
              // Mock KYC response
              const mockKycResponse = {
                 "message": "Success",
@@ -153,6 +170,12 @@
                   "limit_amount": "0.00",
                   }
              };
+
+            //Mock Token Request
+            const mockTokenRequst = {
+                "clientId": "C87stk86mED2qG7kFZRwSuady",
+                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
+            }
  
              // Mock token response
              const mockTokenResponse = {
@@ -162,12 +185,14 @@
  
              (nbmClient.getKyc as jest.Mock).mockResolvedValue(mockKycResponse);
              (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
+
+             await nbmClient.getToken(mockTokenRequst);
  
              const kyc_res = await ccAggregate.getParties(ACCOUNT_ID, idType);
  
              expect(nbmClient.getToken).toHaveBeenCalled();
-             expect(nbmClient.getKyc).toHaveBeenCalledWith(ACCOUNT_ID);
-             expect(kyc_res.statusCode).toEqual(200);
+             expect(nbmClient.getKyc).toHaveBeenCalledWith({ account_number: ACCOUNT_ID });
+             expect(kyc_res.statusCode(200)).toEqual(200);
          });
  
          test('PUT /transfers/{id} notification: should handle transfer updates', async () => {
