@@ -55,8 +55,8 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             handlers: {
                 sendMoney: this.initiateTransfer.bind(this),
                 updateSendMoney: this.updateInitiatedTransfer.bind(this),
-                initiateMerchantPayment : this.initiateTransfer.bind(this),
-                updateInitiatedMerchantPayment : this.updateInitiatedTransfer.bind(this),
+                initiateMerchantPayment : this.initiateMerchantPayment.bind(this),
+                updateInitiatedMerchantPayment : this.updateInitiatedMerchantPayment.bind(this),
                 callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
@@ -98,9 +98,9 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
 
     // Send Money - Payer
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest;
+        const transfer = request.payload as TAirtelSendMoneyRequest;
         try {
-            const result = await this.aggregate.sendTransfer(transfer);
+            const result = await this.aggregate.sendTransfer(transfer, "SEND");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             if(error instanceof Error){
@@ -113,7 +113,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferId = params["transferId"] as string;
-        const transferAccept = request.payload as TAirtelUpdateSendMoneyRequest | TAirtelUpdateMerchantPaymentRequest;
+        const transferAccept = request.payload as TAirtelUpdateSendMoneyRequest;
         this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept, transferId );
@@ -125,6 +125,33 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             return this.handleError(error, h);
         }
     }
+
+    private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const transfer = request.payload as TAirtelMerchantPaymentRequest;
+        this.logger.info(`Transfer request ${transfer}`);
+        try {
+            const result = await this.aggregate.sendTransfer(transfer,"RECEIVE");
+            return this.handleResponse(result, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const { params } = context.request;
+        const transferAccept = request.payload as TAirtelUpdateMerchantPaymentRequest;
+        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
+        try {
+            const updateTransferRes = await this.aggregate.updateSentTransfer(
+                transferAccept,
+                params.transferId as string,
+            );
+            return this.handleResponse(updateTransferRes, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+    
 
 
     private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){

@@ -407,9 +407,17 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amo
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Elijah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+        BirthDt: "1985-04-12",
+        PrvcOfBirth: "Lusaka",
+        CityOfBirth: "Lusaka",
+        CtryOfBirth: "Lusaka",
+    },
+},
+
 });
 
 

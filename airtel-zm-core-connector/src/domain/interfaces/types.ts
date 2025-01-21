@@ -62,11 +62,24 @@ export type TRequestOptions = {
 export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse;
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
+
+
+// Extension List to be used in Payee type
+export type  TPayeeExtensionListEntry = {
+    key?: string;
+    value?: string;
+}
+
+export type TPayerExtensionListEntry = {
+    key: string;
+    value: string;
+}
+
   
 export type Payee = {
     dateOfBirth?: string;
     displayName: string;
-    extensionList?: unknown[];
+    extensionList?: TPayeeExtensionListEntry[];
     firstName: string;
     fspId?: string;
     idSubValue?: string;
