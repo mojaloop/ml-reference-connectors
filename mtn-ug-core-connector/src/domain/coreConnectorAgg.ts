@@ -25,7 +25,7 @@
  --------------
  ******/
 
- 'use strict';
+'use strict';
 
 import config from '../config';
 
@@ -179,7 +179,7 @@ export class CoreConnectorAggregate {
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        if (quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
+        if (this.mtnConfig.MTN_ENV === 'production' && quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
@@ -215,7 +215,7 @@ export class CoreConnectorAggregate {
         if (transfer.to.idType != this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        if (transfer.currency !== config.get("mtn.X_CURRENCY")) {
+        if (this.mtnConfig.MTN_ENV === 'production' && transfer.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.validateQuote(transfer)) {
@@ -259,62 +259,62 @@ export class CoreConnectorAggregate {
         return {
             "amount": requestBody.quoteRequest.body.amount.amount,
             "currency": this.mtnConfig.X_CURRENCY,
-            "externalId" : requestBody.transferId,
+            "externalId": requestBody.transferId,
             "payee": {
-            "partyIdType": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdType,
-             "partyId": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier
+                "partyIdType": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdType,
+                "partyId": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier
             },
             "payerMessage": "Payer Attached Note For Transactions",
-            "payeeNote" : "Sending Money"
- 
-         };
- 
-     }
- 
-     private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNSendMoneyResponse {
-         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
-         return {
-             "payeeDetails": {
-                 "idType": transfer.to.idType,
-                 "idValue":transfer.to.idValue,
-                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                 "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                 "lastName":transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                 "dateOfBirth":transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
-             },
-             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-             "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
-             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-             "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
-             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
-         };
-     }
+            "payeeNote": "Sending Money"
 
+        };
 
-     private getTMTNMerchantMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNMerchantPaymentResponse {
+    }
+
+    private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
-                "idValue":transfer.to.idValue,
+                "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
                 "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName":transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth":transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector" ,
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
             "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
- 
-     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
+
+
+    private getTMTNMerchantMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNMerchantPaymentResponse {
+        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
+        return {
+            "payeeDetails": {
+                "idType": transfer.to.idType,
+                "idValue": transfer.to.idValue,
+                "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
+                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
+                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
+                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+            },
+            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
+            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
+            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+        };
+    }
+
+    private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferResponse.amount}`);
         let result = true;
         if (
-            !(this.mtnConfig.X_CURRENCY === transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
+            this.mtnConfig.MTN_ENV === 'production' && !(this.mtnConfig.X_CURRENCY === transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
             result = false;
         }
@@ -349,7 +349,7 @@ export class CoreConnectorAggregate {
         }
         return result;
     }
- 
+
     private validateReturnedQuote(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Retunred Quote with transfer response amount${transferResponse.amount}`);
         let result = true;
@@ -396,76 +396,76 @@ export class CoreConnectorAggregate {
         return result;
     }
 
- 
- 
-     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
-         const res = await this.mtnClient.getKyc({
-             msisdn: transfer.payerAccount
-         });
-         return {
-             'homeTransactionId': transfer.homeTransactionId,
-             'from': {
-                 'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
-                 'idValue': transfer.payerAccount,
-                 'fspId': this.mtnConfig.FSP_ID,
-                 "displayName": `${res.given_name} ${res.family_name}`,
-                 "firstName": res.given_name,
-                 "middleName": res.given_name,
-                 "lastName": res.family_name,
-                 "merchantClassificationCode": "123",
-             },
-             'to': {
-                 'idType': transfer.payeeIdType,
-                 'idValue': transfer.payeeId
-             },
-             'amountType': 'SEND',
-             'currency': transfer.sendCurrency,
-             'amount': transfer.sendAmount,
-             'transactionType': transfer.transactionType,
-         };
-     }
- 
-     // Payer
-     async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
-         this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
- 
-         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
-         const res = await this.sdkClient.initiateTransfer(transferRequest);
-         let acceptRes: THttpResponse<TtransferContinuationResponse>;
- 
-         if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
-             if (!this.validateConversionTerms(res.data)) {
-                 if (!res.data.transferId) {
-                     throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                 }
-                 acceptRes = await this.sdkClient.updateTransfer({
-                     "acceptConversion": false
-                 }, res.data.transferId);
-                 throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
-             }
-             else {
-                 if (!res.data.transferId) {
-                     throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                 }
-                 acceptRes = await this.sdkClient.updateTransfer({
-                     "acceptConversion": true
-                 }, res.data.transferId);
-             }
- 
-             if (!this.validateReturnedQuote(acceptRes.data)) {
-                 throw ValidationError.invalidReturnedQuoteError();
-             }
-             return this.getTMTNSendMoneyResponse(acceptRes.data);
-         }
-         if (!this.validateReturnedQuote(res.data)) {
-             throw ValidationError.invalidReturnedQuoteError();
-         }
-         return this.getTMTNSendMoneyResponse(res.data);
-     }
- 
- 
 
-     async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
+
+    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+        const res = await this.mtnClient.getKyc({
+            msisdn: transfer.payerAccount
+        });
+        return {
+            'homeTransactionId': transfer.homeTransactionId,
+            'from': {
+                'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
+                'idValue': transfer.payerAccount,
+                'fspId': this.mtnConfig.FSP_ID,
+                "displayName": `${res.given_name} ${res.family_name}`,
+                "firstName": res.given_name,
+                "middleName": res.given_name,
+                "lastName": res.family_name,
+                "merchantClassificationCode": "123",
+            },
+            'to': {
+                'idType': transfer.payeeIdType,
+                'idValue': transfer.payeeId
+            },
+            'amountType': 'SEND',
+            'currency': transfer.sendCurrency,
+            'amount': transfer.sendAmount,
+            'transactionType': transfer.transactionType,
+        };
+    }
+
+    // Payer
+    async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
+        const res = await this.sdkClient.initiateTransfer(transferRequest);
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+
+        if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
+            if (!this.validateConversionTerms(res.data)) {
+                if (!res.data.transferId) {
+                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+                }
+                acceptRes = await this.sdkClient.updateTransfer({
+                    "acceptConversion": false
+                }, res.data.transferId);
+                throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+            }
+            else {
+                if (!res.data.transferId) {
+                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+                }
+                acceptRes = await this.sdkClient.updateTransfer({
+                    "acceptConversion": true
+                }, res.data.transferId);
+            }
+
+            if (!this.validateReturnedQuote(acceptRes.data)) {
+                throw ValidationError.invalidReturnedQuoteError();
+            }
+            return this.getTMTNSendMoneyResponse(acceptRes.data);
+        }
+        if (!this.validateReturnedQuote(res.data)) {
+            throw ValidationError.invalidReturnedQuoteError();
+        }
+        return this.getTMTNSendMoneyResponse(res.data);
+    }
+
+
+
+    async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
         this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
@@ -501,46 +501,45 @@ export class CoreConnectorAggregate {
         }
         return this.getTMTNMerchantMoneyResponse(res.data);
     }
- 
-    
- 
-     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
-         return {
-             "amount": deps.amount,
-             "amountType": "RECEIVE",
-             "currency": this.mtnConfig.X_CURRENCY,
-             "externalId": transferId,
-             "payer" :{
-                 "partyId": deps.msisdn,
-                 "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
-             },
-             "payerMessage": deps.payerMessage,
-             "payeeNote": deps.payeeNote,
-             
-         };
-     }
- 
- 
- 
-     async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
-         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
- 
-         if (!(transferAccept.acceptQuote)) {
-             throw ValidationError.quoteNotAcceptedError();
-         }
-         await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
-     }
- 
-     async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
-         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-         if(payload.status === "SUCCESSFUL"){
-             await this.sdkClient.updateTransfer({acceptQuote: true},payload.externalId);
-         }else{
-             await this.sdkClient.updateTransfer({acceptQuote: false},payload.externalId);
-         }
-     }
-     
- }
- 
- 
- 
+
+
+
+    private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
+        return {
+            "amount": deps.amount,
+            "amountType": "RECEIVE",
+            "currency": this.mtnConfig.X_CURRENCY,
+            "externalId": transferId,
+            "payer": {
+                "partyId": deps.msisdn,
+                "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
+            },
+            "payerMessage": deps.payerMessage,
+            "payeeNote": deps.payeeNote,
+
+        };
+    }
+
+
+
+    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
+        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
+
+        if (!(transferAccept.acceptQuote)) {
+            throw ValidationError.quoteNotAcceptedError();
+        }
+        await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
+    }
+
+    async handleCallback(payload: TMTNCallbackPayload): Promise<void> {
+        this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
+        if (payload.status === "SUCCESSFUL") {
+            await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+        } else {
+            await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+        }
+    }
+
+}
+
+

@@ -299,7 +299,7 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
   "sendCurrency": "UGX",
-  "receiveCurrency": "UGX",
+  "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": "Niza Tembo",
