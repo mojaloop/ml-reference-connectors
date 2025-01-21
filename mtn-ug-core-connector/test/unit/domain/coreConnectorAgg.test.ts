@@ -139,7 +139,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     describe ("Payer Core Connector Aggregate Tests", ()=>{
-        test.skip("Send Money. Should trigger transfer in SDK", async ()=>{
+        test("Send Money. Should trigger transfer in SDK", async ()=>{
             //Arrange
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
                 "given_name": "Elijah",

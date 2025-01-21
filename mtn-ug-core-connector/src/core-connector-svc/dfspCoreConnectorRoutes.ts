@@ -50,9 +50,9 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
             handlers: {
-                SendMoney: this.initiateTransfer.bind(this),
-                UpdateSendMoney: this.updateInitiatedTransfer.bind(this),
-                Callback: this.callbackHandler.bind(this),
+                sendMoney: this.initiateTransfer.bind(this),
+                sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+                callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },

@@ -94,7 +94,7 @@
  
  
          test('POST /transfers: sdk-server - Should return receiveTransfer if party in MTN', async () => {
-             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
+             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "103");
              const url = `${ML_URL}/transfers`;
              const res = await axios.post(url, JSON.stringify(transferRequest), {
                  headers: {
