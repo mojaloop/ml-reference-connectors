@@ -132,7 +132,6 @@ export type TNBMDisbursementResponse = {
     "data": {
         "transaction": {
             "reference_id": string,
-            "airtel_money_id": string,
             "id": string,
             "status": string,
             "message": string,

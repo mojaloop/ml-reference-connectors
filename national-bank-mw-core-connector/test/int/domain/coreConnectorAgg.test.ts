@@ -145,7 +145,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         //  Send Money - Payer
-        test('Test POST/ send-money: response should be payee details ', async ()=>{
+        test('Test POST /send-money: response should be payee details ', async ()=>{
             const sendMoneyRequest: TNBMSendMoneyRequest= sendMoneyDTO(ACCOUNT_NO, "103");
             const url = `${DFSP_URL}/send-money`;
     
@@ -154,7 +154,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     'Content-Type': 'application/json',
                 },
             });
-    
             logger.info(JSON.stringify(res.data));
             expect(res.status).toEqual(200);
         });
