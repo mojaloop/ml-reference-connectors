@@ -26,7 +26,7 @@
 
 
  import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
- import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest} from '../../../src/domain/CBSClient';
+ import { AirtelClientFactory, AirtelError,  IAirtelClient, TAirtelMerchantPaymentRequest, TAirtelSendMoneyRequest, TAirtelUpdateMerchantPaymentRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest} from '../../../src/domain/CBSClient';
  import {
      ISDKClient,
      SDKClientFactory,
@@ -35,7 +35,7 @@
  import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
  import { loggerFactory } from '../../../src/infra/logger';
  import config from '../../../src/config';
- import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, callbackPayloadDto } from '../../fixtures';
+ import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyMerchantPaymentDTO, updateSendMoneyMerchantPaymentDTO, callbackPayloadDto } from '../../fixtures';
  import { Service } from '../../../src/core-connector-svc';
  import axios from 'axios';
  import MockAdapter from 'axios-mock-adapter';
@@ -50,7 +50,7 @@
  const DFSP_URL = 'http://0.0.0.0:3004';
  
  // Happy Path variables
- const MSISDN = "978980797";
+ const MSISDN = "971938765";
  const idType = "MSISDN";
  
  
@@ -173,28 +173,50 @@
              mockAxios.restore();
              expect(res.status).toEqual(200);
          });
- 
+        
+
+        //   Payer
+
          //  Send Money - Payer
  
-         test.skip('Test POST/ send-money: response should be payee details ', async ()=>{
-             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyDTO(MSISDN, "500");
+         test('Test POST/ send-money: response should be payee details ', async ()=>{
+             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyMerchantPaymentDTO(MSISDN, "500", "SEND");
              const url = `${DFSP_URL}/send-money`;
- 
+
              const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
                  headers: {
                      'Content-Type': 'application/json',
                  },
              });
+
  
              logger.info(JSON.stringify(res.data));
  
              expect(res.status).toEqual(200);
          });
+
+         //  Merchant Payment
+ 
+         test('Test POST /merchant-payment: response should be merchant details', async()=>{
+             const merchantPaymentRequest : TAirtelMerchantPaymentRequest =  sendMoneyMerchantPaymentDTO(MSISDN, "500", "RECEIVE");
+             const url = `${DFSP_URL}/merchant-payment`;
+
+             const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+
+         });
  
  
          // Confirm Send Money - Payer
          test('Test Put/ send-money{id}: response should be 200', async()=>{
-             const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
+             const updateSendMoneyRequest: TAirtelUpdateSendMoneyRequest = updateSendMoneyMerchantPaymentDTO(1, true, MSISDN);
              const url = `${DFSP_URL}/send-money/${randomUUID()}`;
  
              const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
@@ -206,6 +228,24 @@
              logger.info(JSON.stringify(res.data));
              expect(res.data.status.success).toEqual(true);
          });
+
+
+        //  Confirm Merchant Payment - Payer
+        test('Test Put /merchant-payment{id}: response should be 200', async()=>{
+            const updateMerchantPayment: TAirtelUpdateMerchantPaymentRequest = updateSendMoneyMerchantPaymentDTO(1, true, MSISDN);
+            const url = `${DFSP_URL}/merchant-payment/${randomUUID()}`;
+ 
+            const res = await axios.put(url, JSON.stringify(updateMerchantPayment), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+            expect(res.data.status.success).toEqual(true);
+        });
+
+        //  Callback
  
          test("PUT /callback should update mojaloop connector", async ()=>{
              const callbackPayload: TCallbackRequest = callbackPayloadDto("100","TS");
@@ -219,6 +259,10 @@
  
              expect(res.status).toEqual(200);
          });
+
+
+
+
  
          test('Test Get Transfer Quote (Get Quotes)', async () => {
              try {

@@ -62,7 +62,7 @@ export type TRequestOptions = {
 export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse;
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
-
+  
 export type Payee = {
     dateOfBirth?: string;
     displayName: string;
