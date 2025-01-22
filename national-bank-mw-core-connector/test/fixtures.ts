@@ -3,13 +3,9 @@ import {TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
-import { stringify } from 'node:querystring';
 
-type TransferAcceptInputDto = {
-  fineractAccountId?: number;
-  totalAmount?: number;
-  sdkTransferId?: number;
-};
+
+
 
 export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string): TtransferPatchNotificationRequest => ({
   //@ts-expect-error currentState var to of type
@@ -215,7 +211,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 
 // Send Money DTO
-export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string, amountType: string): TNBMSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "1003486415",
   "payeeIdType": "ACCOUNT_ID",
@@ -226,7 +222,8 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyReq
   "transactionType": "TRANSFER",
   "payer": "Elikah Okello",
   "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "dateOfBirth": "1985-04-12",
+  "amountType": amountType == "SEND" ? "SEND" : "RECEIVE"
 });
 
 

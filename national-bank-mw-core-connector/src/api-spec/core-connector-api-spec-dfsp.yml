@@ -104,6 +104,7 @@ paths:
   /merchant-payment:
     post:
       summary: Send Money endpoint
+      operationId: initiateMerchantPayment
       description: >-
         The Endpoint used by the DFSP Operations application to initiate merchant payment
         requests to the mojaloop connector
@@ -139,6 +140,7 @@ paths:
   /merchant-payment/{id}:
     put:
       summary: Confirm send money
+      operationId: updateInitiatedMerchantPayment
       parameters:
         - name: id
           in: path

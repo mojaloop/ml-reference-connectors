@@ -55,7 +55,10 @@ export type TNBMSendMoneyRequest = {
     "payer": string;
     "payerAccount": string;
     "dateOfBirth": string;
+    "amountType": "RECEIVE" | "SEND";
 }
+
+export type TNBMMerchantPaymentRequest = TNBMSendMoneyRequest;
 
 export type TNBMSendMoneyResponse = {
     "payeeDetails": {
@@ -77,6 +80,8 @@ export type TNBMSendMoneyResponse = {
 export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
 }
+
+export type TNBMUpdateMerchantPaymentRequest = TNBMUpdateSendMoneyRequest;
 
 export type TCallbackRequest = {
     "transaction": {
