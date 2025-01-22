@@ -108,7 +108,7 @@ export type TNBMKycResponse = {
     };
     "message": string
 }
-3
+3;
 export type TGetTokenArgs = {
     clientId: string;
     clientSecret: string;
@@ -197,10 +197,6 @@ export type TNBMTransactionResponse = {
     timestamp: string;
   };
 
-//Mock Send Money Type
-export type TNBMMockSendMoneyRequest ={
-
-}
 
 export interface INBMClient {
     NBMConfig: TNBMConfig;

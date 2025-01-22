@@ -31,7 +31,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TCallbackRequest, TNBMMerchantPaymentRequest, TNBMSendMoneyRequest, TNBMUpdateMerchantPaymentRequest, TNBMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import {TNBMMerchantPaymentRequest, TNBMSendMoneyRequest, TNBMUpdateMerchantPaymentRequest, TNBMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");

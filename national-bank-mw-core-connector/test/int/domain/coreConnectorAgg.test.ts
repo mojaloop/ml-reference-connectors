@@ -25,7 +25,7 @@
  **********/
 
 import { CoreConnectorAggregate, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
-import { NBMClientFactory, CBSError, INBMClient, TNBMSendMoneyRequest, TNBMSendMoneyResponse, TNBMUpdateSendMoneyRequest, TCallbackRequest } from '../../../src/domain/CBSClient';
+import { NBMClientFactory, INBMClient, TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest} from '../../../src/domain/CBSClient';
 import {
     ISDKClient,
     SDKClientFactory,

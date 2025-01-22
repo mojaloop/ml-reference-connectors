@@ -33,7 +33,7 @@ import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { INBMClient, TNBMCollectMoneyResponse, TNBMConfig, TNBMKycResponse, TNBMSendMoneyRequest, TNBMSendMoneyResponse, TNBMUpdateSendMoneyRequest } from '../CBSClient';
+import { INBMClient, TNBMConfig, TNBMKycResponse, TNBMSendMoneyRequest, TNBMSendMoneyResponse, TNBMUpdateSendMoneyRequest } from '../CBSClient';
 import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -86,7 +86,7 @@ export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferRe
 
 export type Party = {
    
-    statusCode(statusCode: any): unknown;
+    statusCode(statusCode: number): unknown;
     dateOfBirth?: string;
   
     extensionList?: unknown[];

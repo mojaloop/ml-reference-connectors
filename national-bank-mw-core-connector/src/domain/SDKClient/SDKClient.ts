@@ -95,6 +95,7 @@ export class SDKClient implements ISDKClient {
             }
             return res;
         } catch (error: unknown) {
+            
             if (error instanceof SDKClientError) throw error;
             const errMessage = `SDKClient initiate update receiveTransfer error: ${(error as Error)?.message}`;
             this.logger.error(errMessage, { error });

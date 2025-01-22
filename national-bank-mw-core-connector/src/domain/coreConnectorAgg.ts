@@ -30,16 +30,12 @@
 import { randomUUID } from 'crypto';
 import {
     INBMClient,
-    TCallbackRequest,
-    TNBMCollectMoneyRequest,
-    TNBMCollectMoneyResponse,
     TNBMConfig,
     TNBMDisbursementRequestBody,
     TNBMKycResponse,
     TNBMSendMoneyRequest,
     TNBMSendMoneyResponse,
     TNBMUpdateSendMoneyRequest,
-    PartyType
 } from './CBSClient';
 import {
     ILogger,
@@ -59,7 +55,6 @@ import {
     SDKClientError,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
-    TSDKTransferContinuationRequest,
     TtransferContinuationResponse,
 } from './SDKClient';
 
@@ -95,12 +90,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     private getPartiesResponse(res: TNBMKycResponse): Party {
         return {
-            statusCode: (statusCode: any) => 200,
+            statusCode: () => 200,
             idType: "ACCOUNT_ID",
             idValue: res.data.account_number,
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-        }
+        };
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -112,7 +107,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedCurrencyError();
         }
         const res = await this.nbmClient.getKyc({ account_number: quoteRequest.to.idValue });
-        const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount)
+        const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
         // check if account is blocked if possible
         const quoteExpiration = this.cbsConfig.EXPIRATION_DURATION;
         const expiration = new Date();
@@ -139,7 +134,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "transferAmount": (deps.fees + Number(deps.quoteRequest.amount)).toString(),
             "transferAmountCurrency": deps.quoteRequest.currency,
             "transactionId": deps.quoteRequest.transactionId
-        }
+        };
     }
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
@@ -208,7 +203,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         let result = true;
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
             this.logger.error(`transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined`);
-            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
         if (
             parseFloat(transfer.amount) !==
@@ -270,7 +265,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "id": requestBody.transferId,
                 "type": "B2B"
             }
-        }
+        };
     }
 
     // Payer
@@ -362,14 +357,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Retunred Quote with transfer response amount ${outboundTransferRes.amount}`);
+        this.logger.info(`Validating Returned Quote with transfer response amount ${outboundTransferRes.amount}`);
 
         let result = true;
         if (!this.validateConversionTerms(outboundTransferRes)) {
             result = false;
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
-        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body
+        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
         if (!quoteResponseBody) { 
             this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();

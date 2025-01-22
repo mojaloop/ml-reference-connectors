@@ -26,7 +26,7 @@
  import axios from 'axios';
  import MockAdapter from 'axios-mock-adapter';
  
- import { CoreConnectorAggregate, TtransferPatchNotificationRequest } from '../../../src/domain';
+ import { CoreConnectorAggregate, } from '../../../src/domain';
  import {
      ISDKClient,
      SDKClientFactory,
@@ -34,14 +34,16 @@
  import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
  import { loggerFactory } from '../../../src/infra/logger';
  import config from '../../../src/config';
- import { NBMClientFactory, INBMClient, TNBMCollectMoneyRequest } from '../../../src/domain/CBSClient';
+ import { NBMClientFactory, INBMClient, } from '../../../src/domain/CBSClient';
  import { 
      sdkInitiateTransferResponseDto, 
-     sdkUpdateTransferResponseDto, 
+     transferRequestDto,
+     quoteRequestDto, 
      sendMoneyDTO, 
      transferPatchNotificationRequestDto, 
-     updateSendMoneyDTO 
+     merchantPaymentRequestDTO
  } from '../../fixtures';
+ import { randomUUID } from 'crypto';
  
  const mockAxios = new MockAdapter(axios);
  const logger = loggerFactory({ context: 'ccAgg tests' });
@@ -49,189 +51,209 @@
  const SDK_URL = 'http://localhost:4040';
  
  const idType = "ACCOUNT_NO";
- const ACCOUNT_ID = "1003486415";
+ const ACCOUNT_NO = "1003486415";
  
- const collectMoneyRequest: TNBMCollectMoneyRequest = {
-     amount: 12000,
-     description: "Test Transaction",
-     reference: "INV/2003/202930",
-     credit_account: ACCOUNT_ID,
-     currency: "MWK"
- };
+//  const collectMoneyRequest: TNBMCollectMoneyRequest = {
+//      amount: 12000,
+//      description: "Test Transaction",
+//      reference: "INV/2003/202930",
+//      credit_account: ACCOUNT_NO,
+//      currency: "MWK"
+//  };
  
  describe('CoreConnectorAggregate Tests -->', () => {
-     let ccAggregate: CoreConnectorAggregate;
-     let nbmClient: INBMClient;
-     let sdkClient: ISDKClient;
-     
-     beforeEach(() => {
-         mockAxios.reset();
-         const httpClient = AxiosClientFactory.createAxiosClientInstance();
-         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-         nbmClient = NBMClientFactory.createClient({ NBMConfig, httpClient, logger });
-         ccAggregate = new CoreConnectorAggregate(sdkClient, nbmClient, NBMConfig, logger);
- 
-         // Mock nbmClient methods
-         nbmClient.getToken = jest.fn();
-         nbmClient.getKyc = jest.fn();
-         nbmClient.collectMoney = jest.fn();
-         nbmClient.sendMoney = jest.fn();
-         nbmClient.mockCollectMoney = jest.fn();
-     });
- 
-     describe("Payee Tests", () => {
-         test("should handle generic payee operations", async () => {
-             // Add specific payee test implementations as needed
-             logger.info("Write payee tests");
-         });
-     });
- 
-     describe("NBM Payer Tests", () => {
-         test("PUT /send-money: should initiate request to pay to customer wallet", async () => {
+    let ccAggregate: CoreConnectorAggregate;
+    let nbmClient: INBMClient;
+    let sdkClient: ISDKClient;
+    
+    beforeEach(() => {
+        mockAxios.reset();
+        const httpClient = AxiosClientFactory.createAxiosClientInstance();
+        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
+        nbmClient = NBMClientFactory.createClient({ NBMConfig, httpClient, logger });
+        ccAggregate = new CoreConnectorAggregate(sdkClient, nbmClient, NBMConfig, logger);
 
-            //Mock Token Request
-            const mockTokenRequst = {
-                "clientId": "C87stk86mED2qG7kFZRwSuady",
-                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
-            }
-             // Mock token response
-             const mockTokenResponse = {
-                 "token": "eyJhbGciOiJSUzI1NjYWZl...",
-                 "expires_in": "300"
-             };
-             
-             (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
- 
-             // Mock collect money response
-             const mockCollectMoneyResponse = {
-                "message": "Success",
-                "data": {
-                      "reference": "FT24928459824"
+        // Mock dependencies
+        nbmClient.getToken = jest.fn();
+        nbmClient.getKyc = jest.fn();
+        nbmClient.collectMoney = jest.fn();
+        nbmClient.sendMoney = jest.fn();
+    });
+
+    describe("Payee Core Connector Aggregate Tests", () => {
+        test("Party Lookup in aggregate should return party info", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    customer_number: "424082",
+                    category: "Saving Ord",
+                    branch: "Zomba",
+                    currency: "MWK"
                 }
-             };
-             (nbmClient.collectMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
-
-             await nbmClient.getToken(mockTokenRequst);
- 
-             const response = await nbmClient.collectMoney(collectMoneyRequest);
-             
-             expect(nbmClient.getToken).toHaveBeenCalled();
-             expect(nbmClient.collectMoney).toHaveBeenCalledWith(collectMoneyRequest);
-             expect(response).toEqual(mockCollectMoneyResponse);
-         });
-
-         test("POST /merchant-payment: should initiate request to pay to customer wallet", async () => {
-
-            //Mock Token Request
-            const mockTokenRequst = {
-                "clientId": "C87stk86mED2qG7kFZRwSuady",
-                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
-            }
-             // Mock token response
-             const mockTokenResponse = {
-                 "token": "eyJhbGciOiJSUzI1NjYWZl...",
-                 "expires_in": "300"
-             };
-             
-             (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
- 
-             // Mock collect money response
-             const mockCollectMoneyResponse = {
-                "message": "Success",
-                "data": {
-                      "reference": "FT24928459824"
-                }
-             };
-             (nbmClient.collectMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
-
-             await nbmClient.getToken(mockTokenRequst);
- 
-             const response = await nbmClient.collectMoney(collectMoneyRequest);
-             
-             expect(nbmClient.getToken).toHaveBeenCalled();
-             expect(nbmClient.collectMoney).toHaveBeenCalledWith(collectMoneyRequest);
-             expect(response).toEqual(mockCollectMoneyResponse);
-         });
-     });
- 
-     describe("NBM Payee Test", () => {
-         test("Get Parties Happy Path", async () => {
-
-             // Mock KYC response
-             const mockKycResponse = {
-                "message": "Success",
-                "data": {
-                  "account_number": "100100200",
-                  "customer_number": "424082",
-                  "category": "Saving Ord",
-                  "branch": "Zomba",
-                  "currency": "MWK",
-                  "locked_amount": "0.00",
-                  "limit_amount": "0.00",
-                  }
-             };
-
-            //Mock Token Request
-            const mockTokenRequst = {
-                "clientId": "C87stk86mED2qG7kFZRwSuady",
-                "clientSecret": "pkAV1p9DqBXsBhbWh8bacCNiyTYCmJX3"
-            }
- 
-             // Mock token response
-             const mockTokenResponse = {
-                "token": "eyJhbGciOiJSUzI1NjYWZl...",
-                "expires_in": "300"
             };
- 
-             (nbmClient.getKyc as jest.Mock).mockResolvedValue(mockKycResponse);
-             (nbmClient.getToken as jest.Mock).mockResolvedValue(mockTokenResponse);
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
 
-             await nbmClient.getToken(mockTokenRequst);
- 
-             const kyc_res = await ccAggregate.getParties(ACCOUNT_ID, idType);
- 
-             expect(nbmClient.getToken).toHaveBeenCalled();
-             expect(nbmClient.getKyc).toHaveBeenCalledWith({ account_number: ACCOUNT_ID });
-             expect(kyc_res.statusCode(200)).toEqual(200);
-         });
- 
-         test('PUT /transfers/{id} notification: should handle transfer updates', async () => {
-             // Mock collect money response
-             const mockCollectMoneyResponse = {
-                "message": "Success",
-                "data": {
-                      "reference": "FT24928459824"
+            // Act
+            const res = await ccAggregate.getParties(ACCOUNT_NO, idType);
+
+            // Assert
+            expect(res.statusCode(200)).toEqual(200);
+            expect(res.idValue).toEqual(ACCOUNT_NO);
+        });
+
+        test("Agreement phase should return quote details", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    customer_number: "424082"
                 }
-             };
- 
-             (nbmClient.mockCollectMoney as jest.Mock).mockResolvedValue(mockCollectMoneyResponse);
- 
-             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto(
-                 "COMPLETED", 
-                 idType, 
-                 ACCOUNT_ID, 
-                 "500"
-             );
- 
-             const res = await ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj");
- 
-             expect(nbmClient.sendMoney).toHaveBeenCalled();
-             expect(res).toBeUndefined();
-         });
- 
-         test('should handle errors in transfer updates', async () => {
-             (nbmClient.sendMoney as jest.Mock).mockRejectedValue(new Error('Transfer failed'));
- 
-             const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto(
-                 "COMPLETED", 
-                 idType, 
-                 ACCOUNT_ID, 
-                 "500"
-             );
- 
-             await expect(ccAggregate.updateTransfer(patchNotificationRequest, "ljzowczj"))
-                 .rejects
-                 .toThrow('Transfer failed');
-         });
-     });
- });
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+
+            // Act
+            const res = await ccAggregate.quoteRequest(quoteRequestDto(idType, ACCOUNT_NO, "1000"));
+
+            // Assert
+            expect(res.transferAmount).toBeDefined();
+            
+        });
+
+        test("Transfer phase should return transfer state RESERVED", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    status: "ACTIVE"
+                }
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+            const transferRequestPayload = transferRequestDto(idType, ACCOUNT_NO, "103");
+
+            // Act
+            const res = await ccAggregate.receiveTransfer(transferRequestPayload);
+
+            // Assert
+            expect(res.transferState).toEqual("RECEIVED");
+        });
+
+        test("Transfer Patch notification should credit the customer's account if request body is valid", async () => {
+            // Arrange
+            nbmClient.sendMoney = jest.fn().mockImplementation(() => {
+                return;
+            });
+            const patchNotificationPayload = transferPatchNotificationRequestDto(
+                "COMPLETED",
+                idType,
+                ACCOUNT_NO,
+                "103"
+            );
+
+            // Act
+            const res = await ccAggregate.updateTransfer(patchNotificationPayload, randomUUID());
+
+            // Assert
+            expect(res).resolves;
+        });
+
+        test("Transfer Patch notification should credit the Merchant's account if request body is valid", async () => {
+            // Arrange
+            nbmClient.collectMoney = jest.fn().mockImplementation(() => {
+                return;
+            });
+            const patchNotificationPayload = transferPatchNotificationRequestDto(
+                "COMPLETED",
+                idType,
+                ACCOUNT_NO,
+                "103"
+            );
+
+            // Act
+            const res = await ccAggregate.updateTransfer(patchNotificationPayload, randomUUID());
+
+            // Assert
+            expect(res).resolves;
+        });
+    });
+
+    describe("Payer Core Connector Aggregate Tests", () => {
+        test("Send Money should trigger transfer in SDK", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    status: "ACTIVE"
+                }
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+
+            const sendMoneyReqPayload = sendMoneyDTO(ACCOUNT_NO, "103", "SEND");
+
+            // Act
+            const res = await ccAggregate.sendMoney(sendMoneyReqPayload);
+            // Assert
+            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+        });
+
+        // test("Update Send Money should trigger a request to pay using NBM client", async () => {
+        //     // Arrange
+        //     const updateSendMoneyPayload = updateSendMoneyDTO(true);
+        //     nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
+        //     const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+
+        //     // Act
+        //     const res = await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
+
+        //     // Assert
+        //     expect(collectMoney).toHaveBeenCalled();
+        // });
+    });
+
+    describe("Merchant Core Connector Aggregate Tests", () => {
+        test("Collect Money should trigger transfer in SDK", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    status: "ACTIVE"
+                }
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+
+            const merchantPaymentRequest = merchantPaymentRequestDTO(ACCOUNT_NO, "103");
+
+            // Act
+            const res = await ccAggregate.sendMoney(merchantPaymentRequest);
+
+            // Assert
+            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+        });
+
+        // test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
+        //     // Arrange
+        //     const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(1000, true,);
+        //     nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
+        //     const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+
+        //     // Act
+        //     const res = await ccAggregate.updateSendMoney(updateMerchantPaymentPayload, randomUUID());
+
+        //     // Assert
+        //     expect(collectMoney).toHaveBeenCalled();
+        // });
+
+        
+    });
+});

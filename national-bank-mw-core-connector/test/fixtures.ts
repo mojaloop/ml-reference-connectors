@@ -1,5 +1,5 @@
 import { TSDKOutboundTransferResponse, TtransferContinuationResponse, } from '../src/domain/SDKClient';
-import {TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
+import {TNBMMerchantPaymentRequest, TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -109,10 +109,9 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 });
 
 
-export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string = "0881544547", amount: string = "1"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string = "1003486415", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
-
   currency: "MWK",
   from: {
     idType: "ACCOUNT_NO",
@@ -211,6 +210,22 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 
 // Send Money DTO
+
+export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TNBMMerchantPaymentRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": "RECEIVE",
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "UGX",
+  "receiveCurrency": "UGX",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": "Niza Tembo",
+  "payerAccount": idValue,
+  "dateOfBirth": "1997-04-27"
+});
+
 export const sendMoneyDTO = (idValue: string, amount: string, amountType: string): TNBMSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "1003486415",
@@ -224,6 +239,10 @@ export const sendMoneyDTO = (idValue: string, amount: string, amountType: string
   "payerAccount": idValue,
   "dateOfBirth": "1985-04-12",
   "amountType": amountType == "SEND" ? "SEND" : "RECEIVE"
+});
+
+export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean): TNBMUpdateSendMoneyRequest => ({
+  "acceptQuote": acceptQuote,
 });
 
 
@@ -243,7 +262,47 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
     },
     to: {
       idType: "ACCOUNT_ID",
-      idValue: idValue
+      idValue: idValue,
+      supportedCurrencies: ["MWK"]
+    },
+    fxQuotesResponse: {
+      body:{
+          homeTransactionId: "",
+          conversionTerms: {
+            sourceAmount: {
+              currency: "MWK",
+              amount: "1000"
+            },
+            conversionId: '',
+            initiatingFsp: '',
+            counterPartyFsp: '',
+            amountType: 'SEND',
+            targetAmount: {
+              currency: 'MWK',
+              amount: "1000"
+            },
+            expiration: ''
+          }
+      }
+    },
+    quoteResponse: {
+      body: {
+        transferAmount: {
+          currency: 'MWK',
+          amount: '1000'
+        },
+        payeeReceiveAmount: {
+          amount: "1000",
+          currency: 'MWK'
+        },
+        payeeFspFee: undefined,
+        payeeFspCommission: undefined,
+        expiration: '',
+        geoCode: undefined,
+        ilpPacket: '',
+        condition: '',
+        extensionList: undefined
+      }
     },
     amountType: "SEND",
     currency: "MWK",
