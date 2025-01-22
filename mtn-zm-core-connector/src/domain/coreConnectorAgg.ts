@@ -179,7 +179,7 @@ export class CoreConnectorAggregate {
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        if (quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
+        if (this.mtnConfig.MTN_ENV === 'production' && quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
@@ -215,7 +215,7 @@ export class CoreConnectorAggregate {
         if (transfer.to.idType != this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        if (transfer.currency !== config.get("mtn.X_CURRENCY")) {
+        if (this.mtnConfig.MTN_ENV === 'production' && transfer.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.validateQuote(transfer)) {
@@ -229,6 +229,7 @@ export class CoreConnectorAggregate {
             transferState: 'RESERVED',
         };
     }
+
 
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
@@ -310,11 +311,11 @@ export class CoreConnectorAggregate {
         };
     }
  
-     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
+    private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferResponse.amount}`);
         let result = true;
         if (
-            !(this.mtnConfig.X_CURRENCY === transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
+            this.mtnConfig.MTN_ENV === 'production' && !(this.mtnConfig.X_CURRENCY === transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
             result = false;
         }
@@ -349,6 +350,7 @@ export class CoreConnectorAggregate {
         }
         return result;
     }
+
  
     private validateReturnedQuote(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Retunred Quote with transfer response amount${transferResponse.amount}`);
@@ -398,7 +400,7 @@ export class CoreConnectorAggregate {
 
  
  
-     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
          const res = await this.mtnClient.getKyc({
              msisdn: transfer.payerAccount
          });
@@ -418,7 +420,7 @@ export class CoreConnectorAggregate {
                  'idType': transfer.payeeIdType,
                  'idValue': transfer.payeeId
              },
-             'amountType': 'SEND',
+             'amountType': transfer.amountType,
              'currency': transfer.sendCurrency,
              'amount': transfer.sendAmount,
              'transactionType': transfer.transactionType,

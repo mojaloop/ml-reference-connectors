@@ -75,6 +75,7 @@ export type TMTNConfig = {
     MTN_TARGET_ENVIRONMENT: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+    MTN_ENV: string;
 }
 
 

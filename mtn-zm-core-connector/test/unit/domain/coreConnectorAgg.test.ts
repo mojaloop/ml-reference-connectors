@@ -139,7 +139,7 @@
      });
  
      describe ("Payer Core Connector Aggregate Tests", ()=>{
-         test.skip("Send Money. Should trigger transfer in SDK", async ()=>{
+         test("Send Money. Should trigger transfer in SDK", async ()=>{
              //Arrange
              mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
                  "given_name": "Elijah",
@@ -196,7 +196,7 @@
  
  
      describe ("Merchant Core Connector Aggregate Tests", ()=>{
-         test.skip("Collect Money. Should trigger transfer in SDK", async ()=>{
+         test("POST Merchant Payment. Should trigger transfer in SDK", async ()=>{
              //Arrange
              mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
                  "given_name": "Elijah",

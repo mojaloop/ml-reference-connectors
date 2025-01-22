@@ -196,7 +196,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
     describe ("Merchant Core Connector Aggregate Tests", ()=>{
-        test.skip("Collect Money. Should trigger transfer in SDK", async ()=>{
+        test("Collect Money. Should trigger transfer in SDK", async ()=>{
             //Arrange
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
                 "given_name": "Elijah",
