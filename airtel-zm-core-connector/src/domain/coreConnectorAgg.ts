@@ -39,6 +39,7 @@ import {
     AirtelError,
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
+    TAirtelMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -79,6 +80,9 @@ export class CoreConnectorAggregate {
         this.logger = logger;
     }
 
+    // Payee (These functions are used in the SDK Core Connector Routes)
+    // Get Parties   --(1)
+
     async getParties(id: string, idType: string): Promise<TLookupPartyInfoResponse> {
         this.logger.info(`Get Parties for ${id}`);
         if (!(idType === config.get("airtel.SUPPORTED_ID_TYPE"))) {
@@ -88,20 +92,23 @@ export class CoreConnectorAggregate {
         const lookupRes = await this.airtelClient.getKyc({ msisdn: id });
         const party = {
             data: {
-                displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
-                firstName: lookupRes.data.first_name,
                 idType: config.get("airtel.SUPPORTED_ID_TYPE"),
                 idValue: id,
-                lastName: lookupRes.data.last_name,
+                displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
+                firstName: lookupRes.data.first_name,
                 middleName: lookupRes.data.first_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(lookupRes)}`,
+                lastName: lookupRes.data.last_name,
             },
             statusCode: Number(lookupRes.status.code),
         };
         this.logger.info(`Party found`, { party });
         return party;
     }
+
+
+    //  Quote Requests(includes get kyc from get Parties)    --(2)
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
@@ -147,14 +154,9 @@ export class CoreConnectorAggregate {
         };
     }
 
-    private async checkAccountBarred(msisdn: string): Promise<void> {
+  
 
-        const res = await this.airtelClient.getKyc({ msisdn: msisdn });
-
-        if (res.data.is_barred) {
-            throw ValidationError.accountBarredError();
-        }
-    }
+    // Receive Transfers(Payee getting funds)     --(3)
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
@@ -176,6 +178,18 @@ export class CoreConnectorAggregate {
         };
     }
 
+      // QR & RT     --(2.1 & 3.1)
+      private async checkAccountBarred(msisdn: string): Promise<void> {
+
+        const res = await this.airtelClient.getKyc({ msisdn: msisdn });
+
+        if (res.data.is_barred) {
+            throw ValidationError.accountBarredError();
+        }
+    }
+
+
+    // RT  --(3.1)
     private validateQuote(transfer: TtransferRequest): boolean {
         this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
         let result = true;
@@ -191,12 +205,13 @@ export class CoreConnectorAggregate {
         return result;
     }
 
+    // Check Transfer Amount Type in Validate Quote    --(3.1.1)
+
     private checkSendAmounts(transfer: TtransferRequest): boolean {
         this.logger.info('Validating Type Send Quote...', { transfer });
         let result = true;
         if (
-            parseFloat(transfer.amount) !==
-            parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
+            parseFloat(transfer.amount) !== parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
         ) {
             result = false;
@@ -205,7 +220,6 @@ export class CoreConnectorAggregate {
         if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
         }
-
         if (
             parseFloat(transfer.quote.payeeReceiveAmount) !==
             parseFloat(transfer.quote.transferAmount) -
@@ -215,6 +229,8 @@ export class CoreConnectorAggregate {
         }
         return result;
     }
+
+    // Check Recieve Amount Type in Validate Quote     --(3.1.1)
 
     private checkReceiveAmounts(transfer: TtransferRequest): boolean {
         this.logger.info('Validating Type Receive Quote...', { transfer });
@@ -237,12 +253,8 @@ export class CoreConnectorAggregate {
         return result;
     }
 
-    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
-        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
-        // todo define implmentation
-        return true;
-    }
-
+    // Update Transfer   --(4)
+    
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
@@ -254,7 +266,16 @@ export class CoreConnectorAggregate {
         const airtelDisbursementRequest: TAirtelDisbursementRequestBody = this.getDisbursementRequestBody(updateTransferPayload);
         await this.airtelClient.sendMoney(airtelDisbursementRequest);
     }
+    
+    
+    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
+            this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
+            // todo define implmentation
+            return true;
+    }
 
+
+     //Get Disbursements Transfer   --(4.1)
 
     private getDisbursementRequestBody(requestBody: TtransferPatchNotificationRequest): TAirtelDisbursementRequestBody {
         if (!requestBody.quoteRequest) {
@@ -275,6 +296,10 @@ export class CoreConnectorAggregate {
         };
     }
 
+
+
+    //  Payer (These are used in the DFSP Core Connector Routes)
+    // Send Transfer  -- (5)
 
     async sendTransfer(transfer: TAirtelSendMoneyRequest): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payerAccount}`);
@@ -314,14 +339,15 @@ export class CoreConnectorAggregate {
             return this.getTAirtelSendMoneyResponse(acceptRes.data);
         }
         if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
+            throw ValidationError.invalidReturnedQuoteError(); 
         }
 
         return this.getTAirtelSendMoneyResponse(res.data);
 
     }
+    // Get TSDKOutbound Transfer Request DTO --(5.1) 
 
-    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.airtelClient.getKyc({
             msisdn: transfer.payerAccount
         });
@@ -341,13 +367,14 @@ export class CoreConnectorAggregate {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': 'SEND',
+            'amountType': transfer.amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
     }
 
+    //  Airtel Send Money Response DTO  --(5.1)
     private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
@@ -365,6 +392,8 @@ export class CoreConnectorAggregate {
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
+
+    // Validation of Conversion Terms --(5.1)
 
     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferResponse.amount}`);
@@ -405,6 +434,8 @@ export class CoreConnectorAggregate {
         }
         return result;
     }
+
+    //  Validion of Returned Quotes --(5.1)
 
     private validateReturnedQuote(transferResponse: TSDKOutboundTransferResponse): boolean {
         this.logger.info(`Validating Retunred Quote with transfer response amount${transferResponse.amount}`);
@@ -452,6 +483,8 @@ export class CoreConnectorAggregate {
         return result;
     }
 
+
+    // Update Sent Transfer --(6)
     async updateSentTransfer(transferAccept: TAirtelUpdateSendMoneyRequest, transferId: string): Promise<TAirtelCollectMoneyResponse> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
@@ -461,7 +494,7 @@ export class CoreConnectorAggregate {
         return await this.airtelClient.collectMoney(this.getTAirtelCollectMoneyRequest(transferAccept, transferId));
     }
 
-
+    // Get Airtel Collect Money Request DT0  --(6.1)
     private getTAirtelCollectMoneyRequest(collection: TAirtelUpdateSendMoneyRequest, transferId: string): TAirtelCollectMoneyRequest {
         return {
             "reference": "string",
@@ -479,6 +512,8 @@ export class CoreConnectorAggregate {
         };
     }
 
+
+    // Handle Call Back --(7)
     async handleCallback(payload: TCallbackRequest): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
         try {
@@ -495,6 +530,7 @@ export class CoreConnectorAggregate {
         }
     }
 
+    // Handle Refund  --(7.1)
     private async handleRefund(payload: TCallbackRequest){
         try{
             if(payload.transaction.status_code === "TS"){
