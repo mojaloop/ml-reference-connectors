@@ -30,7 +30,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TMTNCallbackPayload, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get('server.DFSP_API_SPEC_FILE');
@@ -50,8 +50,10 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
             handlers: {
-                SendMoney: this.initiateTransfer.bind(this),
-                UpdateSendMoney: this.updateInitiatedTransfer.bind(this),
+                sendMoney: this.initiateTransfer.bind(this),
+                sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+                initiateMerchantPayment: this.initiateTransfer.bind(this),
+                updateInitiatedMerchantPayment: this.updateInitiatedTransfer.bind(this),
                 Callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
@@ -92,7 +94,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TMTNSendMoneyRequest;
+        const transfer = request.payload as TMTNSendMoneyRequest | TMTNMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendTransfer(transfer);
@@ -105,7 +107,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferId = params["transferId"] as string;
-        const transferAccept = request.payload as TMTNUpdateSendMoneyRequest;
+        const transferAccept = request.payload as TMTNUpdateSendMoneyRequest | TMTNUpdateMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept,transferId);

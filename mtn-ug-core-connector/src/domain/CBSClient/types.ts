@@ -75,6 +75,7 @@ export type TMTNConfig = {
     MTN_TARGET_ENVIRONMENT: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+    MTN_ENV: string;
 }
 
 
@@ -174,8 +175,7 @@ export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "amountType": "RECEIVE" | "SEND",
+    "sendAmount": string;  "amountType": "RECEIVE" | "SEND",
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": string;
     "transactionDescription": string;
@@ -223,6 +223,7 @@ export type TMTNSendMoneyResponse = {
 export type TMTNCollectMoneyRequest = {
     "amount": string;
     "currency": string;
+    "amountType": "RECEIVE" | "SEND",
     "externalId": string;
     "payer": {
         "partyIdType": string,

@@ -33,7 +33,7 @@ import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { IMTNClient } from '../../../src/domain/CBSClient';
 import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
-import { quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyDTO } from '../../fixtures';
+import { merchantPaymentRequestDTO, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
 import { randomUUID } from 'crypto';
 
 
@@ -93,6 +93,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         });
 
+        
+
         test("Transfer phase. Should return transfer state RESERVED", async ()=>{
             // Arrange 
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
@@ -121,10 +123,23 @@ describe('CoreConnectorAggregate Tests -->', () => {
             //Assert
             expect(res).resolves;
         });
+
+        test("Transfer Patch notification should credit the Merchant's account if request body is valid", async ()=>{
+            // Arrange 
+            mtnClient.collectMoney = jest.fn().mockImplementation(()=>{
+                return;
+            });
+            const patchNotificationPayload = transferPatchNotificationRequestDto("COMPLETED",idType,idValue,"103");
+            //Act
+            const res =  await ccAggregate.updateTransfer(patchNotificationPayload,randomUUID());
+            //Assert
+            expect(res).resolves;
+        });
+        
     });
 
     describe ("Payer Core Connector Aggregate Tests", ()=>{
-        test.skip("Send Money. Should trigger transfer in SDK", async ()=>{
+        test("Send Money. Should trigger transfer in SDK", async ()=>{
             //Arrange
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
                 "given_name": "Elijah",
@@ -149,6 +164,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info("Response",res);
             expect(res.payeeDetails.idValue).toEqual(idValue);
         });
+
 
         test("Update Send Money, should trigger a request to pay using mtn client", async() => {
             //Arrange 
@@ -176,4 +192,63 @@ describe('CoreConnectorAggregate Tests -->', () => {
             expect(sdkUpdateFn).toHaveBeenCalled();
         });
     });
+
+
+
+    describe ("Merchant Core Connector Aggregate Tests", ()=>{
+        test("Collect Money. Should trigger transfer in SDK", async ()=>{
+            //Arrange
+            mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
+                "given_name": "Elijah",
+                "family_name": "Okello",
+                "birthdate": "19-09-1999",
+                "locale": "en",
+                "gender": "male",
+                "status": "OK"
+            });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+            const sendMoneyReqPayload = merchantPaymentRequestDTO(idValue,"103");
+            //Act 
+            const res = await ccAggregate.collectTransfer(sendMoneyReqPayload);
+            //Assert
+
+            logger.info("Response",res);
+            expect(res.payeeDetails.idValue).toEqual(idValue);
+        });
+
+
+        test("Update Merchant Collect Money, Should Trigger a Request to Pay Using MTN Client", async() => {
+            //Arrange 
+            const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(1000,true,idValue);
+            mtnClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
+            const collectMoney = jest.spyOn(mtnClient,"collectMoney");
+
+            //Act 
+            const res = await ccAggregate.updateSentTransfer(updateMerchantPaymentPayload, randomUUID());
+
+            // Assert 
+            logger.info("Response",res);
+            expect(collectMoney).toHaveBeenCalled();
+        });
+
+
+        test("Callback should call sdk update transfer", async ()=>{
+            // Arrange
+            const callbackPayload = TMTNCallbackPayloadDto("EUR",idValue);
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce(undefined);
+            const sdkUpdateFn = jest.spyOn(sdkClient,"updateTransfer");
+
+            //Act 
+            await ccAggregate.handleCallback(callbackPayload);
+            // Assert
+            expect(sdkUpdateFn).toHaveBeenCalled();
+        });
+    });
+
 });
