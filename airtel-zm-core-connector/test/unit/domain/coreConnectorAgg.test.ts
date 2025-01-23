@@ -35,7 +35,8 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
+import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, tSDKOutboundTransferRequestDTO, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
+import { executionAsyncId } from 'node:async_hooks';
 
 
 const mockAxios = new MockAdapter(axios);
@@ -102,6 +103,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
                 logger.info(JSON.stringify(res.data));
                 expect(res.statusCode).toEqual(200);
+
+                // Checking the Extension List Data is not Falsy
+                expect(res.data.extensionList).not.toHaveLength(0);
             } catch (error) {
                 console.error(error);
             }
@@ -144,6 +148,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 logger.info(JSON.stringify(res));
                 const fees = Number(config.get('airtel.SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
                 expect(res.payeeFspFeeAmount).toEqual(fees.toString());
+                expect(res.extensionList).not.toHaveLength(0);
 
             } catch (error) {
                 console.error(error);
@@ -185,6 +190,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info(JSON.stringify(res));
             expect(res.transferState).toEqual("RESERVED");
             expect(airtelClientGetKyc).toHaveBeenCalled();
+            expect(transferRequest).not.toBeFalsy();
         });
 
 
@@ -248,11 +254,32 @@ describe('CoreConnectorAggregate Tests -->', () => {
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO,"WAITING_FOR_QUOTE_ACCEPTANCE")
             });
+
+            // Spying on Update Transfer
             jest.spyOn(sdkClient, "updateTransfer");
+            
+
+            // Spying on Initiate transfer
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+
             const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
             const res = await ccAggregate.sendTransfer(sendMoneyRequestBody, "SEND");
-            logger.info("Response from send monety", res);
+
+            logger.info("Response from send money", res);
+
+            // Expecting Update Transfer to have be called
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
+
         });
 
 

@@ -1,4 +1,4 @@
-import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
+import { TSDKOutboundTransferRequest, TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
 import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
@@ -411,12 +411,12 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amo
     "name": "Elijah Okello",
     payerId: idValue,
     DateAndPlaceOfBirth: {
-        BirthDt: "1985-04-12",
-        PrvcOfBirth: "Lusaka",
-        CityOfBirth: "Lusaka",
-        CtryOfBirth: "Lusaka",
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
     },
-},
+  },
 
 });
 
@@ -436,3 +436,26 @@ export const callbackPayloadDto = (amount: string, transferStatus: string): TCal
   }
 });
 
+
+export const tSDKOutboundTransferRequestDTO = (): TSDKOutboundTransferRequest => ({
+  "amount": "1000",
+  "amountType": "SEND",
+  "currency": "ZMW",
+  "from": {
+    "displayName": "Chimweso Faith Mukoko Test1",
+    "extensionList": [],
+    "firstName": "Chimweso Faith Mukoko",
+    "fspId": "airtelzambia",
+    "idType": "MSISDN",
+    "idValue": "971938765",
+    "lastName": "Test1",
+    "merchantClassificationCode": "123",
+    "middleName": "Chimweso Faith Mukoko"
+  },
+  "homeTransactionId": "4ba7d0ba-bcaf-474f-b0e2-63cad27b0865",
+  "to": {
+    "idType": "MSISDN",
+    "idValue": "07676767676"
+  },
+  "transactionType": "TRANSFER"
+});
