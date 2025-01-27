@@ -36,14 +36,14 @@ paths:
       tags:
         - Health
       responses:
-        '200':
+        "200":
           description: >-
             Returns empty body if the scheme adapter outbound transfers service
             is running.
   /send-money:
     post:
       summary: Send Money endpoint
-      description: >- 
+      description: >-
         The Endpoint used by the DFSP Operations application to initiate send money 
         requests to the mojaloop connector
 
@@ -57,7 +57,7 @@ paths:
       tags:
         - Send Money
       responses:
-        '200':
+        "200":
           description: >-
             Response for send money request. A quote if it is double 
             integration or a payment status response if it is single
@@ -66,13 +66,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/sendMoneyResponse"
-        '400':
+        "400":
           description: >-
             Response for a bad request.
-        '500':
+        "500":
           description: >-
             Response for an internal server error
-        '504':
+        "504":
           description: >-
             Response for a timed out transfer
   /send-money/{transferId}:
@@ -92,13 +92,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConfirmSendMoney'
+              $ref: "#/components/schemas/ConfirmSendMoney"
       tags:
         - Send Money
       responses:
-        '200':
+        "200":
           description: Send money confirmed successfully
-        '400':
+        "400":
           description: Bad request
 
   /merchant-payment:
@@ -117,7 +117,7 @@ paths:
       tags:
         - Merchant Payments
       responses:
-        '200':
+        "200":
           description: >-
             Response for send money request. A quote if it is double 
             integration or a payment status response if it is single
@@ -127,13 +127,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/merchantPaymentResponse"
 
-        '400':
+        "400":
           description: >-
             Response for bad request
-        '500':
+        "500":
           description: >-
             Internal Server error
-        '504':
+        "504":
           description: >-
             Transfer Timeout.
 
@@ -154,15 +154,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConfirmSendMoney'
+              $ref: "#/components/schemas/ConfirmSendMoney"
       tags:
         - Merchant Payments
       responses:
-        '200':
+        "200":
           description: Send money confirmed successfully
-        '400':
+        "400":
           description: Bad request
-          
+
   /callback:
     put:
       operationId: callback
@@ -173,11 +173,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/callbackPayload'
+              $ref: "#/components/schemas/callbackPayload"
       responses:
-        '200': 
+        "200":
           description: Receipt of callback confirmed
-
 
 components:
   schemas:
@@ -214,19 +213,19 @@ components:
         homeTransactionId:
           type: string
           example: "HTX123456789"
-        merchantPaymentId:
+        payeeId:
           type: string
           example: "16135551212"
-        merchantPaymentIdType:
+        payeeIdType:
           type: string
           example: "MSISDN"
-        receiveAmount:
+        sendAmount:
           type: string
           example: "150.00"
-        receiveCurrency:
+        sendCurrency:
           type: string
           example: "UGX"
-        sendCurrency:
+        receiveCurrency:
           type: string
           example: "KES"
         transactionDescription:
@@ -236,52 +235,76 @@ components:
           type: string
           example: "TRANSFER"
         payer:
-          type: string
-          example: "John Doe"
-        payerAccount:
-          type: string
-          example: "9876543210"
-        dateOfBirth:
-          type: string
-          example: "1985-04-12"
-        geoLocationData:
-          description: >-
-            Indicates the geographic location from where the transaction was
-            initiated.
-          properties:
-            latitude:
-              $ref: '#/components/schemas/latitude'
-            longitude:
-              $ref: '#/components/schemas/longitude'
-          required:
-            - latitude
-            - longitude
           type: object
-    latitude:
-      description: >-
-        The API data type Latitude is a JSON String in a lexical format that is
-        restricted by a regular expression for interoperability reasons.
-      pattern: >-
-        ^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$
-      type: string
-    longitude:
-      description: >-
-        The API data type Longitude is a JSON String in a lexical format that is
-        restricted by a regular expression for interoperability reasons.
-      pattern: >-
-        ^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$
-      type: string
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            payerId:
+              type: string
+              example: "9876543210"
+            DateAndPlaceOfBirth:
+              type: object
+              properties:
+                BirthDt:
+                  type: string
+                  example: "20-09-2001"
+                PrvcOfBirth:
+                  type: string
+                  example: "ProvinceOfBirth"
+                CityOfBirth:
+                  type: string
+                  example: "Kampala"
+                CtryOfBirth:
+                  type: string
+                  example: "Uganda"
+              required:
+                - BirthDt
+                - CityOfBirth
+                - CtryOfBirth
+          required:
+            - name
+            - payerId
+      required:
+        - homeTransactionId
+        - payeeId
+        - payeeIdType
+        - sendAmount
+        - sendCurrency
+        - receiveCurrency
+        - transactionType
+        - payer
+      
 
     merchantPaymentResponse:
       type: object
       properties:
-        merchantDetails:
-          type: string
-          example: "{\"name\":\"Jane Smith\",\"accountNumber\":\"1234567890\",\"bankName\":\"Example Bank\",\"address\":\"456 Elm Street, Somecity, Country\"}"
-        sendAmount:
+        payeeDetails:
+          type: object
+          properties:
+            idType:
+              type: string
+              example: "MSISDN"
+            idValue:
+              type: string
+              example: "990454454"
+            fspId:
+              type: string
+              example: "airtelzambia"
+            firstName:
+              type: string
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
+
+        receiveAmount:
           type: string
           example: "140.00"
-        sendCurrency:
+        receiveCurrency:
           type: string
           example: "EUR"
         fees:
@@ -290,13 +313,9 @@ components:
         feeCurrency:
           type: string
           example: "USD"
-        exchangeRate:
+        transactionId:
           type: string
-          example: "1.10"
-        expiryDateTime:
-          type: string
-          format: date-time
-          example: "2024-08-01T12:00:00Z"
+          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyResponse:
       type: object
       properties:
@@ -365,17 +384,54 @@ components:
           type: string
           example: "TRANSFER"
         payer:
-          type: string
-          example: "John Doe"
-        payerAccount:
-          type: string
-          example: "9876543210"
-        dateOfBirth:
-          type: string
-          example: "1985-04-12"
+          type: object
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            payerId:
+              type: string
+              example: "9876543210"
+            DateAndPlaceOfBirth:
+              type: object
+              properties:
+                BirthDt:
+                  type: string
+                  example: "20-09-2001"
+                PrvcOfBirth:
+                  type: string
+                  example: "ProvinceOfBirth"
+                CityOfBirth:
+                  type: string
+                  example: "Kampala"
+                CtryOfBirth:
+                  type: string
+                  example: "Uganda"
+              required:
+                - BirthDt
+                - CityOfBirth
+                - CtryOfBirth
+          required:
+            - name
+            - payerId
+      required:
+        - homeTransactionId
+        - payeeId
+        - payeeIdType
+        - sendAmount
+        - sendCurrency
+        - receiveCurrency
+        - transactionType
+        - payer
+
     ConfirmSendMoney:
       type: object
       properties:
         acceptQuote:
           type: boolean
-          example: true
+        msisdn:
+          type: string
+          example: "777503758"
+        amount:
+          type: string
+          example: "500"

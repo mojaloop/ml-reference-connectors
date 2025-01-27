@@ -31,7 +31,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import {TNBMMerchantPaymentRequest, TNBMSendMoneyRequest, TNBMUpdateMerchantPaymentRequest, TNBMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
@@ -45,8 +45,8 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private readonly handlers = {
         sendMoney: this.initiateTransfer.bind(this),
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
-        initiateMerchantPayment: this.initiateTransfer.bind(this),
-        updateInitiatedMerchantPayment: this.updateInitiatedTransfer.bind(this),
+        initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
+        updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -101,7 +101,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TNBMSendMoneyRequest | TNBMMerchantPaymentRequest;
+        const transfer = request.payload as TNBMSendMoneyRequest ;
         try {
             const result = await this.aggregate.sendMoney(transfer);
             return this.handleResponse(result, h);
@@ -113,12 +113,37 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferId = params['transferId'] as string;
-        const transferAccept = request.payload as TNBMUpdateSendMoneyRequest | TNBMUpdateMerchantPaymentRequest;
+        const transferAccept = request.payload as TNBMUpdateSendMoneyRequest ;
         this.logger.info("Update Send Money Request", transferAccept);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
                 transferId
+            );
+            return this.handleResponse(updateTransferRes, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const transfer = request.payload as TNBMSendMoneyRequest;
+        this.logger.info(`Transfer request ${transfer}`);
+        try {
+            const result = await this.aggregate.sendMoney(transfer);
+            return this.handleResponse(result, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+    private async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const { params } = context.request;
+        const transferAccept = request.payload as TNBMUpdateSendMoneyRequest;
+        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
+        try {
+            const updateTransferRes = await this.aggregate.updateSendMoney(
+                transferAccept,
+                params.transferId as string,
             );
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {

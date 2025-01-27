@@ -39,7 +39,8 @@ export type TNBMConfig = {
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string
 }
 
 
