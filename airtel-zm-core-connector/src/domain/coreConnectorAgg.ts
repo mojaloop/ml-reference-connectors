@@ -39,8 +39,6 @@ import {
     AirtelError,
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
-    TAirtelMerchantPaymentRequest,
-    TAirtelKycResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -187,7 +185,7 @@ export class CoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": config.get("airtel.X_COUNTRY")
             }
-        ]
+        ];
     }
 
 
@@ -242,7 +240,7 @@ export class CoreConnectorAggregate {
     // Get Quote Resonse Extension List DTO to be used in Quote Response on Extension List
     // Get Quote    --(2.3)
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = []
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
         //todo: check if the correct level of information has been provided.
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
@@ -275,7 +273,7 @@ export class CoreConnectorAggregate {
                 "ExtensionList check Failed in Payee Transfers",
                 '3100',
                 500
-            )
+            );
         }
 
         if (!this.validateQuote(transfer)) {
@@ -368,7 +366,8 @@ export class CoreConnectorAggregate {
     // Check Payee Transfer Extension Lists in Receive Transfer  -- (3.1.2)
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-        return true
+        this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
+        return true;
     }
 
 
@@ -505,7 +504,7 @@ export class CoreConnectorAggregate {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                 "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
             }
-        ]
+        ];
     }
 
 

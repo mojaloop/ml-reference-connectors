@@ -35,8 +35,8 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, tSDKOutboundTransferRequestDTO, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
-import { executionAsyncId } from 'node:async_hooks';
+import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../../test/fixtures';
+
 
 
 const mockAxios = new MockAdapter(axios);
