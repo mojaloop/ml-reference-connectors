@@ -101,7 +101,7 @@ export class CoreConnectorAggregate {
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(lookupRes)}`,
                 lastName: lookupRes.data.last_name,
-                extensionList:  this.getGetPartiesExtensionList(),
+                extensionList: this.getGetPartiesExtensionList(),
             },
             statusCode: Number(lookupRes.status.code),
         };
@@ -116,70 +116,6 @@ export class CoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("airtel.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
-                "value": "Not Provided by Airtel"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("airtel.X_COUNTRY")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
-                "value": "Not Provided by Airtel"
             },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
@@ -206,12 +142,20 @@ export class CoreConnectorAggregate {
 
         });
 
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
+
         if (res.data.is_barred) {
             throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
 
         const serviceCharge = Number(config.get("airtel.SERVICE_CHARGE"));
-        const fees = serviceCharge/100 * Number(quoteRequest.amount);
+        const fees = serviceCharge / 100 * Number(quoteRequest.amount);
 
         await this.checkAccountBarred(quoteRequest.to.idValue);
 
@@ -236,6 +180,10 @@ export class CoreConnectorAggregate {
         };
     }
 
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+    }
+
 
     // Get Quote Resonse Extension List DTO to be used in Quote Response on Extension List
     // Get Quote    --(2.3)
@@ -255,7 +203,7 @@ export class CoreConnectorAggregate {
         }
         return newExtensionList;
     }
-  
+
 
     // Receive Transfers(Payee getting funds)     --(3)
 
@@ -288,8 +236,8 @@ export class CoreConnectorAggregate {
         };
     }
 
-      // QR & RT     --(2.1 & 3.1)
-      private async checkAccountBarred(msisdn: string): Promise<void> {
+    // QR & RT     --(2.1 & 3.1)
+    private async checkAccountBarred(msisdn: string): Promise<void> {
 
         const res = await this.airtelClient.getKyc({ msisdn: msisdn });
 
@@ -367,25 +315,25 @@ export class CoreConnectorAggregate {
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
         this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
-        return true;
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
 
 
     // Update Transfer   --(4)
-    
+
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
             throw ValidationError.transferNotCompletedError();
         }
-       
+
         const airtelDisbursementRequest: TAirtelDisbursementRequestBody = this.getDisbursementRequestBody(updateTransferPayload);
         await this.airtelClient.sendMoney(airtelDisbursementRequest);
     }
 
 
-     //Get Disbursements Transfer   --(4.1)
+    //Get Disbursements Transfer   --(4.1)
 
     private getDisbursementRequestBody(requestBody: TtransferPatchNotificationRequest): TAirtelDisbursementRequestBody {
         if (!requestBody.quoteRequest) {
@@ -411,14 +359,14 @@ export class CoreConnectorAggregate {
     //  Payer (These are used in the DFSP Core Connector Routes)
     // Send Transfer  -- (5)
 
-    async sendTransfer(transfer: TAirtelSendMoneyRequest, amountType: "SEND"|"RECEIVE"): Promise<TAirtelSendMoneyResponse> {
+    async sendTransfer(transfer: TAirtelSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payer.payerId}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
-        if(transfer.sendCurrency !== this.airtelConfig.X_CURRENCY){
+        if (transfer.sendCurrency !== this.airtelConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
 
@@ -449,7 +397,7 @@ export class CoreConnectorAggregate {
             return this.getTAirtelSendMoneyResponse(acceptRes.data);
         }
         if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError(); 
+            throw ValidationError.invalidReturnedQuoteError();
         }
 
         return this.getTAirtelSendMoneyResponse(res.data);
@@ -457,7 +405,7 @@ export class CoreConnectorAggregate {
     }
     // Get TSDKOutbound Transfer Request DTO --(5.1) 
 
-    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest, amountType: "SEND"|"RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.airtelClient.getKyc({
             msisdn: transfer.payer.payerId
         });
@@ -472,7 +420,7 @@ export class CoreConnectorAggregate {
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
                 "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer) 
+                "extensionList": this.getOutboundTransferExtensionList(transfer)
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -665,16 +613,16 @@ export class CoreConnectorAggregate {
     }
 
     // Handle Refund  --(7.1)
-    private async handleRefund(payload: TCallbackRequest){
-        try{
-            if(payload.transaction.status_code === "TS"){
+    private async handleRefund(payload: TCallbackRequest) {
+        try {
+            if (payload.transaction.status_code === "TS") {
                 await this.airtelClient.refundMoney({
                     "transaction": {
                         "airtel_money_id": payload.transaction.airtel_money_id,
                     }
                 });
             }
-        }catch(error: unknown){
+        } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;
