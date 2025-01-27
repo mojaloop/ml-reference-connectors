@@ -181,7 +181,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
             jest.spyOn(sdkClient, "updateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000", "SEND");
-            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
             logger.info("Response fromm send monety", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
 
@@ -231,7 +231,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
             jest.spyOn(sdkClient, "updateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000", "RECEIVE");
-            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody. "RECEIVE");
             logger.info("Response fromm send money", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
         });
