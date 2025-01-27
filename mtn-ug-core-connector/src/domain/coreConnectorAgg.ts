@@ -53,6 +53,8 @@ import {
     TtransferPatchNotificationRequest,
     ValidationError,
     THttpResponse,
+    TPayeeExtensionListEntry,
+    TPayerExtensionListEntry,
 } from './interfaces';
 import {
     ISDKClient,
@@ -164,6 +166,7 @@ export class CoreConnectorAggregate {
                 displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
                 firstName: mtnKycResponse.given_name,
                 idType: config.get("mtn.SUPPORTED_ID_TYPE"),
+                extensionList: this.getGetPartiesExtensionList(),
                 idValue: idValue,
                 lastName: mtnKycResponse.family_name,
                 middleName: mtnKycResponse.given_name,
@@ -173,6 +176,84 @@ export class CoreConnectorAggregate {
             statusCode: 200,
         };
     }
+
+    private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
+                "value": config.get("mtn.LEI")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
+                "value": config.get("mtn.X_COUNTRY")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
+                "value": config.get("mtn.X_COUNTRY")
+            }
+        ]
+    }
+
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
@@ -196,6 +277,7 @@ export class CoreConnectorAggregate {
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
+            'extensionList': this.getQuoteResponseExtensionList(quoteRequest),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees,
@@ -210,6 +292,24 @@ export class CoreConnectorAggregate {
     }
 
 
+    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
+        let newExtensionList: TPayeeExtensionListEntry[] = []
+        //todo: check if the correct level of information has been provided.
+        if (quoteRequest.extensionList) {
+            newExtensionList.push(...quoteRequest.extensionList);
+        }
+
+        if (quoteRequest.from.extensionList) {
+            newExtensionList.push(...quoteRequest.from.extensionList);
+        }
+
+        if (quoteRequest.to.extensionList) {
+            newExtensionList.push(...quoteRequest.to.extensionList);
+        }
+        return newExtensionList;
+    }
+
+
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
@@ -221,15 +321,31 @@ export class CoreConnectorAggregate {
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            throw ValidationError.invalidExtensionListsError(
+                "ExtensionList check Failed in Payee Transfers",
+                '3100',
+                500
+            )
+        }
+
+        this.checkAccountBarred(transfer.to.idValue);
+
+        if (!this.validateQuote(transfer)) {
+            throw ValidationError.invalidQuoteError();
+        }
 
         await this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RESERVED',
+            transferState: 'RECEIVED',
         };
     }
 
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        return true
+    }
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
@@ -413,6 +529,7 @@ export class CoreConnectorAggregate {
                 "middleName": res.given_name,
                 "lastName": res.family_name,
                 "merchantClassificationCode": "123",
+                "extensionList": this.getOutboundTransferExtensionList(transfer)
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -424,6 +541,29 @@ export class CoreConnectorAggregate {
             'transactionType': transfer.transactionType,
         };
     }
+
+
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+            }
+        ]
+    }
+
 
     // Payer
     async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {

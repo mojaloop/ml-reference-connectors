@@ -200,6 +200,13 @@ const config = Convict<IConfigSchema>({
             default: 'staging',
             env: 'MTN_ENV',
         },
+
+        LEI: {
+            doc: 'Environment where the lei',
+            format: String,
+            default: 'staging',
+            env: 'LEI',
+        },
     },
 });
 
