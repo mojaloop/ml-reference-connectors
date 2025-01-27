@@ -166,12 +166,13 @@ export class CoreConnectorAggregate {
                 displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
                 firstName: mtnKycResponse.given_name,
                 idType: config.get("mtn.SUPPORTED_ID_TYPE"),
-                extensionList: this.getGetPartiesExtensionList(),
+               
                 idValue: idValue,
                 lastName: mtnKycResponse.family_name,
                 middleName: mtnKycResponse.given_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
+                extensionList: this.getGetPartiesExtensionList(),
             },
             statusCode: 200,
         };
@@ -251,7 +252,7 @@ export class CoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": config.get("mtn.X_COUNTRY")
             }
-        ]
+        ];
     }
 
 
@@ -293,7 +294,7 @@ export class CoreConnectorAggregate {
 
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = []
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
         //todo: check if the correct level of information has been provided.
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
@@ -326,7 +327,7 @@ export class CoreConnectorAggregate {
                 "ExtensionList check Failed in Payee Transfers",
                 '3100',
                 500
-            )
+            );
         }
 
         this.checkAccountBarred(transfer.to.idValue);
@@ -339,13 +340,15 @@ export class CoreConnectorAggregate {
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
     }
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-        return true
+        this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
+        return true;
     }
+    
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
@@ -359,6 +362,7 @@ export class CoreConnectorAggregate {
             await this.performRefundTransfer();
         }
     }
+
 
     async performRefundTransfer() {
         //todo: to be implemented
@@ -516,13 +520,13 @@ export class CoreConnectorAggregate {
 
     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.mtnClient.getKyc({
-            msisdn: transfer.payerAccount
+            msisdn: transfer.payer.payerId
         });
         return {
             'homeTransactionId': transfer.homeTransactionId,
             'from': {
                 'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount,
+                'idValue': transfer.payer.payerId,
                 'fspId': this.mtnConfig.FSP_ID,
                 "displayName": `${res.given_name} ${res.family_name}`,
                 "firstName": res.given_name,
@@ -561,13 +565,13 @@ export class CoreConnectorAggregate {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                 "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
             }
-        ]
+        ];
     }
 
 
     // Payer
     async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
@@ -606,7 +610,7 @@ export class CoreConnectorAggregate {
 
 
     async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
         const res = await this.sdkClient.initiateTransfer(transferRequest);

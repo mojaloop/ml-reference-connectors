@@ -395,9 +395,16 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
   "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
 });
 
 
@@ -413,9 +420,16 @@ export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMT
   "receiveCurrency": "UGX",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
 });
 
 

@@ -182,18 +182,16 @@ export type TMTNSendMoneyRequest = {
     "receiveCurrency": string;
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
-    payer: {
-        name: string;
-        payerId: string;
-        DateAndPlaceOfBirth: {
-            BirthDt: string;
-            PrvcOfBirth: string;
-            CityOfBirth: string;
-            CtryOfBirth: string;
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
         };
     };
-    "payerAccount": string;
-    "dateOfBirth": string;
 }
 
 

@@ -59,9 +59,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test("Party Lookup in aggreggate should return party info ", async () => {
             //Arrange
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
-                "given_name": "Elijah",
-                "family_name": "Okello",
-                "birthdate": "19-09-1999",
+                "given_name": "Niza",
+                "family_name": "Tembo",
+                "birthdate": "27-04-1997",
                 "locale": "en",
                 "gender": "male",
                 "status": "OK"
@@ -70,16 +70,16 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.getParties(idValue, idType);
 
             //Assert
-            expect(res.data.displayName).toContain("Elijah");
+            expect(res.data.displayName).toContain("Niza");
             expect(res.statusCode).toEqual(200);
         });
 
         test("Agreement phase should return quote details", async () => {
             //Arrange
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
-                "given_name": "Elijah",
-                "family_name": "Okello",
-                "birthdate": "19-09-1999",
+                "given_name": "Niza",
+                "family_name": "Tembo",
+                "birthdate": "27-04-1997",
                 "locale": "en",
                 "gender": "male",
                 "status": "OK"
@@ -98,9 +98,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test("Transfer phase. Should return transfer state RESERVED", async ()=>{
             // Arrange 
             mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
-                "given_name": "Elijah",
-                "family_name": "Okello",
-                "birthdate": "19-09-1999",
+                "given_name": "Niza",
+                "family_name": "Tembo",
+                "birthdate": "27-04-1997",
                 "locale": "en",
                 "gender": "male",
                 "status": "OK"
