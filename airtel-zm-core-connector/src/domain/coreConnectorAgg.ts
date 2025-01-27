@@ -380,18 +380,9 @@ export class CoreConnectorAggregate {
         if (updateTransferPayload.currentState !== 'COMPLETED') {
             throw ValidationError.transferNotCompletedError();
         }
-        if (!this.validatePatchQuote(updateTransferPayload)) {
-            throw ValidationError.invalidQuoteError();
-        }
+       
         const airtelDisbursementRequest: TAirtelDisbursementRequestBody = this.getDisbursementRequestBody(updateTransferPayload);
         await this.airtelClient.sendMoney(airtelDisbursementRequest);
-    }
-    
-    
-    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
-            this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
-            // todo define implmentation
-            return true;
     }
 
 
