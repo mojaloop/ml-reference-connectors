@@ -45,7 +45,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
          sendMoney: this.initiateTransfer.bind(this),
          sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
          initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
-        updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
+         updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
          callback: this.callbackHandler.bind(this),
          validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
          notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),

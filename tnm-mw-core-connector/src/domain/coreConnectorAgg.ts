@@ -52,7 +52,6 @@ import {
     TtransferPatchNotificationRequest,
     ValidationError,
     THttpResponse,
-    TGetQuotesDeps,
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
 } from './interfaces';
@@ -493,7 +492,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] {
         return [
             {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",

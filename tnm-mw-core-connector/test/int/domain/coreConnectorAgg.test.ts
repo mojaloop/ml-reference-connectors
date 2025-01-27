@@ -118,7 +118,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         //  Send Money - Payer
         test('Test POST/ send-money: response should be payee details ', async () => {
-            const sendMoneyRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500", "SEND");
+            const sendMoneyRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
 
             const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
@@ -150,7 +150,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         //Merchant Payment
         test('Test POST /merchant-payment: response should be 200', async () => {
-            const merchantPaymentRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500", "RECEIVE");
+            const merchantPaymentRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/merchant-payment`;
             const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {
                 headers: {
