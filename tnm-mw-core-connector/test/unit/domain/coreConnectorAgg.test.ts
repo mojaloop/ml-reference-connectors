@@ -79,6 +79,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info("Returned Data ==>", kyc_res.data);
 
             logger.info(JSON.stringify(kyc_res.data));
+            expect(kyc_res.data.extensionList).toBeDefined();
+            expect(Array.isArray(kyc_res.data.extensionList)).toBeTruthy();
             expect(kyc_res.statusCode).toEqual(200);
         });
 
@@ -107,7 +109,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const res = await ccAggregate.quoteRequest(quoteRequest);
 
-            logger.info(JSON.stringify(res));
+            logger.info("This is the response ==>", JSON.stringify(res));
             const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
         });

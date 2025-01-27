@@ -180,7 +180,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   currency: "MWK",
   from: {
     idType: "MSISDN",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -188,7 +194,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
   transactionType: "TRANSFER"

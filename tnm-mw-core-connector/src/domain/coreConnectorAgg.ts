@@ -111,70 +111,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("tnm.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
-                "value": "Not Provided by CBS"
-            },
+            }, 
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
                 "value": "Malawi"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
-                "value": "Not Provided by CBS"
             },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
@@ -185,6 +125,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
+
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
+
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
@@ -226,6 +175,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             transferAmount: (Number(quoteRequest.amount) + fees).toString() ,
             transferAmountCurrency: quoteRequest.currency,
         };
+    }
+
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
     }
 
     
@@ -289,7 +242,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-        return true
+         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
