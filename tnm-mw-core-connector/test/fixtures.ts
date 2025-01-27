@@ -213,12 +213,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "currency": "MWK",
   "from": {
       "idType": "MSISDN",
-      "idValue": "777123456"
+      "idValue": "777123456",
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "to": {
       //@ts-expect-error idType 
       "idType": idType,
-      "idValue": idValue
+      "idValue": idValue,
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "ilpPacket": {
       "data": {
