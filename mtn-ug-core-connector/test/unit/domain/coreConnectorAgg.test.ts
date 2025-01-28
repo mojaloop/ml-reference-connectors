@@ -68,10 +68,11 @@ describe('CoreConnectorAggregate Tests -->', () => {
             });
             //Act
             const res = await ccAggregate.getParties(idValue, idType);
-
             //Assert
+            expect(res.data.extensionList).toBeDefined();
             expect(res.data.displayName).toContain("Niza");
             expect(res.statusCode).toEqual(200);
+
         });
 
         test("Agreement phase should return quote details", async () => {
@@ -87,8 +88,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             // Act
             const res = await ccAggregate.quoteRequest(quoteRequestDto(idType,idValue,"1000"));
-
             //Assert
+            expect(res.extensionList).not.toHaveLength(0);
             expect(res.transferAmount).toBeDefined();
 
         });
@@ -108,6 +109,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const transferRequestPayload = transferRequestDto(idType,idValue,"103");
             // Act
             const res = await ccAggregate.receiveTransfer(transferRequestPayload);
+    
             // Assert
             expect(res.transferState).toEqual("RESERVED");
         });
@@ -141,7 +143,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
     describe ("Payer Core Connector Aggregate Tests", ()=>{
         test("Send Money. Should trigger transfer in SDK", async ()=>{
             //Arrange
-            mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
+            mtnClient.getKyc = jest.fn().mockResolvedValue({
                 "given_name": "Elijah",
                 "family_name": "Okello",
                 "birthdate": "19-09-1999",
@@ -149,20 +151,35 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "gender": "male",
                 "status": "OK"
             });
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
-            const sendMoneyReqPayload = sendMoneyDTO(idValue,"103");
-            //Act 
-            const res = await ccAggregate.sendTransfer(sendMoneyReqPayload);
-            //Assert
 
-            logger.info("Response",res);
+             // Spying on Initiate / update transfer
+             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+             const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer")
+             const transferRequest = initiateTransferSpy.mock.calls[0][0];
+             const sendMoneyReqPayload = sendMoneyDTO(idValue,"100");
+             const res = await ccAggregate.sendTransfer(sendMoneyReqPayload);
+            //Act 
+           
+            logger.info("Response from send money", res);
+            
+            // Expecting Initaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+            expect(updateTransferSpy).toHaveBeenCalled();
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+
+            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
             expect(res.payeeDetails.idValue).toEqual(idValue);
+           
         });
 
 

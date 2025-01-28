@@ -330,8 +330,6 @@ export class CoreConnectorAggregate {
             );
         }
 
-        this.checkAccountBarred(transfer.to.idValue);
-
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
