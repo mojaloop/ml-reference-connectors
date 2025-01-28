@@ -33,7 +33,7 @@ import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { IMTNClient } from '../../../src/domain/CBSClient';
 import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
-import { merchantPaymentRequestDTO, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, sendMoneyMerchantPaymentDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
+import {quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, sendMoneyMerchantPaymentDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
 import { randomUUID } from 'crypto';
 
 

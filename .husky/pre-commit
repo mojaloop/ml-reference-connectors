@@ -5,6 +5,7 @@ for dir in */; do
         *-core-connector/)
             cd "$dir" || exit 1
             npx lint-staged
+            npm run lint:fix
             cd - > /dev/null || exit 1
             ;;
     esac
