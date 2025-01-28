@@ -1,4 +1,5 @@
 # Payee Quote requests for this DFSP
+This sequence diagram shows the set of steps that the core connector goes through to handle a request for a quote from the mojaloop connector.
 
 ```mermaid
    sequenceDiagram
@@ -15,9 +16,9 @@ Alt if Currency Not Supported
 CC-->>ML Connector: Response 500
 End
 CC->>CC:Calculate Charge
-CC->> CBS Api:GET /standard/v2/users/{msisdn}
+CC->> CBS Api:GET /replace/with/api/call/for/getting/customer 
 CBS Api -->> CC:Response
-CC->>CC: Check Respomse
+CC->>CC: Check Response and Customer Account status 
 Alt if Response not Successful
 CC-->>ML Connector: Response 500 ML Code: 5000
 End

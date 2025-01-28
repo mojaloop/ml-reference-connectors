@@ -34,7 +34,9 @@ import {
     TCbsCollectMoneyResponse,
     TCBSConfig,
     TCbsDisbursementRequestBody,
+    TCbsDisbursementResponse,
     TCbsKycResponse,
+    TCbsRefundMoneyRequest,
     TCbsSendMoneyRequest,
     TCbsSendMoneyResponse,
     TCBSUpdateSendMoneyRequest,
@@ -61,7 +63,7 @@ import {
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
 } from './SDKClient';
-import config from 'src/config';
+import config from '../config';
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     IdType: string;
@@ -187,6 +189,13 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
         const res = await this.cbsClient.getKyc({ msisdn: quoteRequest.to.idValue });
         const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
         // check if account is blocked if possible
@@ -219,9 +228,13 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+    }
+
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = []
-        //todo: check if the correct level of information has been provided.
+        let newExtensionList: TPayeeExtensionListEntry[] = [];
+
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
         }
@@ -246,25 +259,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
             throw ValidationError.invalidExtensionListsError(
-                "ExtensionList check Failed in Payee Transfers",
+                "Some extensionLists are undefined",
                 '3100',
                 500
-            )
+            );
         }
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
-        this.checkAccountBarred(transfer.to.idValue);
+        await this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
     }
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-        return true
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
+
 
     private validateQuote(transfer: TtransferRequest): boolean {
         this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
@@ -337,15 +351,20 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
-            await this.initiateCompensationAction();
             throw ValidationError.transferNotCompletedError();
         }
         const makePaymentRequest: TCbsDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.cbsClient.sendMoney(makePaymentRequest);
+        let res: TCbsDisbursementResponse | undefined = undefined;
+        try {
+            res = await this.cbsClient.sendMoney(makePaymentRequest);
+        } catch (error: unknown) {
+            await this.initiateCompensationAction(makePaymentRequest);
+        }
     }
 
-    private async initiateCompensationAction() {
-        // todo function implementation to be defined.
+    private async initiateCompensationAction(req: TCbsDisbursementRequestBody) {
+        this.logger.error("Failed to make transfer to customer", { request: req });
+        await this.cbsClient.logFailedIncomingTransfer(req);
     }
 
     private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TCbsDisbursementRequestBody {
@@ -373,14 +392,23 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    async sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND"| "RECEIVE"): Promise<TCbsSendMoneyResponse> {
+    async sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
-        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer,amountType));
-        if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return await this.checkAndRespondToConversionTerms(res);
-        }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
+        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
+        if(amountType === "SEND"){
+            if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
+                return await this.checkAndRespondToConversionTerms(res);
+            }
+            if (!this.validateReturnedQuote(res.data)) {
+                throw ValidationError.invalidReturnedQuoteError();
+            }
+        }else{
+            if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+                return await this.checkAndRespondToConversionTerms(res);
+            }
+            if (!this.validateReturnedQuote(res.data)) {
+                throw ValidationError.invalidReturnedQuoteError();
+            }
         }
         return this.getTCbsSendMoneyResponse(res.data);
     }
@@ -529,7 +557,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.first_name,
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer) 
+                "extensionList": this.getOutboundTransferExtensionList(transfer)
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -599,8 +627,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                // perform refund or rollback
-                // const rollbackRes = await this.cbsClient.refundMoney();
+                // perform refund or rollback if payment was successful
+                if(payload.transaction.status_code === "TS"){
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
+        }
+    }
+
+    private async handleRefund(refund: TCbsRefundMoneyRequest): Promise<void>{
+        try{
+            await this.cbsClient.refundMoney(refund);
+        }catch(error: unknown){
+            this.cbsClient.logFailedRefund(refund.transaction.airtel_money_id);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TCallbackRequest): TCbsRefundMoneyRequest {
+        return {
+            "transaction": {
+                "airtel_money_id": callbackPayload.transaction.airtel_money_id
             }
         }
     }

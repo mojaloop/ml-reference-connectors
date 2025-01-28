@@ -225,4 +225,6 @@ export interface ICbsClient {
     sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse>;
     collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse>;
     refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse>;
+    logFailedIncomingTransfer(req: TCbsDisbursementRequestBody): Promise<void>;
+    logFailedRefund(airtel_money_id: string): Promise<void>;
 }

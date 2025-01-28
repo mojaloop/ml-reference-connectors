@@ -62,6 +62,17 @@ export class CBSClient implements ICbsClient{
         this.httpClient = httpClient;
         this.logger = logger;
     }
+    logFailedRefund(airtel_money_id: string): Promise<void> {
+        // todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed refund transaction id", airtel_money_id);
+        return Promise.resolve();
+    }
+
+    logFailedIncomingTransfer(req: TCbsDisbursementRequestBody): Promise<void> {
+        //todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed disbursement request",req);
+        return Promise.resolve();
+    }
     
     async getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse> {
         this.logger.info("Getting KYC Information");
