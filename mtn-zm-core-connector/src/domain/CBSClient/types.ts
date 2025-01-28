@@ -75,6 +75,7 @@ export type TMTNConfig = {
     MTN_TARGET_ENVIRONMENT: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+    MTN_ENV: string;
 }
 
 
@@ -153,8 +154,8 @@ export type TMTNCollectMoneyResponse = {
         "partyIdType": string;
         "partyId": string;
     },
-    "payerMessage": "MoMo Market Payment",
-    "payeeNote": "MoMo Market Payment",
+    "payerMessage": string,
+    "payeeNote": string,
     "status": string;
 }
 
@@ -167,10 +168,12 @@ export type TMTNUpdateSendMoneyRequest = {
     "payeeNote": string;
 }
 
+export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
 
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
+    "amountType": "RECEIVE" | "SEND",
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string;
     "sendCurrency": components['schemas']['Currency'];
@@ -181,6 +184,10 @@ export type TMTNSendMoneyRequest = {
     "payerAccount": string;
     "dateOfBirth": string;
 }
+
+export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest;
+
+export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
 
 export type TMTNCallbackPayload = {
     financialTransactionId: string;
@@ -211,9 +218,11 @@ export type TMTNSendMoneyResponse = {
     "transactionId": string;
 }
 
+
 export type TMTNCollectMoneyRequest = {
     "amount": string;
     "currency": string;
+    "amountType": "RECEIVE" | "SEND",
     "externalId": string;
     "payer": {
         "partyIdType": string,
@@ -222,6 +231,7 @@ export type TMTNCollectMoneyRequest = {
     "payerMessage": string;
     "payeeNote": string;
 }
+
 
 export type TAuthParameters = {
     subscriptionKey: string;

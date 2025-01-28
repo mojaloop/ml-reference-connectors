@@ -1,7 +1,7 @@
-import { TUpdateTransferDeps, TSDKOutboundTransferResponse} from '../src/domain/SDKClient';
-import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
+import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
-import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
+import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest , THttpResponse} from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 type TransferAcceptInputDto = {
@@ -37,7 +37,7 @@ export const fineractLookUpPartyResponseDto = () =>
 
 export const fineractVerifyBeneficiaryResponseDto = () =>
   ({
-    currency: 'UGX',
+    currency: 'UGXX',
     amount: '100',
     quoteId: crypto.randomUUID(),
     transactionId: crypto.randomUUID(),
@@ -73,33 +73,36 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
     homeTransactionId: crypto.randomUUID(),
     from: {
       idType: "MSISDN",
-      idValue: idValue
+      idValue: idValue,
+      supportedCurrencies: [
+        'ZMW'
+      ]
     },
     to: {
       idType: "MSISDN",
       idValue: idValue,
       supportedCurrencies: [
-        "MWK"
+        'MWK'
       ]
     },
     amountType: "SEND",
-    currency: "EUR",
+    currency: "ZMW",
     amount: "1000",
     transactionType: "TRANSFER",
     currentState: currentState,
-    quoteResponse: {
+    "quoteResponse": {
       "body": {
         "transferAmount": {
           "currency": "MWK",
-          "amount": "123.45"
+          "amount": "1000"
         },
         "payeeReceiveAmount": {
-          "currency": "AED",
-          "amount": "123.45"
+          "currency": "MWK",
+          "amount": "1000"
         },
         "payeeFspFee": {
-          "currency": "AED",
-          "amount": "123.45"
+          "currency": "MWK",
+          "amount": "0"
         },
         "payeeFspCommission": {
           "currency": "AED",
@@ -123,7 +126,8 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       },
       "headers": {}
     },
-    fxQuotesResponse:{
+    transferId: crypto.randomUUID(),
+    "fxQuotesResponse": {
       "body": {
         "homeTransactionId": "string",
         "condition": "string",
@@ -134,12 +138,12 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
           "counterPartyFsp": "string",
           "amountType": "RECEIVE",
           "sourceAmount": {
-            "currency": "EUR",
+            "currency": "ZMW",
             "amount": "1000"
           },
           "targetAmount": {
-            "currency": "AED",
-            "amount": "123.45"
+            "currency": "MWK",
+            "amount": "1000"
           },
           "expiration": "2016-05-24T08:38:08.699-04:00",
           "charges": [
@@ -166,10 +170,10 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
         }
       },
       "headers": {}
-    },
-    transferId: crypto.randomUUID()
+    }
   }
 });
+
 
 export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
 
@@ -317,7 +321,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
     "data": {
       "amount": {
         "amount": "400",
-        "currency": "ZMW"
+        "currency": "UGX"
       },
       "payee": {
         "partyIdInfo": {
@@ -381,14 +385,14 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
-  "homeTransactionId": "HTX123456789",
-  "payeeId": "07676767676",
+export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": "SEND",
+  "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
-  "amountType": "SEND",
   "sendCurrency": "UGX",
-  "receiveCurrency": "ZMW",
+  "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": "Niza Tembo",
@@ -399,14 +403,14 @@ export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequ
 
 // Send Money DTO
 
-export const merchantRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
-  "homeTransactionId": "HTX123456789",
+export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": "RECEIVE",
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
-  "amountType": "RECEIVE",
   "sendCurrency": "UGX",
-  "receiveCurrency": "ZMW",
+  "receiveCurrency": "UGX",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": "Niza Tembo",
@@ -415,8 +419,7 @@ export const merchantRequestDTO = (idValue: string, amount: string,): TMTNMercha
 });
 
 
-
-export const updateMerchantDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateMerchantPaymentRequest => ({
+export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString(),
@@ -424,16 +427,13 @@ export const updateMerchantDTO = (amount: number, acceptQuote: boolean, idValue:
   "payeeNote": "School Fees"
 });
 
-
-
-
 export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString(),
   "payerMessage": "School Fees",
   "payeeNote": "School Fees"
-})
+});
 
 export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (
   {
