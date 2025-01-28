@@ -40,8 +40,6 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
-    TMTNMerchantPaymentRequest,
-    TMTNMerchantPaymentResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -166,7 +164,7 @@ export class CoreConnectorAggregate {
                 displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
                 firstName: mtnKycResponse.given_name,
                 idType: config.get("mtn.SUPPORTED_ID_TYPE"),
-               
+
                 idValue: idValue,
                 lastName: mtnKycResponse.family_name,
                 middleName: mtnKycResponse.given_name,
@@ -185,68 +183,8 @@ export class CoreConnectorAggregate {
                 "value": config.get("mtn.LEI")
             },
             {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
-                "value": "Not Provided by CBS"
-            },
-            {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
                 "value": config.get("mtn.X_COUNTRY")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
-                "value": "Not Provided by CBS"
             },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
@@ -264,6 +202,15 @@ export class CoreConnectorAggregate {
         if (this.mtnConfig.MTN_ENV === 'production' && quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
+
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
+
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
         await this.checkAccountBarred(quoteRequest.to.idValue);
@@ -274,6 +221,9 @@ export class CoreConnectorAggregate {
         return this.getQuoteResponse(quoteRequest, fees.toString(), expirationJSON);
     }
 
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+    }
 
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
@@ -295,7 +245,7 @@ export class CoreConnectorAggregate {
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         const newExtensionList: TPayeeExtensionListEntry[] = [];
-        //todo: check if the correct level of information has been provided.
+
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
         }
@@ -344,9 +294,9 @@ export class CoreConnectorAggregate {
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
         this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
-        return true;
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
-    
+
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
@@ -390,26 +340,6 @@ export class CoreConnectorAggregate {
     }
 
     private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNSendMoneyResponse {
-        this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
-        return {
-            "payeeDetails": {
-                "idType": transfer.to.idType,
-                "idValue": transfer.to.idValue,
-                "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
-            },
-            "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
-            "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
-        };
-    }
-
-
-    private getTMTNMerchantMoneyResponse(transfer: TSDKOutboundTransferResponse): TMTNMerchantPaymentResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -516,7 +446,7 @@ export class CoreConnectorAggregate {
 
 
 
-    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.mtnClient.getKyc({
             msisdn: transfer.payer.payerId
         });
@@ -537,7 +467,7 @@ export class CoreConnectorAggregate {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': 'SEND',
+            'amountType': amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
@@ -568,10 +498,10 @@ export class CoreConnectorAggregate {
 
 
     // Payer
-    async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
+    async sendTransfer(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNSendMoneyResponse> {
         this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
 
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
@@ -604,47 +534,6 @@ export class CoreConnectorAggregate {
         }
         return this.getTMTNSendMoneyResponse(res.data);
     }
-
-
-
-    async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
-
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
-        const res = await this.sdkClient.initiateTransfer(transferRequest);
-        let acceptRes: THttpResponse<TtransferContinuationResponse>;
-
-        if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
-            if (!this.validateConversionTerms(res.data)) {
-                if (!res.data.transferId) {
-                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                }
-                acceptRes = await this.sdkClient.updateTransfer({
-                    "acceptConversion": false
-                }, res.data.transferId);
-                throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
-            }
-            else {
-                if (!res.data.transferId) {
-                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                }
-                acceptRes = await this.sdkClient.updateTransfer({
-                    "acceptConversion": true
-                }, res.data.transferId);
-            }
-
-            if (!this.validateReturnedQuote(acceptRes.data)) {
-                throw ValidationError.invalidReturnedQuoteError();
-            }
-            return this.getTMTNMerchantMoneyResponse(acceptRes.data);
-        }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTMTNMerchantMoneyResponse(res.data);
-    }
-
-
 
     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
         return {

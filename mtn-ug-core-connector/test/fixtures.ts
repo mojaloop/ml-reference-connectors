@@ -328,12 +328,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   from: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   ilpPacket: {
     "data": {
@@ -403,7 +415,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
   "amountType": "SEND",
   "payeeId": "56733123450",
@@ -427,8 +439,29 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
 
 
 // Send Money DTO
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": amountType,
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
+});
 
-export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
+export const merchantPaymentRequestDTO = (idValue: string, amount: string,amountType: "SEND" | "RECEIVE"): TMTNMerchantPaymentRequest => ({
   "homeTransactionId": crypto.randomUUID(),
   "amountType": "RECEIVE",
   "payeeId": "56733123450",

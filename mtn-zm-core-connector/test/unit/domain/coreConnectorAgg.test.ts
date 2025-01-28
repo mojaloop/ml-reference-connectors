@@ -179,7 +179,7 @@
                  ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_QUOTE_ACCEPTANCE")
              });
 
-              // Spying on Update Transfer
+            // Spying on Update Transfer
              jest.spyOn(sdkClient, "updateTransfer");
 
 
