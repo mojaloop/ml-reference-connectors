@@ -152,10 +152,17 @@ export class ValidationError extends BasicError {
             httpCode: 500,
         });
     }
+ 
     static quoteNotAcceptedError(){
         return new ValidationError("Payer rejected transaction request", {
             mlCode: '4101',
             httpCode: 500,
+        });
+    }
+    static invalidExtensionListsError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
         });
     }
 }

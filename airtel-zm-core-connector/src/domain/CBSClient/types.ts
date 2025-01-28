@@ -328,7 +328,8 @@ export type TAirtelConfig = {
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string;
 }
 
 export type TGetKycArgs = {
@@ -419,9 +420,16 @@ export type TAirtelSendMoneyRequest = {
     "receiveCurrency": string;
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
 }
 
 //  Response sent to Airtel

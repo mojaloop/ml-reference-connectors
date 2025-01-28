@@ -1,94 +1,8 @@
-import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
+import { TSDKOutboundTransferRequest, TSDKOutboundTransferResponse, } from '../src/domain/SDKClient';
+import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest} from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
-
-type TransferAcceptInputDto = {
-  fineractAccountId?: number;
-  totalAmount?: number;
-  sdkTransferId?: number;
-};
-
-
-export const transferAcceptDto = ({
-  fineractAccountId = 1,
-  totalAmount = 123.45,
-  sdkTransferId = 999,
-}: TransferAcceptInputDto = {}): TUpdateTransferDeps =>
-  ({
-    fineractTransaction: {
-      fineractAccountId,
-      totalAmount,
-      routingCode: 'routingCode',
-      receiptNumber: 'receiptNumber',
-      bankNumber: 'bankNumber',
-    },
-    sdkTransferId,
-  }) as const;
-
-// todo: make it configurable, add all required fields
-export const fineractGetAccountResponseDto = (): Partial<TFineractGetAccountResponse> =>
-  ({
-    id: 'id',
-    accountNo: 'accountNo',
-    clientId: 123,
-    clientName: 'clientName',
-  }) as const;
-
-// todo: make it configurable,
-export const fineractTransactionResponseDto = (): TFineractTransactionResponse =>
-  ({
-    officeId: 1,
-    clientId: 2,
-    savingsId: 3,
-    resourceId: 4,
-    changes: {
-      accountNumber: 'accountNumber',
-      routingCode: 'routingCode',
-      receiptNumber: 'receiptNumber',
-      bankNumber: 'bankNumber',
-    },
-  }) as const;
-
-export const fineractLookUpPartyResponseDto = () =>
-  ({
-    displayName: 'Dove Love',
-    firstname: 'Dove',
-    lastname: 'Love',
-  }) as const;
-
-export const fineractVerifyBeneficiaryResponseDto = () =>
-  ({
-    currency: 'UGX',
-    amount: '100',
-    quoteId: crypto.randomUUID(),
-    transactionId: crypto.randomUUID(),
-  }) as const;
-
-export const fineractGetAccountIdResponseDto = () => ({
-  accountId: 1,
-});
-
-export const fineractReceiveTransferResponseDto = () => true;
-
-export const fineractGetSavingsAccountResponseDto = (
-  credit: boolean,
-  debit: boolean,
-  balance: number,
-  active: boolean,
-) => ({
-  status: {
-    active: active,
-  },
-  subStatus: {
-    blockCredit: credit,
-    blockDebit: debit,
-  },
-  summary: {
-    availableBalance: balance,
-  },
-});
 
 export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
   statusCode: 200,
@@ -196,9 +110,6 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
     }
   }
 });
-
-export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
-
 
 export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string): TtransferPatchNotificationRequest => ({
   //@ts-expect-error currentState var to of type
@@ -309,7 +220,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "97
   currency: "ZMW",
   from: {
     idType: "MSISDN",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -317,10 +234,22 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "97
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
-  transactionType: "TRANSFER"
+  transactionType: "TRANSFER",
+  extensionList: [
+    {
+      "key": "testkey",
+      "value": "TestVal"
+    }
+  ]
 });
 
 
@@ -331,12 +260,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   from: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   ilpPacket: {
     data: {
@@ -407,9 +348,17 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amo
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Elijah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
+
 });
 
 
@@ -428,3 +377,26 @@ export const callbackPayloadDto = (amount: string, transferStatus: string): TCal
   }
 });
 
+
+export const tSDKOutboundTransferRequestDTO = (): TSDKOutboundTransferRequest => ({
+  "amount": "1000",
+  "amountType": "SEND",
+  "currency": "ZMW",
+  "from": {
+    "displayName": "Chimweso Faith Mukoko Test1",
+    "extensionList": [],
+    "firstName": "Chimweso Faith Mukoko",
+    "fspId": "airtelzambia",
+    "idType": "MSISDN",
+    "idValue": "971938765",
+    "lastName": "Test1",
+    "merchantClassificationCode": "123",
+    "middleName": "Chimweso Faith Mukoko"
+  },
+  "homeTransactionId": "4ba7d0ba-bcaf-474f-b0e2-63cad27b0865",
+  "to": {
+    "idType": "MSISDN",
+    "idValue": "07676767676"
+  },
+  "transactionType": "TRANSFER"
+});
