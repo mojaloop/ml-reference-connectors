@@ -146,7 +146,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info(JSON.stringify(res));
             const fees = Number(config.get('airtel.SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
-            expect(res.extensionList).not.toHaveLength(0)
+            expect(res.extensionList).not.toHaveLength(0);
 
         });
 
@@ -336,11 +336,31 @@ describe('CoreConnectorAggregate Tests -->', () => {
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
+
+            // Spying on Update Transfer
             jest.spyOn(sdkClient, "updateTransfer");
+
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "RECEIVE");
             const res = await ccAggregate.sendTransfer(merchantPaymentRequestBody, "RECEIVE");
+
             logger.info("Response from merchant payment", res);
+
+
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
         });
 
         test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
@@ -360,12 +380,14 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "success": true
                 }
             });
+           
             jest.spyOn(airtelClient, "collectMoney");
             const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN_NO);
             const res = await ccAggregate.updateSentTransfer(updateMerchantPaymentReqBody, "ljzowczj");
             logger.info("Response ", res);
             expect(airtelClient.collectMoney).toHaveBeenCalled();
-        });
+        }
+    );
 
 
         test("PUT /callback: should receive a transacion status code", async () => {
