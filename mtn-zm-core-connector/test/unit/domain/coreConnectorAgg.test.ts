@@ -185,9 +185,7 @@
 
             // Spying on Initiate transfer
              const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");  
-
-
-
+             
              const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "SEND");
              //Act 
              const res = await ccAggregate.sendTransfer(sendMoneyReqPayload, "SEND");
