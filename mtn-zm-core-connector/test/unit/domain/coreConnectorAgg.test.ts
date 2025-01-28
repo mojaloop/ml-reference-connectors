@@ -23,7 +23,7 @@
  * Elijah Okello <elijahokello90@gmail.com>
  --------------
  **********/
- import { CoreConnectorAggregate } from '../../../src/domain';
+ import { CoreConnectorAggregate, TQuoteRequest } from '../../../src/domain';
  import {
      ISDKClient,
      SDKClientFactory,
@@ -33,13 +33,13 @@
  import config from '../../../src/config';
  import { IMTNClient } from '../../../src/domain/CBSClient';
  import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
- import { merchantPaymentRequestDTO, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
+ import {quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyMerchantPaymentDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
  import { randomUUID } from 'crypto';
  
  
  const logger = loggerFactory({ context: 'ccAgg tests' });
  const mtnConfig = config.get("mtn");
- const SDK_URL = 'http://localhost:4040';
+ const SDK_URL = 'http://localhost:4010';
  const idValue = "786332992";
  const idType = "MSISDN";
  
@@ -56,6 +56,8 @@
      });
  
      describe("Payee Core Connector Aggregate Tests", () => {
+
+        // Get Parties Test
          test("Party Lookup in aggreggate should return party info ", async () => {
              //Arrange
              mtnClient.getKyc = jest.fn().mockResolvedValueOnce({
@@ -68,11 +70,17 @@
              });
              //Act
              const res = await ccAggregate.getParties(idValue, idType);
+             logger.info("Returned Data ==>", res.data);
  
              //Assert
              expect(res.data.displayName).toContain("Elijah");
              expect(res.statusCode).toEqual(200);
+
+             expect(res.data.extensionList).not.toHaveLength(0);
          });
+
+
+        // Quotes Requests
  
          test("Agreement phase should return quote details", async () => {
              //Arrange
@@ -86,10 +94,13 @@
              });
  
              // Act
-             const res = await ccAggregate.quoteRequest(quoteRequestDto(idType,idValue,"1000"));
+             const quoteRequest:TQuoteRequest = quoteRequestDto(idType,idValue,"1000");
+             const res = await ccAggregate.quoteRequest(quoteRequest);
  
              //Assert
              expect(res.transferAmount).toBeDefined();
+             expect(res.extensionList).not.toHaveLength(0);
+             
  
          });
  
@@ -105,13 +116,22 @@
                  "gender": "male",
                  "status": "OK"
              });
+
+             const mtnClientGetKyc = jest.spyOn(mtnClient, "getKyc");
+
+
              const transferRequestPayload = transferRequestDto(idType,idValue,"103");
              // Act
              const res = await ccAggregate.receiveTransfer(transferRequestPayload);
              // Assert
              expect(res.transferState).toEqual("RESERVED");
+             expect(mtnClientGetKyc).toHaveBeenCalled();
+             expect(transferRequestPayload).not.toBeFalsy();
          });
  
+
+
+
          test("Transfer Patch notification should credit the customer's accout if request body is valid", async ()=>{
              // Arrange 
              mtnClient.sendMoney = jest.fn().mockImplementation(()=>{
@@ -122,6 +142,8 @@
              const res =  await ccAggregate.updateTransfer(patchNotificationPayload,randomUUID());
              //Assert
              expect(res).resolves;
+             expect(res).toBeUndefined();
+             expect(mtnClient.sendMoney).toHaveBeenCalled();
          });
  
          test("Transfer Patch notification should credit the Merchant's account if request body is valid", async ()=>{
@@ -153,15 +175,41 @@
                  ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_CONVERSION_ACCEPTANCE")
              });
  
-             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+             sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({
                  ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_QUOTE_ACCEPTANCE")
              });
-             const sendMoneyReqPayload = sendMoneyDTO(idValue,"103");
+
+              // Spying on Update Transfer
+             jest.spyOn(sdkClient, "updateTransfer");
+
+
+            // Spying on Initiate transfer
+             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");  
+
+
+
+             const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "SEND");
              //Act 
-             const res = await ccAggregate.sendTransfer(sendMoneyReqPayload);
+             const res = await ccAggregate.sendTransfer(sendMoneyReqPayload, "SEND");
              //Assert
  
              logger.info("Response",res);
+
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting initiate Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
              expect(res.payeeDetails.idValue).toEqual(idValue);
          });
  
@@ -210,15 +258,36 @@
                  ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_CONVERSION_ACCEPTANCE")
              });
  
-             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+             sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({
                  ...sdkInitiateTransferResponseDto(idValue, "WAITING_FOR_QUOTE_ACCEPTANCE")
              });
-             const sendMoneyReqPayload = merchantPaymentRequestDTO(idValue,"103");
+
+             // Spying on Update Transfer
+            jest.spyOn(sdkClient, "updateTransfer");
+
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+
+
+             const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "RECEIVE");
              //Act 
-             const res = await ccAggregate.collectTransfer(sendMoneyReqPayload);
+             const res = await ccAggregate.collectTransfer(sendMoneyReqPayload, "RECEIVE");
              //Assert
  
              logger.info("Response",res);
+             expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+             // Expecting INitaite Transfer to have been called
+             expect(initiateTransferSpy).toHaveBeenCalled();
+ 
+             // Get the Reguest being Used to call
+             const transferRequest = initiateTransferSpy.mock.calls[0][0];
+ 
+             // Check the Extension List is not 0
+             expect(transferRequest.from.extensionList).not.toHaveLength(0);
+             if (transferRequest.from.extensionList) {
+                 expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+             }
+             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
              expect(res.payeeDetails.idValue).toEqual(idValue);
          });
  

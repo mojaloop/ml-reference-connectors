@@ -186,6 +186,12 @@ const config = Convict<IConfigSchema>({
             default: 'staging',
             env: 'MTN_ENV',
         },
+        LEI: {
+            doc: 'Legal Entity Identifier',
+            format: String,
+            default: null,
+            env: 'LEI',
+        },
     },
 });
 

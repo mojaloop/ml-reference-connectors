@@ -28,7 +28,7 @@
  import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
  import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNUpdateMerchantPaymentRequest } from '../../../src/domain/CBSClient';
  import { loggerFactory } from '../../../src/infra/logger';
- import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto, merchantPaymentRequestDTO, updateMerchantPaymentRequestDTO } from '../../fixtures';
+ import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyMerchantPaymentDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto, updateMerchantPaymentRequestDTO } from '../../fixtures';
  import { Service } from '../../../src/core-connector-svc';
  import axios from 'axios';
  import { randomUUID } from 'crypto';
@@ -126,7 +126,7 @@
  
  
          test('Test POST/ send-money: response should be payee details ', async () => {
-             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "20");
+             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyMerchantPaymentDTO(MSISDN, "20", "SEND");
              const url = `${DFSP_URL}/send-money`;
              const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
                  headers: {
@@ -161,7 +161,7 @@
  
  
          test('Test POST/ merchant-payment: response should be payee details ', async () => {
-             const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20");
+             const merchantyRequest: TMTNMerchantPaymentRequest = sendMoneyMerchantPaymentDTO(MSISDN, "20", "RECEIVE");
              const url = `${DFSP_URL}/merchant-payment`;
              const res = await axios.post(url, JSON.stringify(merchantyRequest), {
                  headers: {

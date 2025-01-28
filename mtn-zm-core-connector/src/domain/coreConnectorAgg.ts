@@ -53,6 +53,8 @@ import {
     TtransferPatchNotificationRequest,
     ValidationError,
     THttpResponse,
+    TPayeeExtensionListEntry,
+    TPayerExtensionListEntry,
 } from './interfaces';
 import {
     ISDKClient,
@@ -169,10 +171,27 @@ export class CoreConnectorAggregate {
                 middleName: mtnKycResponse.given_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
+                extensionList: this.getGetPartiesExtensionList(),
             },
             statusCode: 200,
         };
     }
+
+      // Get Extension List DTO to be used in Party Response on Extension List
+    // Get Parties   --(1.1)
+    private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
+                "value": config.get("mtn.LEI")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
+                "value": config.get("mtn.X_COUNTRY")
+            }
+        ];
+    }
+
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
@@ -182,6 +201,15 @@ export class CoreConnectorAggregate {
         if (this.mtnConfig.MTN_ENV === 'production' && quoteRequest.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
+
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
+        
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
         await this.checkAccountBarred(quoteRequest.to.idValue);
@@ -196,6 +224,7 @@ export class CoreConnectorAggregate {
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
+            extensionList: this.getQuoteResponseExtensionList(quoteRequest),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees,
@@ -210,6 +239,31 @@ export class CoreConnectorAggregate {
     }
 
 
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+    }
+
+
+    // Get Quote Resonse Extension List DTO to be used in Quote Response on Extension List
+   
+    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
+        //todo: check if the correct level of information has been provided.
+        if (quoteRequest.extensionList) {
+            newExtensionList.push(...quoteRequest.extensionList);
+        }
+
+        if (quoteRequest.from.extensionList) {
+            newExtensionList.push(...quoteRequest.from.extensionList);
+        }
+
+        if (quoteRequest.to.extensionList) {
+            newExtensionList.push(...quoteRequest.to.extensionList);
+        }
+        return newExtensionList;
+    }
+
+
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
@@ -218,6 +272,15 @@ export class CoreConnectorAggregate {
         if (this.mtnConfig.MTN_ENV === 'production' && transfer.currency !== config.get("mtn.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
+
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            throw ValidationError.invalidExtensionListsError(
+                "ExtensionList check Failed in Payee Transfers",
+                '3100',
+                500
+            );
+        }
+
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
@@ -230,6 +293,11 @@ export class CoreConnectorAggregate {
         };
     }
 
+
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
+    }
 
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
@@ -400,38 +468,62 @@ export class CoreConnectorAggregate {
 
  
  
-     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
+     private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
          const res = await this.mtnClient.getKyc({
-             msisdn: transfer.payerAccount
+             msisdn: transfer.payer.payerId
          });
          return {
              'homeTransactionId': transfer.homeTransactionId,
              'from': {
                  'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
-                 'idValue': transfer.payerAccount,
+                 'idValue': transfer.payer.payerId,
                  'fspId': this.mtnConfig.FSP_ID,
                  "displayName": `${res.given_name} ${res.family_name}`,
                  "firstName": res.given_name,
                  "middleName": res.given_name,
                  "lastName": res.family_name,
                  "merchantClassificationCode": "123",
+                 "extensionList": this.getOutboundTransferExtensionList(transfer)
              },
              'to': {
                  'idType': transfer.payeeIdType,
                  'idValue': transfer.payeeId
              },
-             'amountType': transfer.amountType,
+             'amountType': amountType,
              'currency': transfer.sendCurrency,
              'amount': transfer.sendAmount,
              'transactionType': transfer.transactionType,
          };
      }
- 
+
+     // Get OutBound Transfer Extension List DTO used in getTSDKOutboundTransferRequest DTO --(5.1.1)
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+            }
+        ];
+    }
+    
+     
      // Payer
-     async sendTransfer(transfer: TMTNSendMoneyRequest): Promise<TMTNSendMoneyResponse> {
-         this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+     async sendTransfer(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNSendMoneyResponse> {
+         this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
  
-         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
+         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
          const res = await this.sdkClient.initiateTransfer(transferRequest);
          let acceptRes: THttpResponse<TtransferContinuationResponse>;
  
@@ -467,10 +559,10 @@ export class CoreConnectorAggregate {
  
  
 
-     async collectTransfer(transfer: TMTNMerchantPaymentRequest): Promise<TMTNMerchantPaymentResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payerAccount}`);
+     async collectTransfer(transfer: TMTNMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNMerchantPaymentResponse> {
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
 
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer);
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
 
