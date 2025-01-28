@@ -1,3 +1,5 @@
+# Payer Merchant Payment 
+This sequence diagram details the process of making a merchant payment and the steps the core connector takes to make a payment in the mojaloop connector.
 ```mermaid
 sequenceDiagram
   autoNumber

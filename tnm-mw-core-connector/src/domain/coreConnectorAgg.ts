@@ -37,7 +37,6 @@ import {
     TNMError,
     TNMInvoiceRequest,
     TNMInvoiceResponse,
-    TNMMerchantPaymentRequest,
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
     TNMUpdateSendMoneyRequest,
@@ -53,6 +52,8 @@ import {
     TtransferPatchNotificationRequest,
     ValidationError,
     THttpResponse,
+    TPayeeExtensionListEntry,
+    TPayerExtensionListEntry,
 } from './interfaces';
 import {
     ISDKClient,
@@ -61,6 +62,7 @@ import {
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
 } from './SDKClient';
+
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     IdType: string;
@@ -91,6 +93,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 displayName: `${lookupRes.data.full_name}`,
                 firstName: lookupRes.data.full_name,
                 idType: this.tnmClient.tnmConfig.SUPPORTED_ID_TYPE,
+                extensionList: this.getGetPartiesExtensionList(),
                 idValue: id,
                 lastName: lookupRes.data.full_name,
                 middleName: lookupRes.data.full_name,
@@ -103,8 +106,34 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return party;
     }
 
+    private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
+                "value": config.get("tnm.LEI")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
+                "value": "Malawi"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
+                "value": "Malawi"
+            }
+        ]
+    }
+
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
+
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
+        }
+
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
@@ -134,6 +163,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         return {
             expiration: expirationJSON,
+            extensionList: this.getQuoteResponseExtensionList(quoteRequest),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees.toString(),
@@ -142,10 +172,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             payeeReceiveAmountCurrency: quoteRequest.currency,
             quoteId: quoteRequest.quoteId,
             transactionId: quoteRequest.transactionId,
-            transferAmount: (Number(quoteRequest.amount) + fees).toString() ,
+            transferAmount: (Number(quoteRequest.amount) + fees).toString(),
             transferAmountCurrency: quoteRequest.currency,
         };
     }
+
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+    }
+
 
     //TODO: Check actual response for barred accounts
     private async checkAccountBarred(msisdn: string): Promise<void> {
@@ -153,6 +188,23 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (res.message != "Completed successfully") {
             throw ValidationError.accountBarredError();
         }
+    }
+
+
+
+    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
+        let newExtensionList: TPayeeExtensionListEntry[] = []
+        //todo: check if the correct level of information has been provided.
+        if (quoteRequest.extensionList) {
+            newExtensionList.push(...quoteRequest.extensionList);
+        }
+        if (quoteRequest.from.extensionList) {
+            newExtensionList.push(...quoteRequest.from.extensionList);
+        }
+        if (quoteRequest.to.extensionList) {
+            newExtensionList.push(...quoteRequest.to.extensionList);
+        }
+        return newExtensionList;
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -165,6 +217,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             this.logger.error("Unsupported currency ", { currency: transfer.currency });
             throw ValidationError.unsupportedCurrencyError();
         }
+
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            throw ValidationError.invalidExtensionListsError(
+                "ExtensionList check Failed in Payee Transfers",
+                '3100',
+                500
+            )
+        }
+
         if (!this.validateQuote(transfer)) {
             this.logger.error("Invalid quote", { quote: transfer });
             throw ValidationError.invalidQuoteError();
@@ -178,6 +239,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             transferState: 'RESERVED',
         };
 
+    }
+
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
@@ -202,9 +267,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
-            
+
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
-            
+
         ) {
             this.logger.error("transfer.amount !== transfer.quote.transferAmount - transfer.quote.payeeFspCommissionAmount");
             result = false;
@@ -247,16 +312,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return result;
     }
 
-    
+
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
             throw ValidationError.transferNotCompletedError();
         }
-        if (!this.validatePatchQuote(updateTransferPayload)) {
-            throw ValidationError.invalidQuoteError();
-        }
-
         const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
         await this.tnmClient.sendMoney(makePaymentRequest);
 
@@ -276,18 +337,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-
-    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
-        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
-        // todo define implmentation
-        return true;
-    }
-
-
     // Payer
-    async sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse> {
-        this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
-        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
+    async sendMoney(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNMSendMoneyResponse> {
+        this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
+        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
             return await this.checkAndRespondToConversionTerms(res);
         }
@@ -353,31 +406,52 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest | TNMMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.tnmClient.getKyc({
-            msisdn: transfer.payerAccount
+            msisdn: transfer.payer.payerId
         });
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.tnmConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount,
+                'idValue': transfer.payer.payerId,
                 'fspId': this.tnmConfig.FSP_ID,
                 "displayName": res.data.full_name,
                 "firstName": res.data.full_name,
                 "middleName": res.data.full_name,
                 "lastName": res.data.full_name,
-                "merchantClassificationCode": "123", //todo: clarify what is needed here
+                "extensionList": this.getOutboundTransferExtensionList(transfer)
             },
             'to': {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': transfer.amountType,
+            'amountType': amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
+    }
+
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+            }
+        ]
     }
 
     async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse> {
@@ -400,26 +474,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     async handleCallback(payload: TNMCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction_id}`);
-        try{
-            if(payload.success){
-                await this.sdkClient.updateTransfer({acceptQuote: true},payload.transaction_id);
-            }else{
-                await this.sdkClient.updateTransfer({acceptQuote: false},payload.transaction_id);
+        try {
+            if (payload.success) {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction_id);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction_id);
             }
-        }catch (error: unknown){
-            if(error instanceof SDKClientError){
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
                 // perform refund or rollback
                 await this.handleRefund(payload);
             }
         }
     }
 
-    private async handleRefund(payload: TNMCallbackPayload){
-        try{
-            if(payload.success){
-                await this.tnmClient.refundPayment({receipt_number:payload.receipt_number});
+    private async handleRefund(payload: TNMCallbackPayload) {
+        try {
+            if (payload.success) {
+                await this.tnmClient.refundPayment({ receipt_number: payload.receipt_number });
             }
-        }catch(error: unknown){
+        } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;

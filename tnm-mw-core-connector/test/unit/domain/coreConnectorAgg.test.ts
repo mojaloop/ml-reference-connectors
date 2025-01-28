@@ -79,6 +79,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
             logger.info("Returned Data ==>", kyc_res.data);
 
             logger.info(JSON.stringify(kyc_res.data));
+            expect(kyc_res.data.extensionList).toBeDefined();
+            expect(Array.isArray(kyc_res.data.extensionList)).toBeTruthy();
             expect(kyc_res.statusCode).toEqual(200);
         });
 
@@ -107,7 +109,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const res = await ccAggregate.quoteRequest(quoteRequest);
 
-            logger.info(JSON.stringify(res));
+            logger.info("This is the response ==>", JSON.stringify(res));
             const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
         });
@@ -179,10 +181,28 @@ describe('CoreConnectorAggregate Tests -->', () => {
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
             });
-            jest.spyOn(sdkClient, "updateTransfer");
-            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000", "SEND");
-            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
-            logger.info("Response fromm send monety", res);
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
+
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
+
+
+            logger.info("Response fromm send money", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
 
         });
@@ -206,7 +226,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
                     "data": []
                   }
             );
-            jest.spyOn(tnmClient, "collectMoney");
             const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
             const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
             logger.info("Response ", res);
@@ -229,9 +248,25 @@ describe('CoreConnectorAggregate Tests -->', () => {
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
             });
-            jest.spyOn(sdkClient, "updateTransfer");
-            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000", "RECEIVE");
-            const res = await ccAggregate.sendMoney(sendMoneyRequestBody);
+            const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+            const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "RECEIVE");
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateMerchantTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
+
             logger.info("Response fromm send money", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalled();
         });
@@ -257,6 +292,8 @@ describe('CoreConnectorAggregate Tests -->', () => {
             jest.spyOn(tnmClient, "collectMoney");
             const updateSendMoneyReqBody = tnmUpdateSendMoneyRequestDto(MSISDN_NO, "1000");
             const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
+
+            
             logger.info("Response ", res);
             expect(tnmClient.collectMoney).toHaveBeenCalled();
         });
