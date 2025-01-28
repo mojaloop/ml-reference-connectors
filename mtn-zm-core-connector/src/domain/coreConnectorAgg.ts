@@ -40,7 +40,6 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
-    TMTNMerchantPaymentResponse,
 } from './CBSClient';
 import {
     ILogger,
