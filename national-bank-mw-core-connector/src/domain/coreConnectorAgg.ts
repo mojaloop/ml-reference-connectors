@@ -28,6 +28,7 @@
  'use strict';
 
 import { randomUUID } from 'crypto';
+import config from '../config';
 import {
     INBMClient,
     TNBMConfig,
@@ -49,6 +50,8 @@ import {
     ValidationError,
     Party,
     TGetQuotesDeps,
+    TPayeeExtensionListEntry,
+    TPayerExtensionListEntry,
 } from './interfaces';
 import {
     ISDKClient,
@@ -57,6 +60,7 @@ import {
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
 } from './SDKClient';
+
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     IdType: string;
@@ -93,15 +97,42 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             statusCode: () => 200,
             idType: "ACCOUNT_ID",
             idValue: res.data.account_number,
+            extensionList: this.getPartiesExtensionList(),
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
         };
     }
 
+    private getPartiesExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
+                "value": config.get("nbm.LEI")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
+                "value": config.get("nbm.X_COUNTRY")
+            },
+            
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
+                "value": config.get("nbm.X_COUNTRY")
+            }
+        ]
+    }
+
+
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Calculating quote for ${quoteRequest.to.idValue} and amount ${quoteRequest.amount}`);
         if (quoteRequest.to.idType !== this.cbsConfig.SUPPORTED_ID_TYPE) {
             throw ValidationError.unsupportedIdTypeError();
+        }
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            throw ValidationError.invalidExtensionListsError(
+                "Some extensionLists are undefined",
+                '3100',
+                500
+            );
         }
         if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
@@ -117,8 +148,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             res: res,
             fees: fees,
             expiration: expirationJSON,
-            quoteRequest: quoteRequest
+            quoteRequest: quoteRequest,
         });
+    }
+
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
     }
 
     private getQuoteResponse(deps: TGetQuotesDeps): TQuoteResponse {
@@ -133,13 +168,36 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "quoteId": deps.quoteRequest.quoteId,
             "transferAmount": (deps.fees + Number(deps.quoteRequest.amount)).toString(),
             "transferAmountCurrency": deps.quoteRequest.currency,
-            "transactionId": deps.quoteRequest.transactionId
+            "transactionId": deps.quoteRequest.transactionId,
+            "extensionList": this.getQuoteResponseExtensionList(deps.quoteRequest)
         };
+    }
+
+    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
+        let newExtensionList: TPayeeExtensionListEntry[] = []
+        //todo: check if the correct level of information has been provided.
+        if (quoteRequest.extensionList) {
+            newExtensionList.push(...quoteRequest.extensionList);
+        }
+        if (quoteRequest.from.extensionList) {
+            newExtensionList.push(...quoteRequest.from.extensionList);
+        }
+        if (quoteRequest.to.extensionList) {
+            newExtensionList.push(...quoteRequest.to.extensionList);
+        }
+        return newExtensionList;
     }
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
+        }
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            throw ValidationError.invalidExtensionListsError(
+                "ExtensionList check Failed in Payee Transfers",
+                '3100',
+                500
+            )
         }
         if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
@@ -153,6 +211,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             homeTransactionId: transfer.transferId,
             transferState: 'RECEIVED',
         };
+    }
+
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
@@ -269,10 +331,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    async sendMoney(transfer: TNBMSendMoneyRequest): Promise<TNBMSendMoneyResponse> {
-        this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
+    async sendMoney(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse> {
+        this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
         
-        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
+        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
             return await this.checkAndRespondToConversionTerms(res);
         }
@@ -432,31 +494,54 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TNBMSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.nbmClient.getKyc({
-            account_number: transfer.payerAccount
+            account_number: transfer.payer.payerId
         });
         
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.cbsConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount,
+                'idValue': transfer.payer.payerId,
                 'fspId': this.cbsConfig.FSP_ID,
                 "displayName": `${res.data.account_number}`,
                 
                 "merchantClassificationCode": "123",
+                extensionList: this.getOutboundTransferExtensionList(transfer)
             },
             'to': {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': 'SEND',
+            'amountType': amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
     }
+
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNBMSendMoneyRequest): TPayerExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+            },
+            {
+                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+            }
+        ]
+    }
+    
     async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps} `);
 

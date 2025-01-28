@@ -41,7 +41,7 @@
      quoteRequestDto, 
      sendMoneyDTO, 
      transferPatchNotificationRequestDto, 
-     merchantPaymentRequestDTO
+    
  } from '../../fixtures';
  import { randomUUID } from 'crypto';
  
@@ -100,6 +100,7 @@
 
             // Assert
             expect(res.statusCode(200)).toEqual(200);
+            expect(res.extensionList).toBeDefined();
             expect(res.idValue).toEqual(ACCOUNT_NO);
         });
 
@@ -194,11 +195,28 @@
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
-
-            const sendMoneyReqPayload = sendMoneyDTO(ACCOUNT_NO, "103", "SEND");
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+            const sendMoneyReqPayload = sendMoneyDTO(ACCOUNT_NO, "103",);
 
             // Act
-            const res = await ccAggregate.sendMoney(sendMoneyReqPayload);
+            const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "SEND");
+
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.initiateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
+
             // Assert
             expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
         });
@@ -218,7 +236,7 @@
     });
 
     describe("Merchant Core Connector Aggregate Tests", () => {
-        test("Collect Money should trigger transfer in SDK", async () => {
+        test("Merchant Pay should trigger transfer in SDK", async () => {
             // Arrange
             const mockKycResponse = {
                 message: "Success",
@@ -231,11 +249,25 @@
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
+            const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
-            const merchantPaymentRequest = merchantPaymentRequestDTO(ACCOUNT_NO, "103");
+            const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
 
             // Act
-            const res = await ccAggregate.sendMoney(merchantPaymentRequest);
+            const res = await ccAggregate.sendMoney(merchantPaymentRequest, "RECEIVE");
+
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.initiateTransfer).toHaveBeenCalled();
+            // Expecting INitaite Transfer to have been called
+            expect(initiateMerchantTransferSpy).toHaveBeenCalled();
+            // Get the Reguest being Used to call
+            const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
             // Assert
             expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);

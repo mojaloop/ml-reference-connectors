@@ -80,6 +80,16 @@ export type TRequestOptions = {
     headers?: unknown | undefined;
 };
 
+export type  TPayeeExtensionListEntry = {
+    key?: string;
+    value?: string;
+}
+export type TPayerExtensionListEntry = {
+    key: string;
+    value: string;
+}
+
+
 export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse;
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
@@ -166,6 +176,6 @@ export interface ICoreConnectorAggregate {
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TNBMSendMoneyRequest): Promise<TNBMSendMoneyResponse>
+    sendMoney(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse>
     updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse>
 }

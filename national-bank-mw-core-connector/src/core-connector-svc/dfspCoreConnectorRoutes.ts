@@ -103,7 +103,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TNBMSendMoneyRequest ;
         try {
-            const result = await this.aggregate.sendMoney(transfer);
+            const result = await this.aggregate.sendMoney(transfer, "SEND");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -130,7 +130,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TNBMSendMoneyRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
-            const result = await this.aggregate.sendMoney(transfer);
+            const result = await this.aggregate.sendMoney(transfer, "RECEIVE");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);

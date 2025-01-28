@@ -1,5 +1,5 @@
 import { TSDKOutboundTransferResponse, TtransferContinuationResponse, } from '../src/domain/SDKClient';
-import {TNBMMerchantPaymentRequest, TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
+import { TNBMSendMoneyRequest, TNBMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -115,7 +115,13 @@ export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string =
   currency: "MWK",
   from: {
     idType: "ACCOUNT_NO",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -123,7 +129,13 @@ export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string =
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
   transactionType: "TRANSFER"
@@ -136,12 +148,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "currency": "MWK",
   "from": {
       "idType": "MSISDN",
-      "idValue": "777123456"
+      "idValue": "777123456",
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "to": {
       //@ts-expect-error idType 
       "idType": idType,
-      "idValue": idValue
+      "idValue": idValue,
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "ilpPacket": {
       "data": {
@@ -211,22 +235,8 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TNBMMerchantPaymentRequest => ({
-  "homeTransactionId": crypto.randomUUID(),
-  "amountType": "RECEIVE",
-  "payeeId": "56733123450",
-  "payeeIdType": "MSISDN",
-  "sendAmount": amount,
-  "sendCurrency": "UGX",
-  "receiveCurrency": "UGX",
-  "transactionDescription": "Payment for services",
-  "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
-});
 
-export const sendMoneyDTO = (idValue: string, amount: string, amountType: string): TNBMSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "1003486415",
   "payeeIdType": "ACCOUNT_ID",
@@ -235,10 +245,15 @@ export const sendMoneyDTO = (idValue: string, amount: string, amountType: string
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Elikah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12",
-  "amountType": amountType == "SEND" ? "SEND" : "RECEIVE"
+  "payer": {
+    "name": "Elijah Okello",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1985-04-12",
+      "PrvcOfBirth": "Kampala",	
+      "CityOfBirth": "Kampala",
+      "CtryOfBirth": "Uganda"
+    }},
 });
 
 export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean): TNBMUpdateSendMoneyRequest => ({

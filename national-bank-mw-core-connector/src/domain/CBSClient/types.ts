@@ -45,21 +45,27 @@ export type TNBMConfig = {
 
 
 export type TNBMSendMoneyRequest = {
-    "homeTransactionId": string;
-    "payeeId": string;
-    "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
-    "transactionDescription": string;
-    "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
-    "amountType": "RECEIVE" | "SEND";
+    homeTransactionId: string;
+    payeeId: string;
+    payeeIdType: components["schemas"]["PartyIdType"];
+    sendAmount: string;
+    sendCurrency: components['schemas']['Currency'];
+    receiveCurrency: components['schemas']['Currency'];
+    transactionDescription: string;
+    transactionType: components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
 }
 
-export type TNBMMerchantPaymentRequest = TNBMSendMoneyRequest;
+
 
 export type TNBMSendMoneyResponse = {
     "payeeDetails": {
@@ -82,7 +88,6 @@ export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
 }
 
-export type TNBMUpdateMerchantPaymentRequest = TNBMUpdateSendMoneyRequest;
 
 export type TCallbackRequest = {
     "transaction": {
