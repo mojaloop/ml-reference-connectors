@@ -578,7 +578,7 @@ components:
       minLength: 3
       maxLength: 3
       enum:
-        - AED
+        - ZMW
         - AFN
         - ALL
         - AMD
@@ -740,7 +740,7 @@ components:
         - XXX
         - YER
         - ZAR
-        - ZMW
+        - AED
         - ZWD
     accountsRequest:
       type: array
@@ -1165,6 +1165,22 @@ components:
       required:
         - currency
         - amount
+    fspMoney:
+      title: Money
+      type: object
+      description: Data model for the complex type Money.
+      properties:
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          title: Amount
+          type: string
+          pattern: ^([0]|([1-9][0-9]{0,17}))([.][0-9]{0,3}[1-9])?$
+          description: The API data type Amount is a JSON String in a canonical format that is restricted by a regular expression for interoperability reasons. This pattern does not allow any trailing zeroes at all, but allows an amount without a minor currency unit. It also only allows four digits in the minor currency unit; a negative value is not allowed. Using more than 18 digits in the major currency unit is not allowed.
+          example: '0'
+      required:
+        - currency
+        - amount
     Latitude:
       title: Latitude
       type: string
@@ -1224,7 +1240,7 @@ components:
         payeeFspFee:
           $ref: '#/components/schemas/Money'
         payeeFspCommission:
-          $ref: '#/components/schemas/Money'
+          $ref: '#/components/schemas/fspMoney'
         geoCode:
           $ref: '#/components/schemas/GeoCode'
         ilpPacket:
@@ -1926,7 +1942,7 @@ components:
                 payeeFspFee:
                   $ref: '#/components/schemas/Money'
                 payeeFspCommission:
-                  $ref: '#/components/schemas/Money'
+                  $ref: '#/components/schemas/fspMoney'
                 expiration:
                   type: string
                   description: Date and time until when the quotation is valid and can be honored when used in the subsequent transaction.
@@ -2094,10 +2110,10 @@ components:
     transferStatus:
       type: string
       enum:
-        - WAITING_FOR_CONVERSION_ACCEPTANCE
         - ERROR_OCCURRED
         - WAITING_FOR_PARTY_ACCEPTANCE
         - WAITING_FOR_QUOTE_ACCEPTANCE
+        - WAITING_FOR_CONVERSION_ACCEPTANCE
         - COMPLETED
     QuotesIDPutResponse:
       title: QuotesIDPutResponse
@@ -2111,7 +2127,7 @@ components:
         payeeFspFee:
           $ref: '#/components/schemas/Money'
         payeeFspCommission:
-          $ref: '#/components/schemas/Money'
+          $ref: '#/components/schemas/fspMoney'
         expiration:
           $ref: '#/components/schemas/DateTime'
         geoCode:
@@ -2285,13 +2301,25 @@ components:
           $ref: '#/components/schemas/CorrelationId'
         getPartiesResponse:
           type: object
-          required:
-            - body
           properties:
             body:
-              type: object
+              oneOf:
+                - type: object
+                  properties:
+                    party:
+                      $ref: '#/components/schemas/Party'
+                  required:
+                    - party
+                - type: object
+                  properties:
+                    errorInformation:
+                      $ref: '#/components/schemas/ErrorInformation'
+                  required:
+                    - errorInformation
             headers:
               type: object
+          required:
+            - body
         quoteResponse:
           type: object
           required:

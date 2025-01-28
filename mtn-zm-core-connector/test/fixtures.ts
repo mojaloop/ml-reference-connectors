@@ -1,7 +1,8 @@
-import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
+import {TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
-import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
+import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse} from 'src/domain/interfaces/types';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 type TransferAcceptInputDto = {
   fineractAccountId?: number;
@@ -66,20 +67,112 @@ export const fineractGetSavingsAccountResponseDto = (
   },
 });
 
-export const sdkInitiateTransferResponseDto = (
-  payeeFspCommissionAmount: string | undefined,
-  payeeFspFeeAmount: string | undefined,
-) => ({
-  quoteResponse: {
-    body: {
-      payeeFspCommission: {
-        amount: payeeFspCommissionAmount,
-      },
-      payeeFspFee: {
-        amount: payeeFspFeeAmount,
-      },
+
+export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
+  statusCode: 200,
+  data: {
+    homeTransactionId: crypto.randomUUID(),
+    from: {
+      idType: "MSISDN",
+      idValue: idValue,
+      supportedCurrencies: [
+        'ZMW'
+      ]
     },
-  },
+    to: {
+      idType: "MSISDN",
+      idValue: idValue,
+      supportedCurrencies: [
+        'MWK'
+      ]
+    },
+    amountType: "SEND",
+    currency: "ZMW",
+    amount: "1000",
+    transactionType: "TRANSFER",
+    currentState: currentState,
+    "quoteResponse": {
+      "body": {
+        "transferAmount": {
+          "currency": "MWK",
+          "amount": "1000"
+        },
+        "payeeReceiveAmount": {
+          "currency": "MWK",
+          "amount": "1000"
+        },
+        "payeeFspFee": {
+          "currency": "MWK",
+          "amount": "0"
+        },
+        "payeeFspCommission": {
+          "currency": "AED",
+          "amount": "0"
+        },
+        "expiration": "2016-05-24T08:38:08.699-04:00",
+        "geoCode": {
+          "latitude": "+45.4215",
+          "longitude": "+75.6972"
+        },
+        "ilpPacket": "AYIBgQAAAAAAAASwNGxldmVsb25lLmRmc3AxLm1lci45T2RTOF81MDdqUUZERmZlakgyOVc4bXFmNEpLMHlGTFGCAUBQU0svMS4wCk5vbmNlOiB1SXlweUYzY3pYSXBFdzVVc05TYWh3CkVuY3J5cHRpb246IG5vbmUKUGF5bWVudC1JZDogMTMyMzZhM2ItOGZhOC00MTYzLTg0NDctNGMzZWQzZGE5OGE3CgpDb250ZW50LUxlbmd0aDogMTM1CkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbgpTZW5kZXItSWRlbnRpZmllcjogOTI4MDYzOTEKCiJ7XCJmZWVcIjowLFwidHJhbnNmZXJDb2RlXCI6XCJpbnZvaWNlXCIsXCJkZWJpdE5hbWVcIjpcImFsaWNlIGNvb3BlclwiLFwiY3JlZGl0TmFtZVwiOlwibWVyIGNoYW50XCIsXCJkZWJpdElkZW50aWZpZXJcIjpcIjkyODA2MzkxXCJ9IgA",
+        "condition": "string",
+        "extensionList": {
+          "extension": [
+            {
+              "key": "string",
+              "value": "string"
+            }
+          ]
+        }
+      },
+      "headers": {}
+    },
+    transferId: crypto.randomUUID(),
+    "fxQuotesResponse": {
+      "body": {
+        "homeTransactionId": "string",
+        "condition": "string",
+        "conversionTerms": {
+          "conversionId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "determiningTransferId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "initiatingFsp": "string",
+          "counterPartyFsp": "string",
+          "amountType": "RECEIVE",
+          "sourceAmount": {
+            "currency": "ZMW",
+            "amount": "1000"
+          },
+          "targetAmount": {
+            "currency": "MWK",
+            "amount": "1000"
+          },
+          "expiration": "2016-05-24T08:38:08.699-04:00",
+          "charges": [
+            {
+              "chargeType": "string",
+              "sourceAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              },
+              "targetAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              }
+            }
+          ],
+          "extensionList": {
+            "extension": [
+              {
+                "key": "string",
+                "value": "string"
+              }
+            ]
+          }
+        }
+      },
+      "headers": {}
+    }
+  }
 });
 
 export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
@@ -187,25 +280,44 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 });
 
 
-export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "56733123450", amount: string = "100"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "961938765", amount: string = "100"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
   currency: "EUR",
   from: {
     idType: "MSISDN",
-    idValue: "56733123450"
+    idValue: "961938765",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
+  
   initiator: "PAYER",
   initiatorType: "CONSUMER",
   quoteId: crypto.randomUUID(),
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
-  transactionType: "TRANSFER"
+  transactionType: "TRANSFER",
+  extensionList: [
+    {
+      "key": "testkey",
+      "value": "TestVal"
+    }
+  ]
 });
 
 
@@ -217,12 +329,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   from: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   ilpPacket: {
     "data": {
@@ -292,19 +416,40 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
-  "homeTransactionId": "HTX123456789",
-  "payeeId": "07676767676",
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": amountType,
+  "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
   "sendCurrency": "ZMW",
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
 });
+
+
+
+
+
+export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+  "acceptQuote": acceptQuote,
+  "msisdn": idValue,
+  "amount": amount.toString(),
+  "payerMessage": "Goods Purchase",
+  "payeeNote": "Glocery Store Sells"
+});
+
 
 
 export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
@@ -314,6 +459,8 @@ export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue
   "payerMessage": "School Fees",
   "payeeNote": "School Fees"
 });
+
+
 
 export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (
   {
