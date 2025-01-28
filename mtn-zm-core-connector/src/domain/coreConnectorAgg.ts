@@ -209,7 +209,7 @@ export class CoreConnectorAggregate {
                 500
             );
         }
-        
+
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
         await this.checkAccountBarred(quoteRequest.to.idValue);
@@ -557,45 +557,7 @@ export class CoreConnectorAggregate {
          return this.getTMTNSendMoneyResponse(res.data);
      }
  
- 
 
-     async collectTransfer(transfer: TMTNMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNMerchantPaymentResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
-
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
-        const res = await this.sdkClient.initiateTransfer(transferRequest);
-        let acceptRes: THttpResponse<TtransferContinuationResponse>;
-
-        if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
-            if (!this.validateConversionTerms(res.data)) {
-                if (!res.data.transferId) {
-                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                }
-                acceptRes = await this.sdkClient.updateTransfer({
-                    "acceptConversion": false
-                }, res.data.transferId);
-                throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
-            }
-            else {
-                if (!res.data.transferId) {
-                    throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-                }
-                acceptRes = await this.sdkClient.updateTransfer({
-                    "acceptConversion": true
-                }, res.data.transferId);
-            }
-
-            if (!this.validateReturnedQuote(acceptRes.data)) {
-                throw ValidationError.invalidReturnedQuoteError();
-            }
-            return this.getTMTNMerchantMoneyResponse(acceptRes.data);
-        }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTMTNMerchantMoneyResponse(res.data);
-    }
- 
     
  
      private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {

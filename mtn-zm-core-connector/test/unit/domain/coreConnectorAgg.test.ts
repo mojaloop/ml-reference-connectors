@@ -270,7 +270,7 @@
 
              const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "RECEIVE");
              //Act 
-             const res = await ccAggregate.collectTransfer(sendMoneyReqPayload, "RECEIVE");
+             const res = await ccAggregate.sendTransfer(sendMoneyReqPayload, "RECEIVE");
              //Assert
  
              logger.info("Response",res);
