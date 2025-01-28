@@ -287,7 +287,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "56
   currency: "EUR",
   from: {
     idType: "MSISDN",
-    idValue: "56733123450"
+    idValue: "56733123450",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -295,10 +301,22 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "56
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
-  transactionType: "TRANSFER"
+  transactionType: "TRANSFER",
+  extensionList: [
+    {
+      "key": "testkey",
+      "value": "TestVal"
+    }
+  ]
 });
 
 
@@ -310,12 +328,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   from: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   ilpPacket: {
     "data": {
@@ -385,9 +415,9 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": "SEND",
+  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -395,17 +425,45 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
   "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
 });
 
 
 // Send Money DTO
-
-export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": "RECEIVE",
+  "amountType": amountType,
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
+});
+
+export const merchantPaymentRequestDTO = (idValue: string, amount: string,amountType: "SEND" | "RECEIVE"): TMTNMerchantPaymentRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -413,9 +471,16 @@ export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMT
   "receiveCurrency": "UGX",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
 });
 
 
