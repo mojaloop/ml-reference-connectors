@@ -142,6 +142,14 @@
              httpCode: 500,
          });
      }
+
+
+     static invalidExtensionListsError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode,
+        });
+    }
  }
  
  export class MTNError extends BasicError{
