@@ -111,7 +111,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("tnm.LEI")
-            }, 
+            },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
                 "value": "Malawi"
@@ -172,7 +172,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             payeeReceiveAmountCurrency: quoteRequest.currency,
             quoteId: quoteRequest.quoteId,
             transactionId: quoteRequest.transactionId,
-            transferAmount: (Number(quoteRequest.amount) + fees).toString() ,
+            transferAmount: (Number(quoteRequest.amount) + fees).toString(),
             transferAmountCurrency: quoteRequest.currency,
         };
     }
@@ -181,7 +181,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
     }
 
-    
+
     //TODO: Check actual response for barred accounts
     private async checkAccountBarred(msisdn: string): Promise<void> {
         const res = await this.tnmClient.getKyc({ msisdn: msisdn });
@@ -190,7 +190,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
     }
 
-    
+
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         let newExtensionList: TPayeeExtensionListEntry[] = []
@@ -242,7 +242,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
@@ -267,9 +267,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
-            
+
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
-            
+
         ) {
             this.logger.error("transfer.amount !== transfer.quote.transferAmount - transfer.quote.payeeFspCommissionAmount");
             result = false;
@@ -312,16 +312,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return result;
     }
 
-    
+
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
             throw ValidationError.transferNotCompletedError();
         }
-        if (!this.validatePatchQuote(updateTransferPayload)) {
-            throw ValidationError.invalidQuoteError();
-        }
-
         const makePaymentRequest: TMakePaymentRequest = this.getMakePaymentRequestBody(updateTransferPayload);
         await this.tnmClient.sendMoney(makePaymentRequest);
 
@@ -340,14 +336,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "narration": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned"
         };
     }
-
-
-    private validatePatchQuote(transfer: TtransferPatchNotificationRequest): boolean {
-        this.logger.info(`Validating code for transfer with state ${transfer.currentState}`);
-        // todo define implmentation
-        return true;
-    }
-
 
     // Payer
     async sendMoney(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNMSendMoneyResponse> {
@@ -486,26 +474,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     async handleCallback(payload: TNMCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction_id}`);
-        try{
-            if(payload.success){
-                await this.sdkClient.updateTransfer({acceptQuote: true},payload.transaction_id);
-            }else{
-                await this.sdkClient.updateTransfer({acceptQuote: false},payload.transaction_id);
+        try {
+            if (payload.success) {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction_id);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction_id);
             }
-        }catch (error: unknown){
-            if(error instanceof SDKClientError){
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
                 // perform refund or rollback
                 await this.handleRefund(payload);
             }
         }
     }
 
-    private async handleRefund(payload: TNMCallbackPayload){
-        try{
-            if(payload.success){
-                await this.tnmClient.refundPayment({receipt_number:payload.receipt_number});
+    private async handleRefund(payload: TNMCallbackPayload) {
+        try {
+            if (payload.success) {
+                await this.tnmClient.refundPayment({ receipt_number: payload.receipt_number });
             }
-        }catch(error: unknown){
+        } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process...");
             // todo: define a way to start a manual refund process.
             throw error;
