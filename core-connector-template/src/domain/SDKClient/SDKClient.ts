@@ -1,12 +1,11 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
-
+ Copyright © 2020-2024 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
-
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 
  Contributors
  --------------
@@ -37,6 +36,10 @@ import {
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
 import { SDKClientError } from './errors';
 
+export const SDK_ROUTES = Object.freeze({
+    transfers: "transfers",
+});
+
 export class SDKClient implements ISDKClient {
     private readonly logger: ILogger;
     private readonly httpClient: IHTTPClient;
@@ -54,7 +57,7 @@ export class SDKClient implements ISDKClient {
         this.logger.info('SDKClient initiate receiveTransfer', transfer);
         try {
             const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
+                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}`,
                 transfer,
                 {
                     headers: {
@@ -80,7 +83,7 @@ export class SDKClient implements ISDKClient {
         this.logger.info('SDKClient initiate update receiveTransfer %s', transferAccept);
         try {
             const res = await this.httpClient.put<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers/${id}`,
+                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}/${id}`,
                 transferAccept,
                 {
                     headers: {
