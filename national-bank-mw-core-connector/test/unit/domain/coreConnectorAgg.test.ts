@@ -40,7 +40,6 @@
      sendMoneyDTO, 
      transferPatchNotificationRequestDto,
      updateSendMoneyDTO,
-     updateMerchantPaymentRequestDTO, 
     
  } from '../../fixtures';
  import { randomUUID } from 'crypto';
@@ -222,7 +221,7 @@
         test("Update Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
-            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({})
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
             const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
 
             // Act
@@ -274,7 +273,7 @@
         test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
             // Arrange
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
-            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({})
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
             const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
 
             // Act
