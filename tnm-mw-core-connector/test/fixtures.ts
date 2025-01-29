@@ -1,4 +1,4 @@
-import { TSDKOutboundTransferResponse, TtransferContinuationResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
+import { TSDKOutboundTransferResponse, TtransferContinuationResponse } from '../src/domain/SDKClient';
 import { TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';

@@ -120,7 +120,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": "Malawi"
             }
-        ]
+        ];
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -178,7 +178,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
     }
 
 
@@ -193,7 +193,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = [];
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
         }
@@ -222,7 +222,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "ExtensionList check Failed in Payee Transfers",
                 '3100',
                 500
-            )
+            );
         }
 
         if (!this.validateQuote(transfer)) {
@@ -294,7 +294,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
-            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
         if (
             parseFloat(transfer.amount) !==
@@ -524,7 +524,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                 "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
             }
-        ]
+        ];
     }
 
     async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse> {
