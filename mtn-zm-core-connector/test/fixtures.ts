@@ -1,5 +1,5 @@
 import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
-import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import {TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse} from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -280,25 +280,44 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 });
 
 
-export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "56733123450", amount: string = "100"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "961938765", amount: string = "100"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
   currency: "EUR",
   from: {
     idType: "MSISDN",
-    idValue: "56733123450"
+    idValue: "961938765",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
+  
   initiator: "PAYER",
   initiatorType: "CONSUMER",
   quoteId: crypto.randomUUID(),
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
-  transactionType: "TRANSFER"
+  transactionType: "TRANSFER",
+  extensionList: [
+    {
+      "key": "testkey",
+      "value": "TestVal"
+    }
+  ]
 });
 
 
@@ -310,12 +329,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   from: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   ilpPacket: {
     "data": {
@@ -385,9 +416,9 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyRequest => ({
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": "SEND",
+  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -395,29 +426,20 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TMTNSendMoneyReq
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
 });
 
 
 
-// Send Money DTO
-
-export const merchantPaymentRequestDTO = (idValue: string, amount: string,): TMTNMerchantPaymentRequest => ({
-  "homeTransactionId": crypto.randomUUID(),
-  "amountType": "RECEIVE",
-  "payeeId": "56733123450",
-  "payeeIdType": "MSISDN",
-  "sendAmount": amount,
-  "sendCurrency": "ZMW",
-  "receiveCurrency": "ZMW",
-  "transactionDescription": "Payment for services",
-  "transactionType": "TRANSFER",
-  "payer": "Niza Tembo",
-  "payerAccount": idValue,
-  "dateOfBirth": "1997-04-27"
-});
 
 
 export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({

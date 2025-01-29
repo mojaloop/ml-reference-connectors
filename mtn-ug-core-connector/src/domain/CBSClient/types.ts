@@ -50,7 +50,8 @@ export type TCBSConfig = {
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string;
 }
 
 export type TMTNClientFactoryDeps = {
@@ -76,6 +77,7 @@ export type TMTNConfig = {
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
+    LEI: string;
 }
 
 
@@ -180,9 +182,16 @@ export type TMTNSendMoneyRequest = {
     "receiveCurrency": string;
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        };
+    };
 }
 
 
