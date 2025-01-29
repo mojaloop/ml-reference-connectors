@@ -1,12 +1,11 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
-
+ Copyright © 2020-2024 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
-
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
 
  Contributors
  --------------
@@ -39,6 +38,7 @@ import {
     TCbsSendMoneyRequest,
     TCbsSendMoneyResponse,
     TCBSUpdateSendMoneyRequest,
+    TMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -96,7 +96,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
             lastName: res.data.last_name
-        }
+        };
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -108,7 +108,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedCurrencyError();
         }
         const res = await this.cbsClient.getKyc({ msisdn: quoteRequest.to.idValue });
-        const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount)
+        const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
         // check if account is blocked if possible
         const quoteExpiration = this.cbsConfig.EXPIRATION_DURATION;
         const expiration = new Date();
@@ -135,7 +135,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "transferAmount": (deps.fees + Number(deps.quoteRequest.amount)).toString(),
             "transferAmountCurrency": deps.quoteRequest.currency,
             "transactionId": deps.quoteRequest.transactionId
-        }
+        };
     }
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
@@ -200,7 +200,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
-            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000")
+            throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
         if (
             parseFloat(transfer.amount) !==
@@ -259,7 +259,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "id": requestBody.transferId,
                 "type": "B2B"
             }
-        }
+        };
     }
 
     // Payer
@@ -347,7 +347,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             result = false;
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
-        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body
+        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
         if (!quoteResponseBody) {
             throw SDKClientError.noQuoteReturnedError();
         }
@@ -405,7 +405,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest | TMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
         const res = await this.cbsClient.getKyc({
             msisdn: transfer.payerAccount
         });
@@ -425,7 +425,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': 'SEND',
+            'amountType': transfer.amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,

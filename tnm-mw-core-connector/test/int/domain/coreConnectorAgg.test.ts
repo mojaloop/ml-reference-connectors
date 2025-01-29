@@ -102,8 +102,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         // Patch Transfer Requests Test - Payee
-        test.skip('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
-            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "100");
+
+        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
+            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, MSISDN, "5000000");
             const url = `${ML_URL}/transfers/a867963f-37b2-4723-9757-26bf1f28902c`;
             const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
                 headers: {

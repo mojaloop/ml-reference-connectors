@@ -1,9 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 
 for dir in */; do
-    if [[ $dir == *-core-connector/ ]]; then
-    cd $dir 
-        npx lint-staged
-    cd -
-    fi
+    case "$dir" in
+        *-core-connector/)
+            cd "$dir" || exit 1
+            npx lint-staged
+            npm run lint:fix
+            cd - > /dev/null || exit 1
+            ;;
+    esac
 done
