@@ -118,7 +118,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": config.get("nbm.X_COUNTRY")
             }
-        ]
+        ];
     }
 
 
@@ -153,7 +153,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
     }
 
     private getQuoteResponse(deps: TGetQuotesDeps): TQuoteResponse {
@@ -174,7 +174,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = []
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
         //todo: check if the correct level of information has been provided.
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
@@ -197,7 +197,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "ExtensionList check Failed in Payee Transfers",
                 '3100',
                 500
-            )
+            );
         }
         if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
@@ -539,7 +539,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                 "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
             }
-        ]
+        ];
     }
     
     async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse> {
