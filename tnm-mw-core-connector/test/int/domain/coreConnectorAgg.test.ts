@@ -117,7 +117,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         //  Send Money - Payer
-
         test('Test POST/ send-money: response should be payee details ', async () => {
             const sendMoneyRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
@@ -138,6 +137,35 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test('Test Put/ send-money{id}: response should be 200', async () => {
             const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
+
+            const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
+
+        //Merchant Payment
+        test('Test POST /merchant-payment: response should be 200', async () => {
+            const merchantPaymentRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
+            const url = `${DFSP_URL}/merchant-payment`;
+            const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+        });
+
+        test('Test PUT /merchant-payment/{id}: response should be 200', async () => {
+            const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
+            const url = `${DFSP_URL}/merchant-payment/${randomUUID()}`;
 
             const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
                 headers: {

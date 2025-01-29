@@ -82,6 +82,15 @@ export type Payee = {
     kycInformation: string;
 };
 
+export type  TPayeeExtensionListEntry = {
+    key?: string;
+    value?: string;
+}
+export type TPayerExtensionListEntry = {
+    key: string;
+    value: string;
+}
+
 export type Transfer = {
     completedTimestamp: string;
     fulfilment: string;
@@ -143,6 +152,6 @@ export interface ICoreConnectorAggregate  {
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TNMSendMoneyRequest): Promise<TNMSendMoneyResponse>
+    sendMoney(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNMSendMoneyResponse>
     updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse>
 }
