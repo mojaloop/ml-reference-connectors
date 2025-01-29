@@ -25,39 +25,18 @@
 
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-
-import { CoreConnectorAggregate } from '../../../src/domain';
-import {
-    ISDKClient,
-    SDKClientFactory,
-} from '../../../src/domain/SDKClient';
-import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
-import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from '../../../src/domain/CBSClient';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const cbsConfig = config.get("cbs");
-const SDK_URL = 'http://localhost:4040';
 
 describe('CoreConnectorAggregate Tests -->', () => {
-    let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: ICbsClient;
-    let sdkClient: ISDKClient;
 
     beforeEach(() => {
         mockAxios.reset();
-        const httpClient = AxiosClientFactory.createAxiosClientInstance();
-        sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = CBSClientFactory.createClient({cbsConfig,httpClient,logger});
-        ccAggregate = new CoreConnectorAggregate(sdkClient,cbsClient, cbsConfig, logger);
     });
 
     describe("Payee Tests", ()=>{
-        test("test ccAggregate",async ()=>{
-            logger.info("Id Type",ccAggregate.IdType);
-        });
         
         test("test", async ()=>{
             logger.info("Write payee tests");
