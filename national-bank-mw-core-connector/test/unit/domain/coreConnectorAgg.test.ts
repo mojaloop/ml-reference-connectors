@@ -55,6 +55,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     describe("Payee Tests", ()=>{
+        test("test ccAggregate",async ()=>{
+            logger.info("Id Type",ccAggregate.IdType);
+        });
+        
         test("test", async ()=>{
             logger.info("Write payee tests");
         });
@@ -62,7 +66,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe("Payer Tests", ()=>{
         test("test", async ()=>{
-            logger.info("Write payer tests")
+            logger.info("Write payer tests");
         });
     });
 });
