@@ -34,7 +34,7 @@ CC->>CC: Validation Checks, Expiration Check, Quote Expiration Validation, Curre
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC->>CBS Api: POST /standard/v3/disbursement
+CC->>CBS Api: POST /api/transfer
 CBS Api-->CC: Response
 Alt if Response not Successful
 CC-->>ML Connector: Response 500

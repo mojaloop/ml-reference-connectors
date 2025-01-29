@@ -25,7 +25,7 @@
  --------------
  ******/
 
- 'use strict';
+'use strict';
 
 import { randomUUID } from 'crypto';
 import config from '../config';
@@ -84,11 +84,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!(IdType === this.cbsConfig.SUPPORTED_ID_TYPE)) {
             throw ValidationError.unsupportedIdTypeError();
         }
-        
+
         const res = await this.nbmClient.getKyc({
             account_number: id,
         });
-        
+
         return this.getPartiesResponse(res);
     }
 
@@ -113,7 +113,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
                 "value": config.get("nbm.X_COUNTRY")
             },
-            
+
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": config.get("nbm.X_COUNTRY")
@@ -175,7 +175,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         const newExtensionList: TPayeeExtensionListEntry[] = [];
-        //todo: check if the correct level of information has been provided.
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
         }
@@ -187,6 +186,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         return newExtensionList;
     }
+
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
@@ -209,7 +209,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
     }
 
@@ -299,7 +299,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferNotCompletedError();
         }
         const makePaymentRequest: TNBMDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.nbmClient.sendMoney(makePaymentRequest);
+        await this.nbmClient.sendMoney(makePaymentRequest); //todo: define better error handling logic
     }
 
     private async initiateCompensationAction() {
@@ -333,7 +333,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     // Payer
     async sendMoney(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
-        
+
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
             return await this.checkAndRespondToConversionTerms(res);
@@ -370,7 +370,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);   
+        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
         let result = true;
         if (
             !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
@@ -427,7 +427,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
         const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
-        if (!quoteResponseBody) { 
+        if (!quoteResponseBody) {
             this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();
         }
@@ -498,7 +498,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         const res = await this.nbmClient.getKyc({
             account_number: transfer.payer.payerId
         });
-        
+
         return {
             'homeTransactionId': randomUUID(),
             'from': {
@@ -506,7 +506,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idValue': transfer.payer.payerId,
                 'fspId': this.cbsConfig.FSP_ID,
                 "displayName": `${res.data.account_number}`,
-                
+
                 "merchantClassificationCode": "123",
                 extensionList: this.getOutboundTransferExtensionList(transfer)
             },
@@ -541,14 +541,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
         ];
     }
-    
+
     async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps} `);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId);
+        const res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId); //todo: implement better error handling logic 
         return res.data;
     }
 }

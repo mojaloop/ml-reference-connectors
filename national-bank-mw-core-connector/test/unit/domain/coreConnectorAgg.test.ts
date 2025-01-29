@@ -23,8 +23,6 @@
  --------------
  **********/
 
- import axios from 'axios';
- import MockAdapter from 'axios-mock-adapter';
  
  import { CoreConnectorAggregate, } from '../../../src/domain';
  import {
@@ -40,12 +38,13 @@
      transferRequestDto,
      quoteRequestDto, 
      sendMoneyDTO, 
-     transferPatchNotificationRequestDto, 
+     transferPatchNotificationRequestDto,
+     updateSendMoneyDTO,
+     updateMerchantPaymentRequestDTO, 
     
  } from '../../fixtures';
  import { randomUUID } from 'crypto';
  
- const mockAxios = new MockAdapter(axios);
  const logger = loggerFactory({ context: 'ccAgg tests' });
  const NBMConfig = config.get("nbm");
  const SDK_URL = 'http://localhost:4040';
@@ -67,7 +66,6 @@
     let sdkClient: ISDKClient;
     
     beforeEach(() => {
-        mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
         nbmClient = NBMClientFactory.createClient({ NBMConfig, httpClient, logger });
@@ -139,7 +137,7 @@
             const res = await ccAggregate.receiveTransfer(transferRequestPayload);
 
             // Assert
-            expect(res.transferState).toEqual("RECEIVED");
+            expect(res.transferState).toEqual("RESERVED");
         });
 
         test("Transfer Patch notification should credit the customer's account if request body is valid", async () => {
@@ -221,18 +219,18 @@
             expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
         });
 
-        // test("Update Send Money should trigger a request to pay using NBM client", async () => {
-        //     // Arrange
-        //     const updateSendMoneyPayload = updateSendMoneyDTO(true);
-        //     nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-        //     const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+        test("Update Send Money should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({})
+            const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
 
-        //     // Act
-        //     const res = await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
+            // Act
+            await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
 
-        //     // Assert
-        //     expect(collectMoney).toHaveBeenCalled();
-        // });
+            // Assert
+            expect(updateTransferSpy).toHaveBeenCalled();
+        });
     });
 
     describe("Merchant Core Connector Aggregate Tests", () => {
@@ -273,18 +271,18 @@
             expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
         });
 
-        // test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
-        //     // Arrange
-        //     const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(1000, true,);
-        //     nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-        //     const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+        test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({})
+            const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
 
-        //     // Act
-        //     const res = await ccAggregate.updateSendMoney(updateMerchantPaymentPayload, randomUUID());
+            // Act
+            await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
 
-        //     // Assert
-        //     expect(collectMoney).toHaveBeenCalled();
-        // });
+            // Assert
+            expect(updateTransferSpy).toHaveBeenCalled();
+        });
 
         
     });
