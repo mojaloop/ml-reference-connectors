@@ -132,7 +132,7 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'FSP_ID',
         },
-        LEI:{
+        LEI: {
             doc: 'Legal Entity Identifier',
             format: String,
             default: null, // required

@@ -13,14 +13,21 @@ export enum IdType {
     ALIAS = 'ALIAS',
 }
 
-export type TCBSClientFactoryDeps = {
-    cbsConfig: TCBSConfig;
+export enum PartyType {
+    CONSUMER = 'CONSUMER',
+    AGENT = 'AGENT',
+    BUSINESS = 'BUSINESS',
+    DEVICE = 'DEVICE',
+}
+
+export type TNBMClientFactoryDeps = {
+    NBMConfig: TNBMConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
 }
 
-export type TCBSConfig = {
-    CBS_NAME: string;
+export type TNBMConfig = {
+    NBM_NAME: string;
     DFSP_BASE_URL: string;
     CLIENT_ID: string;
     CLIENT_SECRET: string;
@@ -32,25 +39,35 @@ export type TCBSConfig = {
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string
 }
 
 
-export type TCbsSendMoneyRequest = {
-    "homeTransactionId": string;
-    "payeeId": string;
-    "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
-    "transactionDescription": string;
-    "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+export type TNBMSendMoneyRequest = {
+    homeTransactionId: string;
+    payeeId: string;
+    payeeIdType: components["schemas"]["PartyIdType"];
+    sendAmount: string;
+    sendCurrency: components['schemas']['Currency'];
+    receiveCurrency: components['schemas']['Currency'];
+    transactionDescription: string;
+    transactionType: components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
 }
 
-export type TCbsSendMoneyResponse = {
+
+
+export type TNBMSendMoneyResponse = {
     "payeeDetails": {
         "idType": string;
         "idValue": string;
@@ -67,11 +84,10 @@ export type TCbsSendMoneyResponse = {
 }
 
 
-export type TCBSUpdateSendMoneyRequest = {
+export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
-    "msisdn": string;
-    "amount": string;
 }
+
 
 export type TCallbackRequest = {
     "transaction": {
@@ -83,47 +99,33 @@ export type TCallbackRequest = {
 }
 
 export type TGetKycArgs = {
-    msisdn: string;
-
+    account_number: string;
 }
 
-export type TCbsKycResponse = {
+export type TNBMKycResponse = {
     "data": {
-        "first_name": string;
-        "grade": string;
-        "is_barred": boolean;
-        "is_pin_set": boolean;
-        "last_name": string;
-        "msisdn": string;
-        "dob": string;
-        "account_status": string;
-        "nationatility": string;
-        "id_number": string;
-        "registration": {
-            "status": string
-        }
+        "account_number": string;
+        "customer_number": string;
+        "category": string;
+        "branch": string;
+        "currency": string;
+        "locked_amount": string;
+        "limit_amound": string;
     };
-    "status": {
-        "code": string;
-        "message": string;
-        "result_code": string;
-        "success": boolean
-    }
+    "message": string
 }
-
+3;
 export type TGetTokenArgs = {
-    client_id: string;
-    client_secret: string;
-    grant_type: string;
+    clientId: string;
+    clientSecret: string;
 }
 
 export type TGetTokenResponse = {
     "access_token": string;
     "expires_in": string;
-    "token_type": string
 }
 
-export type TCbsDisbursementRequestBody = {
+export type TNBMDisbursementRequestBody = {
     "payee": {
         "msisdn": string,
         "wallet_type": string,
@@ -137,11 +139,10 @@ export type TCbsDisbursementRequestBody = {
     }
 }
 
-export type TCbsDisbursementResponse = {
+export type TNBMDisbursementResponse = {
     "data": {
         "transaction": {
             "reference_id": string,
-            "airtel_money_id": string,
             "id": string,
             "status": string,
             "message": string,
@@ -155,44 +156,28 @@ export type TCbsDisbursementResponse = {
     }
 }
 
-export type TCbsCollectMoneyRequest = {
-    "reference": string;
-    "subscriber": {
-        "country": string;
-        "currency": string;
-        "msisdn": string;
-    },
-    "transaction": {
-        "amount": number;
-        "country": string;
-        "currency": string;
-        "id": string;
-    }
+export type TNBMCollectMoneyRequest = { 
+    "amount": number,
+    "description": string,
+    "reference": string,
+    "credit_account": string
+    "currency": string
 }
 
-export type TCbsCollectMoneyResponse = {
+export type TNBMCollectMoneyResponse = {
+    "message": string,
     "data": {
-        "transaction": {
-            "id": string;
-            "status": string;
-        }
-    },
-    "status": {
-        "code": string;
-        "message": string;
-        "result_code": string;
-        "response_code": string;
-        "success": boolean;
-    }
+        "reference_": string,
+}
 }
 
-export type TCbsRefundMoneyRequest = {
+export type TNBMRefundMoneyRequest = {
     "transaction": {
         "airtel_money_id": string;
     }
 }
 
-export type TCbsRefundMoneyResponse = {
+export type TNBMRefundMoneyResponse = {
     "data": {
         "transaction": {
             "airtel_money_id": string;
@@ -207,13 +192,26 @@ export type TCbsRefundMoneyResponse = {
     }
 }
 
-export interface ICbsClient {
-    cbsConfig: TCBSConfig;
+export type TNBMTransactionResponse = {
+    success: boolean;
+    message: string;
+    transactionId: string;
+    debitAccountId: string;
+    creditAccountId: string;
+    amount: number;
+    status: "debited" | "credited";
+    timestamp: string;
+  };
+
+
+export interface INBMClient {
+    NBMConfig: TNBMConfig;
     httpClient: IHTTPClient;
     logger: ILogger;
-    getKyc(deps: TGetKycArgs): Promise<TCbsKycResponse>;
+    getKyc(deps: TGetKycArgs): Promise<TNBMKycResponse>;
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
-    sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse>;
-    collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse>;
-    refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse>;
+    sendMoney(deps: TNBMDisbursementRequestBody): Promise<TNBMDisbursementResponse>;
+    collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse>;
+    refundMoney(deps: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse>;
+    mockCollectMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse>
 }

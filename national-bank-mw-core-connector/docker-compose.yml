@@ -1,4 +1,4 @@
-version: "3.8"
+
 networks:
   mojaloop-net:
     name: mojaloop-net
@@ -15,3 +15,5 @@ services:
     ports:
       - "3003:3003"
       - "3004:3004"
+  
+  
