@@ -16,7 +16,7 @@ sequenceDiagram
   Alt if Checks fail
   CC-->>DFSP Customer App: Response 400
   End
-  CC->>ML Connector: POST /transfer /{}
+  CC->>ML Connector: POST /transfer /{amountType=RECEIVE}
   ML Connector-->>CC: Response
   CC->> CC: Check Response
   Alt if Checks fail

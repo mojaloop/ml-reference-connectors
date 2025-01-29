@@ -1870,6 +1870,7 @@ components:
         - ACCOUNT_ID
         - IBAN
         - ALIAS
+        - ACCOUNT_NO
       description: >-
         Below are the allowed values for the enumeration.
 

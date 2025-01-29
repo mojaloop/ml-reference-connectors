@@ -26,13 +26,13 @@
  ******/
 'use strict';
 
-import { CBSClient } from './CBSClient';
-import { TCBSClientFactoryDeps } from './types';
+import { NBMClient } from './CBSClient';
+import { TNBMClientFactoryDeps } from './types';
 
-export class CBSClientFactory {
-    static createClient(cbsClientfactoryDeps: TCBSClientFactoryDeps) {
-        return new CBSClient(
-            cbsClientfactoryDeps.cbsConfig,
+export class NBMClientFactory {
+    static createClient(cbsClientfactoryDeps: TNBMClientFactoryDeps) {
+        return new NBMClient(
+            cbsClientfactoryDeps.NBMConfig,
             cbsClientfactoryDeps.httpClient,
             cbsClientfactoryDeps.logger
         );

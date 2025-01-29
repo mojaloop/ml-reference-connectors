@@ -90,7 +90,7 @@
           "quoteResponse": {
             "body": {
               "transferAmount": {
-                "currency": "AED",
+                "currency": "MWK",
                 "amount": "123.45"
               },
               "payeeReceiveAmount": {

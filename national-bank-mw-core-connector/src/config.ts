@@ -1,6 +1,6 @@
-import "dotenv/config";
+import 'dotenv/config';
 import Convict from 'convict';
-import { TCBSConfig } from "./domain/CBSClient";
+import { TNBMConfig } from './domain/CBSClient';
 
 interface IConfigSchema {
     server: {
@@ -13,8 +13,8 @@ interface IConfigSchema {
     };
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
-    }
-    cbs:TCBSConfig;
+    };
+    nbm: TNBMConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -64,86 +64,92 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    cbs:{
-        CBS_NAME: {
+    nbm: {
+        NBM_NAME: {
             doc: 'Name of the DFSP',
             format: String,
             default: null, // required
             env: 'CBS_NAME',
         },
-        DFSP_BASE_URL:{
+        DFSP_BASE_URL: {
             doc: 'API Base URL',
             format: String,
             default: null, // required
             env: 'DFSP_BASE_URL',
         },
-        CLIENT_ID:{
+        CLIENT_ID: {
             doc: 'Client ID for api user',
             format: String,
             default: null, // required
             env: 'CLIENT_ID',
         },
-        CLIENT_SECRET:{
+        CLIENT_SECRET: {
             doc: 'Client Secret for api user',
             format: String,
             default: null, // required
             env: 'CLIENT_SECRET',
         },
-        GRANT_TYPE:{
+        GRANT_TYPE: {
             doc: 'Airtel Grant Type',
             format: String,
             default: null, // required
             env: 'GRANT_TYPE',
         },
-        X_COUNTRY:{
+        X_COUNTRY: {
             doc: 'Country',
             format: String,
             default: null, // required
             env: 'X_COUNTRY',
         },
-        X_CURRENCY:{
+        X_CURRENCY: {
             doc: 'Currency',
             format: String,
             default: null, // required
             env: 'X_CURRENCY',
         },
-        SUPPORTED_ID_TYPE:{
+        SUPPORTED_ID_TYPE: {
             doc: 'Supported Id Type',
             format: String,
             default: null, // required
             env: 'SUPPORTED_ID_TYPE',
         },
-        SENDING_SERVICE_CHARGE:{
+        SENDING_SERVICE_CHARGE: {
             doc: 'Charge for sending money to customer account',
             format: String,
             default: null, // required
             env: 'SENDING_SERVICE_CHARGE',
         },
-        RECEIVING_SERVICE_CHARGE:{
+        RECEIVING_SERVICE_CHARGE: {
             doc: 'Charge for collecting money from customer account',
             format: String,
             default: null, // required
             env: 'RECEIVING_SERVICE_CHARGE',
         },
-        EXPIRATION_DURATION:{
+        EXPIRATION_DURATION: {
             doc: 'Quote expiration duration',
             format: String,
             default: null, // required
             env: 'EXPIRATION_DURATION',
         },
-        AIRTEL_PIN:{
+        AIRTEL_PIN: {
             doc: 'Airtel disbursement PIN',
             format: String,
             default: null, // required
             env: 'AIRTEL_PIN',
         },
-        FSP_ID:{
+        FSP_ID: {
             doc: 'FSP Identifier',
             format: String,
             default: null, // required
             env: 'FSP_ID',
-        }
-    }
+        },
+        LEI: {
+            doc: 'Legal Entity Identifier',
+            format: String,
+            default: null, // required
+            env: 'LEI',
+        },
+    },
 });
 
 config.validate({ allowed: 'strict' });
