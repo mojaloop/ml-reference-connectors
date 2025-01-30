@@ -1,3 +1,5 @@
+# Proposed Customer Journey for TNM Malawi Customers
+
 ```mermaid
 sequenceDiagram
   autonumber
@@ -25,9 +27,9 @@ sequenceDiagram
   
   Alt If payment successful
 
-    USSD System-->>Customer: "Transfer successful! Transaction ID: 123456"
+    USSD System-->>Customer: "Transfer successful! Receipt Number: AGC00B5MCA"
   Else If payment fails
     
-    USSD System-->>Customer: "Transfer failed. Please try again later."
+    USSD System-->>Customer: "Transfer failed." [Show reason for failure]
   End
 ```
