@@ -1,137 +1,140 @@
-import { TUpdateTransferDeps } from '../src/domain/SDKClient';
-import {TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest, TFineractGetAccountResponse, TFineractTransactionResponse } from '../src/domain/CBSClient';
+import { TSDKOutboundTransferRequest, TSDKOutboundTransferResponse, } from '../src/domain/SDKClient';
+import { TAirtelSendMoneyRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest} from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
-import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest } from 'src/domain/interfaces/types';
+import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
+import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
-type TransferAcceptInputDto = {
-    fineractAccountId?: number;
-    totalAmount?: number;
-    sdkTransferId?: number;
-};
-
-
-export const transferAcceptDto = ({
-    fineractAccountId = 1,
-    totalAmount = 123.45,
-    sdkTransferId = 999,
-}: TransferAcceptInputDto = {}): TUpdateTransferDeps =>
-    ({
-        fineractTransaction: {
-            fineractAccountId,
-            totalAmount,
-            routingCode: 'routingCode',
-            receiptNumber: 'receiptNumber',
-            bankNumber: 'bankNumber',
+export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
+  statusCode: 200,
+  data: {
+    homeTransactionId: crypto.randomUUID(),
+    from: {
+      idType: "MSISDN",
+      idValue: idValue,
+      supportedCurrencies: [
+        'ZMW'
+      ]
+    },
+    to: {
+      idType: "MSISDN",
+      idValue: idValue,
+      supportedCurrencies: [
+        'MWK'
+      ]
+    },
+    amountType: "SEND",
+    currency: "ZMW",
+    amount: "1000",
+    transactionType: "TRANSFER",
+    currentState: currentState,
+    "quoteResponse": {
+      "body": {
+        "transferAmount": {
+          "currency": "MWK",
+          "amount": "1000"
         },
-        sdkTransferId,
-    }) as const;
-
-// todo: make it configurable, add all required fields
-export const fineractGetAccountResponseDto = (): Partial<TFineractGetAccountResponse> =>
-    ({
-        id: 'id',
-        accountNo: 'accountNo',
-        clientId: 123,
-        clientName: 'clientName',
-    }) as const;
-
-// todo: make it configurable,
-export const fineractTransactionResponseDto = (): TFineractTransactionResponse =>
-    ({
-        officeId: 1,
-        clientId: 2,
-        savingsId: 3,
-        resourceId: 4,
-        changes: {
-            accountNumber: 'accountNumber',
-            routingCode: 'routingCode',
-            receiptNumber: 'receiptNumber',
-            bankNumber: 'bankNumber',
+        "payeeReceiveAmount": {
+          "currency": "MWK",
+          "amount": "1000"
         },
-    }) as const;
-
-export const fineractLookUpPartyResponseDto = () =>
-    ({
-        displayName: 'Dove Love',
-        firstname: 'Dove',
-        lastname: 'Love',
-    }) as const;
-
-export const fineractVerifyBeneficiaryResponseDto = () =>
-    ({
-        currency: 'UGX',
-        amount: '100',
-        quoteId: crypto.randomUUID(),
-        transactionId: crypto.randomUUID(),
-    }) as const;
-
-export const fineractGetAccountIdResponseDto = () => ({
-    accountId: 1,
+        "payeeFspFee": {
+          "currency": "MWK",
+          "amount": "0"
+        },
+        "payeeFspCommission": {
+          "currency": "AED",
+          "amount": "0"
+        },
+        "expiration": "2016-05-24T08:38:08.699-04:00",
+        "geoCode": {
+          "latitude": "+45.4215",
+          "longitude": "+75.6972"
+        },
+        "ilpPacket": "AYIBgQAAAAAAAASwNGxldmVsb25lLmRmc3AxLm1lci45T2RTOF81MDdqUUZERmZlakgyOVc4bXFmNEpLMHlGTFGCAUBQU0svMS4wCk5vbmNlOiB1SXlweUYzY3pYSXBFdzVVc05TYWh3CkVuY3J5cHRpb246IG5vbmUKUGF5bWVudC1JZDogMTMyMzZhM2ItOGZhOC00MTYzLTg0NDctNGMzZWQzZGE5OGE3CgpDb250ZW50LUxlbmd0aDogMTM1CkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbgpTZW5kZXItSWRlbnRpZmllcjogOTI4MDYzOTEKCiJ7XCJmZWVcIjowLFwidHJhbnNmZXJDb2RlXCI6XCJpbnZvaWNlXCIsXCJkZWJpdE5hbWVcIjpcImFsaWNlIGNvb3BlclwiLFwiY3JlZGl0TmFtZVwiOlwibWVyIGNoYW50XCIsXCJkZWJpdElkZW50aWZpZXJcIjpcIjkyODA2MzkxXCJ9IgA",
+        "condition": "string",
+        "extensionList": {
+          "extension": [
+            {
+              "key": "string",
+              "value": "string"
+            }
+          ]
+        }
+      },
+      "headers": {}
+    },
+    transferId: crypto.randomUUID(),
+    "fxQuotesResponse": {
+      "body": {
+        "homeTransactionId": "string",
+        "condition": "string",
+        "conversionTerms": {
+          "conversionId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "determiningTransferId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "initiatingFsp": "string",
+          "counterPartyFsp": "string",
+          "amountType": "RECEIVE",
+          "sourceAmount": {
+            "currency": "ZMW",
+            "amount": "1000"
+          },
+          "targetAmount": {
+            "currency": "MWK",
+            "amount": "1000"
+          },
+          "expiration": "2016-05-24T08:38:08.699-04:00",
+          "charges": [
+            {
+              "chargeType": "string",
+              "sourceAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              },
+              "targetAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              }
+            }
+          ],
+          "extensionList": {
+            "extension": [
+              {
+                "key": "string",
+                "value": "string"
+              }
+            ]
+          }
+        }
+      },
+      "headers": {}
+    }
+  }
 });
 
-export const fineractReceiveTransferResponseDto = () => true;
-
-export const fineractGetSavingsAccountResponseDto = (
-    credit: boolean,
-    debit: boolean,
-    balance: number,
-    active: boolean,
-) => ({
-    status: {
-        active: active,
-    },
-    subStatus: {
-        blockCredit: credit,
-        blockDebit: debit,
-    },
-    summary: {
-        availableBalance: balance,
-    },
-});
-
-export const sdkInitiateTransferResponseDto = (
-    payeeFspCommissionAmount: string | undefined,
-    payeeFspFeeAmount: string | undefined,
-) => ({
-    quoteResponse: {
-        body: {
-            payeeFspCommission: {
-                amount: payeeFspCommissionAmount,
-            },
-            payeeFspFee: {
-                amount: payeeFspFeeAmount,
-            },
-        },
-    },
-});
-
-export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
-
-
-export const transferPatchNotificationRequestDto= (currentState: string, partyIdType:string, partyIdentifier:string, amount:string): TtransferPatchNotificationRequest =>({
+export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string): TtransferPatchNotificationRequest => ({
   //@ts-expect-error currentState var to of type
-  currentState: currentState,  
+  currentState: currentState,
   direction: "INBOUND",
   finalNotification: {
-    completedTimestamp: "6966-12-29T00:03:24.449Z", 
+    completedTimestamp: "6966-12-29T00:03:24.449Z",
     extensionList: [
       {
         key: "string",
         value: "string"
       }
     ],
-    transferState: "RECEIVED" 
+    transferState: "RECEIVED"
   },
   fulfil: {
     body: {},
     headers: {}
   },
-  initiatedTimestamp: "1197-12-29T23:21:38.743Z", 
+  initiatedTimestamp: "1197-12-29T23:21:38.743Z",
   lastError: {
-    httpStatusCode: 0, 
+    httpStatusCode: 0,
     mojaloopError: {
       errorInformation: {
-        errorCode: "5100", 
+        errorCode: "5100",
         errorDescription: "string",
         extensionList: {
           extension: [
@@ -187,11 +190,11 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
         supportedCurrencies: undefined
       },
       amountType: 'SEND',
-      amount:{
+      amount: {
         amount: amount,
-        currency :"ZMW"
+        currency: "ZMW"
       },
-      transactionType: { 
+      transactionType: {
         scenario: 'TRANSFER',
         subScenario: undefined,
         initiator: 'PAYER',
@@ -210,14 +213,20 @@ export const transferPatchNotificationRequestDto= (currentState: string, partyId
 });
 
 
-export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978980797", amount: string = "100"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "971938765", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
 
   currency: "ZMW",
   from: {
     idType: "MSISDN",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -225,88 +234,135 @@ export const quoteRequestDto =(idType: string = "MSISDN", idValue: string = "978
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
-  transactionType: "TRANSFER"
+  transactionType: "TRANSFER",
+  extensionList: [
+    {
+      "key": "testkey",
+      "value": "TestVal"
+    }
+  ]
 });
 
 
 export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
-amount: amount,
-amountType: "SEND",
-currency: "ZMW",
-from: {
-  //@ts-expect-error partyIdType var not of type IdType
-  idType: idType,
-  idValue: idValue
-},
-to:{
-  //@ts-expect-error partyIdType var not of type IdType
-  idType: idType,
-  idValue: idValue
-},
-ilpPacket: {
-  data: {
-    amount: {
-      amount: amount,
-      currency: "ZMW",
-    },
-    payee: {
-      partyIdInfo: {
-        //@ts-expect-error partyIdType var not of type IdType
-        partyIdType: idType,
-        partyIdentifier: idValue,
-        fspId: "airtel-123-qwerty",
+  amount: amount,
+  amountType: "SEND",
+  currency: "ZMW",
+  from: {
+    //@ts-expect-error partyIdType var not of type IdType
+    idType: idType,
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
+  },
+  to: {
+    //@ts-expect-error partyIdType var not of type IdType
+    idType: idType,
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
+  },
+  ilpPacket: {
+    data: {
+      amount: {
+        amount: amount,
+        currency: "ZMW",
       },
-      merchantClassificationCode: "1234",
-      name: "Payee Name",
-      personalInfo: {
-        complexName: {
-          firstName: "PayeeFirstName", 
-          lastName: "PayeeLastName",  
+      payee: {
+        partyIdInfo: {
+          //@ts-expect-error partyIdType var not of type IdType
+          partyIdType: idType,
+          partyIdentifier: idValue,
+          fspId: "airtel-123-qwerty",
         },
-        dateOfBirth: "YYYY-MM-DD", 
+        merchantClassificationCode: "1234",
+        name: "Payee Name",
+        personalInfo: {
+          complexName: {
+            firstName: "PayeeFirstName",
+            lastName: "PayeeLastName",
+          },
+          dateOfBirth: "YYYY-MM-DD",
+        },
+        supportedCurrencies: ["ZMW"],
       },
-      supportedCurrencies: ["ZMW"],
-    },
-    payer: {
-      //@ts-expect-error partyIdType var not of type IdType
-      idType: idType,
-      idValue: idValue
-    },
-    quoteId: crypto.randomUUID(), 
-    transactionId: crypto.randomUUID(),
-    transactionType: {
-      initiator: "PAYER",
-      initiatorType: "CONSUMER",
-      scenario: "TRANSFER",
-      subScenario: "LOCALLY_DEFINED_SUBSCENARIO",
+      payer: {
+        //@ts-expect-error partyIdType var not of type IdType
+        idType: idType,
+        idValue: idValue
+      },
+      quoteId: crypto.randomUUID(),
+      transactionId: crypto.randomUUID(),
+      transactionType: {
+        initiator: "PAYER",
+        initiatorType: "CONSUMER",
+        scenario: "TRANSFER",
+        subScenario: "LOCALLY_DEFINED_SUBSCENARIO",
+      },
     },
   },
-},
-note: "Transfer Quote Request",
+  note: "Transfer Quote Request",
+  "quote": {
+    "expiration": "2024-10-15T13:17:57.742Z",
+    "payeeFspCommissionAmount": "0",
+    "payeeFspCommissionAmountCurrency": "MWK",
+    "payeeFspFeeAmount": "3",
+    "payeeFspFeeAmountCurrency": "MWK",
+    "payeeReceiveAmount": "100",
+    "payeeReceiveAmountCurrency": "MWK",
+    "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
+    "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
+    "transferAmount": "103",
+    "transferAmountCurrency": "MWK"
+  },
 });
+
 
 
 // Send Money DTO
 
-export const sendMoneyDTO =(idValue:string, amount:string,): TAirtelSendMoneyRequest => ( {
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amountType: "RECEIVE" | "SEND"): TAirtelSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
+  "amountType": amountType,
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
   "sendCurrency": "ZMW",
   "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
-  "transactionType":"TRANSFER",
-  "payer": "Elijah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "Elijah Okello",
+    payerId: idValue,
+    DateAndPlaceOfBirth: {
+      BirthDt: "1985-04-12",
+      PrvcOfBirth: "Lusaka",
+      CityOfBirth: "Lusaka",
+      CtryOfBirth: "Lusaka",
+    },
+  },
+
 });
 
 
-export const updateSendMoneyDTO =(amount:number, acceptQuote:boolean, idValue:string) :TAirtelUpdateSendMoneyRequest =>({
+export const updateSendMoneyMerchantPaymentDTO = (amount: number, acceptQuote: boolean, idValue: string): TAirtelUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "msisdn": idValue,
   "amount": amount.toString()
@@ -319,4 +375,28 @@ export const callbackPayloadDto = (amount: string, transferStatus: string): TCal
     "status_code": transferStatus,
     "airtel_money_id": "MP210603.1234.L06941"
   }
+});
+
+
+export const tSDKOutboundTransferRequestDTO = (): TSDKOutboundTransferRequest => ({
+  "amount": "1000",
+  "amountType": "SEND",
+  "currency": "ZMW",
+  "from": {
+    "displayName": "Chimweso Faith Mukoko Test1",
+    "extensionList": [],
+    "firstName": "Chimweso Faith Mukoko",
+    "fspId": "airtelzambia",
+    "idType": "MSISDN",
+    "idValue": "971938765",
+    "lastName": "Test1",
+    "merchantClassificationCode": "123",
+    "middleName": "Chimweso Faith Mukoko"
+  },
+  "homeTransactionId": "4ba7d0ba-bcaf-474f-b0e2-63cad27b0865",
+  "to": {
+    "idType": "MSISDN",
+    "idValue": "07676767676"
+  },
+  "transactionType": "TRANSFER"
 });

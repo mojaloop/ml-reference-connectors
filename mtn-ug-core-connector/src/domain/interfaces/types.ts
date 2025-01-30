@@ -32,7 +32,7 @@ import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
-import { TMTNUpdateSendMoneyRequest, TMTNTransactionEnquiryResponse, TMTNCollectMoneyResponse } from '../CBSClient';
+import { TMTNUpdateSendMoneyRequest, TMTNTransactionEnquiryResponse, TMTNCollectMoneyResponse, TMTNKycResponse } from '../CBSClient';
 import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 
 
@@ -63,6 +63,18 @@ export type TRequestOptions = {
     headers?: unknown | undefined;
 };
 
+
+export type  TPayeeExtensionListEntry = {
+    key?: string;
+    value?: string;
+}
+
+export type TPayerExtensionListEntry = {
+    key: string;
+    value: string;
+}
+
+
 export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse;
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
@@ -70,7 +82,7 @@ export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferRe
 export type Payee = {
     dateOfBirth?: string;
     displayName: string;
-    extensionList?: unknown[];
+    extensionList?: TPayeeExtensionListEntry[];
     firstName: string;
     fspId?: string;
     idSubValue?: string;
@@ -130,6 +142,13 @@ export type TtransferPatchNotificationRequest = {
     };
     transferId?: components['schemas']['transferId'];
 };
+
+export type TGetQuotesDeps = {
+    res: TMTNKycResponse;
+    fees: number;
+    expiration: string;
+    quoteRequest: TQuoteRequest
+}
 
 export type TupdateSendMoneyDeps = {
     transferAccept: TMTNUpdateSendMoneyRequest,

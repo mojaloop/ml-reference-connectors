@@ -51,4 +51,8 @@ export class SDKClientError extends BasicError {
             mlCode: '3200',
         });
     }
+
+    static genericQuoteValidationError(message: string, options?: ErrorOptions) {
+        return new SDKClientError(message, options);
+    }
 }
