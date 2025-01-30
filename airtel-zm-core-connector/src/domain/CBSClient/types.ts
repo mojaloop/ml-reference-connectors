@@ -64,7 +64,6 @@ export type TFineractConfig = {
     FINERACT_PAYMENT_TYPE_ID: string;
 };
 
-
 export enum FineractLookupStage {
     SEARCH = 'search',
     SAVINGSACCOUNT = 'savingsaccount',
@@ -329,7 +328,8 @@ export type TAirtelConfig = {
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string;
 }
 
 export type TGetKycArgs = {
@@ -407,6 +407,33 @@ export type TAirtelDisbursementResponse = {
 }
 
 
+//  Send Money to CC 
+
+// Request coming from Airtel
+export type TAirtelSendMoneyRequest = {
+    "homeTransactionId": string;
+    "amountType": "RECEIVE" | "SEND",
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendAmount": string;
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveCurrency": string;
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
+}
+
+//  Response sent to Airtel
+
 export type TAirtelSendMoneyResponse = {
     "payeeDetails": {
         "idType": string;
@@ -423,26 +450,23 @@ export type TAirtelSendMoneyResponse = {
 }
 
 
-export type TAirtelSendMoneyRequest = {
-    "homeTransactionId": string;
-    "payeeId": string;
-    "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
-    "transactionDescription": string;
-    "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
-}
+// Merchant Types (Same types as Payer Send Money Request
 
+export type TAirtelMerchantPaymentRequest = TAirtelSendMoneyRequest
+
+export type TAirtelMerchantPaymentResponse = TAirtelSendMoneyResponse
+
+
+//  Update Send Money Request( Has no response body(returns 200))
 
 export type TAirtelUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
     "amount": string;
 }
+
+//  Update Merchant Payment Request
+export type TAirtelUpdateMerchantPaymentRequest = TAirtelUpdateSendMoneyRequest;
 
 export type TAirtelCollectMoneyRequest = {
     "reference": string;

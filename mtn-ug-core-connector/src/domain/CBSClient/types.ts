@@ -50,7 +50,8 @@ export type TCBSConfig = {
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
-    FSP_ID:string
+    FSP_ID:string;
+    LEI: string;
 }
 
 export type TMTNClientFactoryDeps = {
@@ -75,6 +76,8 @@ export type TMTNConfig = {
     MTN_TARGET_ENVIRONMENT: string;
     TRANSACTION_ENQUIRY_WAIT_TIME: number;
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
+    MTN_ENV: string;
+    LEI: string;
 }
 
 
@@ -168,19 +171,34 @@ export type TMTNUpdateSendMoneyRequest = {
 }
 
 
+export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
+
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
+    "sendAmount": string;  "amountType": "RECEIVE" | "SEND",
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": string;
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        };
+    };
 }
+
+
+export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest
+
+export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
+
 
 export type TMTNCallbackPayload = {
     financialTransactionId: string;
@@ -214,6 +232,7 @@ export type TMTNSendMoneyResponse = {
 export type TMTNCollectMoneyRequest = {
     "amount": string;
     "currency": string;
+    "amountType": "RECEIVE" | "SEND",
     "externalId": string;
     "payer": {
         "partyIdType": string,

@@ -30,7 +30,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TMTNCallbackPayload, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get('server.DFSP_API_SPEC_FILE');
@@ -50,9 +50,11 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
             handlers: {
-                SendMoney: this.initiateTransfer.bind(this),
-                UpdateSendMoney: this.updateInitiatedTransfer.bind(this),
-                Callback: this.callbackHandler.bind(this),
+                sendMoney: this.initiateTransfer.bind(this),
+                sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
+                initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
+                updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
+                callback: this.callbackHandler.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
@@ -95,7 +97,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TMTNSendMoneyRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
-            const result = await this.aggregate.sendTransfer(transfer);
+            const result = await this.aggregate.sendTransfer(transfer,"SEND");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -106,6 +108,30 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const { params } = context.request;
         const transferId = params["transferId"] as string;
         const transferAccept = request.payload as TMTNUpdateSendMoneyRequest;
+        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
+        try {
+            const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept,transferId);
+            return this.handleResponse(updateTransferRes, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const transfer = request.payload as TMTNMerchantPaymentRequest;
+        this.logger.info(`Transfer request ${transfer}`);
+        try {
+            const result = await this.aggregate.sendTransfer(transfer,"RECEIVE");
+            return this.handleResponse(result, h);
+        } catch (error: unknown) {
+            return this.handleError(error, h);
+        }
+    }
+
+    private async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+        const { params } = context.request;
+        const transferId = params["transferId"] as string;
+        const transferAccept = request.payload as TMTNUpdateMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSentTransfer(transferAccept,transferId);

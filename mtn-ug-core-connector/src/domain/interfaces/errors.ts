@@ -53,6 +53,13 @@ export class BasicError extends Error {
 }
 
 export class ValidationError extends BasicError {
+
+    static invalidExtensionListsError(message: string, mlCode: string, httpCode: number) {
+        return new ValidationError(message, {
+            mlCode: mlCode,
+            httpCode: httpCode
+        });
+    }
     static invalidAccountNumberError() {
         return new ValidationError('Account number length is too short', {
             mlCode: '3101',
