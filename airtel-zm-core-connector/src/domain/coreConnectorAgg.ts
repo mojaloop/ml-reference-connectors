@@ -189,7 +189,6 @@ export class CoreConnectorAggregate {
     // Get Quote    --(2.3)
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         const newExtensionList: TPayeeExtensionListEntry[] = [];
-        //todo: check if the correct level of information has been provided.
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
         }
