@@ -506,25 +506,27 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] {
-        return [
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": !!sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt ?  "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": !!sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": !!sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth ? "Not defined"  : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": !!sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth  ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-            }
-        ];
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+        if(sendMoneyRequestPayload.payer.DateAndPlaceOfBirth){
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt 
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                }
+            ];
+        }
     }
 
     async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse> {
