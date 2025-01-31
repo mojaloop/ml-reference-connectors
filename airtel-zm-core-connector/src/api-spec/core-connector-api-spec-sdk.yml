@@ -1,0 +1,774 @@
+openapi: 3.0.3
+info:
+    title: Mifos Core Connector for Mojaloop Connector Backend API
+    version: 0.0.1
+    description: >
+        API Specification for the Airtel Core Connector from the SDK Scheme Adapter
+
+        This API is to be implemented by the DFSP
+    license:
+        name: Apache License Version 2.0, January 2004
+        url: http://www.apache.org/licenses/
+
+paths:
+    /parties/{IdType}/{ID}:
+        get:
+            tags:
+                - Get Parties
+            summary: Perform Account Lookup in Airtel.
+            description: Lookup a party from a remote airtel instance from IBAN
+            operationId: getParties
+            parameters:
+                - name: ID
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                - name: IdType
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: 'Return Party Information'
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PartyInfo'
+                '404':
+                    description: 'Party with MSISDN does not exist in fineract'
+                '500':
+                    description: 'Internal Server Error'
+
+    /quoterequests:
+        post:
+            tags:
+                - Quote Requests
+            summary: Request a quote from airtel for a specified receiveTransfer
+            description: Request a quote for a transaction in airtel
+            operationId: quoteRequests
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/QuoteRequest'
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/QuoteResponse'
+                    description: 'Successful Quote'
+                '400':
+                    description: 'Bad Request'
+                '500':
+                    description: 'Internal Server Error'
+
+    /transfers:
+        post:
+            tags:
+                - Transfer Request
+            summary: Request to make a receiveTransfer from an account from a mojaloop scheme to a airtel account
+            description: Request to make a receiveTransfer
+            operationId: transfers
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/TransferRequest'
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TransferResponse'
+                    description: 'Successful receiveTransfer'
+                '400':
+                    description: 'Bad Request'
+                '500':
+                    description: 'Internal Server Error'
+
+    /transfers/{transferId}:
+        put:
+            tags:
+                - Transfer Request
+            summary: PATCH notification for fulfillment of a transfer
+            description: >-
+                The HTTP request `PUT /transfers/{transferId}` is used to receive
+                notification for transfer being fulfilled when the FSP is a Payee.
+            operationId: updateReceiveTransfer
+            parameters:
+                - name: transferId
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/fulfilNotification'
+            responses:
+                '200':
+                    description: The transfer was completed successfully
+                '500':
+                    description: An error occured while processing the request
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    statusCode:
+                                        type: string
+                                        example: '5000'
+                                    message:
+                                        type: string
+                                        example: "Invalid Quote"
+
+
+components:
+    schemas:
+        transferId:
+            description: A Mojaloop API transfer identifier (UUID).
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+            type: string
+        ExtensionKey:
+            title: ExtensionKey
+            type: string
+            minLength: 1
+            maxLength: 32
+            description: Extension key.
+        ExtensionValue:
+            title: ExtensionValue
+            type: string
+            minLength: 1
+            maxLength: 128
+            description: Extension value.
+        Extension:
+            title: Extension
+            type: object
+            description: Data model for the complex type Extension.
+            properties:
+                key:
+                    $ref: '#/components/schemas/ExtensionKey'
+                value:
+                    $ref: '#/components/schemas/ExtensionValue'
+            required:
+                - key
+                - value
+        ExtensionList:
+            title: ExtensionList
+            type: object
+            description: >-
+                Data model for the complex type ExtensionList. An optional list of
+                extensions, specific to deployment.
+            properties:
+                extension:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Extension'
+                    minItems: 1
+                    maxItems: 16
+                    description: Number of Extension elements.
+            required:
+                - extension
+        ErrorCode:
+            title: ErrorCode
+            type: string
+            pattern: ^[1-9]\d{3}$
+            description: >-
+                The API data type ErrorCode is a JSON String of four characters,
+                consisting of digits only. Negative numbers are not allowed. A leading
+                zero is not allowed. Each error code in the API is a four-digit number,
+                for example, 1234, where the first number (1 in the example) represents
+                the high-level error category, the second number (2 in the example)
+                represents the low-level error category, and the last two numbers (34 in
+                the example) represent the specific error.
+            example: '5100'
+        ErrorDescription:
+            title: ErrorDescription
+            type: string
+            minLength: 1
+            maxLength: 128
+            description: Error description string.
+        ErrorInformation:
+            title: ErrorInformation
+            type: object
+            description: Data model for the complex type ErrorInformation.
+            properties:
+                errorCode:
+                    $ref: '#/components/schemas/ErrorCode'
+                errorDescription:
+                    $ref: '#/components/schemas/ErrorDescription'
+                extensionList:
+                    $ref: '#/components/schemas/ExtensionList'
+            required:
+                - errorCode
+                - errorDescription
+        mojaloopError:
+            type: object
+            properties:
+                errorInformation:
+                    $ref: '#/components/schemas/ErrorInformation'
+        transferError:
+            type: object
+            description: >-
+                This object represents a Mojaloop API error received at any time during
+                the transfer process
+            properties:
+                httpStatusCode:
+                    type: integer
+                    description: >-
+                        The HTTP status code returned to the caller. This is the same as the
+                        actual HTTP status code returned with the response.
+                mojaloopError:
+                    $ref: '#/components/schemas/mojaloopError'
+        extensionItem:
+            properties:
+                key:
+                    maxLength: 32
+                    minLength: 1
+                    type: string
+                value:
+                    maxLength: 128
+                    minLength: 1
+                    type: string
+            type: object
+        extensionList:
+            items:
+                $ref: '#/components/schemas/extensionItem'
+            maxItems: 16
+            minItems: 0
+            type: array
+        timestamp:
+            description: An ISO-8601 formatted timestamp.
+            pattern: >-
+                ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:(\.\d{3}))(?:Z|[+-][01]\d:[0-5]\d)$
+            type: string
+        transferState:
+            description: >
+                Below are the allowed values for the enumeration - RECEIVED DFSP has
+                received the transfer. - RESERVED DFSP has reserved the transfer. -
+                COMMITTED DFSP has successfully performed the transfer. - ABORTED DFSP
+                has aborted the transfer due a rejection or failure to perform the
+                transfer.
+            enum:
+                - RECEIVED
+                - RESERVED
+                - COMMITTED
+                - ABORTED
+            type: string
+        transferStatus:
+            enum:
+                - ERROR_OCCURRED
+                - WAITING_FOR_PARTY_ACCEPTANCE
+                - WAITING_FOR_QUOTE_ACCEPTANCE
+                - COMPLETED
+            type: string
+        fulfilNotification:
+            description: PUT /transfers/{transferId} object.
+            properties:
+                currentState:
+                    $ref: '#/components/schemas/transferStatus'
+                direction:
+                    enum:
+                        - INBOUND
+                    type: string
+                finalNotification:
+                    properties:
+                        completedTimestamp:
+                            $ref: '#/components/schemas/timestamp'
+                        extensionList:
+                            $ref: '#/components/schemas/extensionList'
+                        transferState:
+                            $ref: '#/components/schemas/transferState'
+                    required:
+                        - completedTimestamp
+                        - transferState
+                    type: object
+                fulfil:
+                    properties:
+                        body:
+                            type: object
+                        headers:
+                            type: object
+                    type: object
+                initiatedTimestamp:
+                    $ref: '#/components/schemas/timestamp'
+                lastError:
+                    $ref: '#/components/schemas/transferError'
+                prepare:
+                    properties:
+                        body:
+                            type: object
+                        headers:
+                            type: object
+                    type: object
+                quote:
+                    properties:
+                        fulfilment:
+                            type: string
+                        internalRequest:
+                            type: object
+                        mojaloopResponse:
+                            type: object
+                        request:
+                            type: object
+                        response:
+                            type: object
+                    type: object
+                quoteRequest:
+                    properties:
+                        body:
+                            type: object
+                        headers:
+                            type: object
+                    type: object
+                quoteResponse:
+                    properties:
+                        body:
+                            type: object
+                        headers:
+                            type: object
+                    type: object
+                transferId:
+                    $ref: '#/components/schemas/transferId'
+            title: TransfersIDPatchResponse
+            type: object
+        IdType:
+            type: string
+            enum:
+                - MSISDN
+                - ACCOUNT_NO
+                - EMAIL
+                - PERSONAL_ID
+                - BUSINESS
+                - DEVICE
+                - ACCOUNT_ID
+                - IBAN
+                - ALIAS
+
+        PartyInfo:
+            type: object
+            required:
+                - idType
+                - idValue
+            properties:
+                dateOfBirth:
+                    type: string
+                    example: '8477-05-21'
+                displayName:
+                    type: string
+                extensionList:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: string
+                            value:
+                                type: string
+                firstName:
+                    type: string
+                    description: 'First Name'
+                fspId:
+                    type: string
+                    description: 'FSP Id'
+                idSubValue:
+                    type: string
+                    description: 'Id Sub Value'
+                idType:
+                    $ref: '#/components/schemas/IdType'
+                idValue:
+                    type: string
+                    description: 'ID Value'
+                lastName:
+                    type: string
+                merchantClassificationCode:
+                    type: string
+                middleName:
+                    type: string
+                type:
+                    type: string
+                supportedCurrencies:
+                    type: array
+                    items:
+                        type: string
+                kycInformation:
+                    type: string
+
+        QuoteRequest:
+            type: object
+            required:
+                - amount
+                - amountType
+                - currency
+                - from
+                - initiator
+                - initiatorType
+                - quoteId
+                - to
+                - transactionId
+                - transactionType
+            properties:
+                homeR2PTransactionId:
+                    type: string
+                    example: 'string'
+                amount:
+                    type: string
+                    example: '100'
+                amountType:
+                    type: string
+                    example: 'SEND'
+                currency:
+                    type: string
+                    example: 'ZMW'
+                expiration:
+                    type: string
+                    example: '3177-01-09T02:50:53.508-09:33'
+                extensionList:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: string
+                            value:
+                                type: string
+                feesAmount:
+                    type: string
+                    example: '0'
+                feesCurrency:
+                    type: string
+                    example: 'ZMW'
+                from:
+                    type: object
+                    properties:
+                        dateOfBirth:
+                            type: string
+                            example: '8477-05-21'
+                        displayName:
+                            type: string
+                        extensionList:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    key:
+                                        type: string
+                                    value:
+                                        type: string
+                        firstName:
+                            type: string
+                            description: 'First Name'
+                        fspId:
+                            type: string
+                            description: 'FSP Id'
+                        idSubValue:
+                            type: string
+                            description: 'Id Sub Value'
+                        idType:
+                            $ref: '#/components/schemas/IdType'
+                        idValue:
+                            type: string
+                            description: 'ID Value'
+                        lastName:
+                            type: string
+                        merchantClassificationCode:
+                            type: string
+                        middleName:
+                            type: string
+                        type:
+                            type: string
+                        supportedCurrencies:
+                            type: array
+                            items:
+                                type: string
+                        kycInformation:
+                            type: string
+                geoCode:
+                    type: object
+                    properties:
+                        latitude:
+                            type: string
+                        longitude:
+                            type: string
+                initiator:
+                    type: string
+                    example: 'PAYER'
+                initiatorType:
+                    type: string
+                    example: 'CONSUMER'
+                note:
+                    type: string
+                quoteId:
+                    type: string
+                    example: 'c8fa8773-990c-44a0-9c55-e0b18db6f7e1'
+                subScenario:
+                    type: string
+                to:
+                    type: object
+                    properties:
+                        dateOfBirth:
+                            type: string
+                            example: '8477-05-21'
+                        displayName:
+                            type: string
+                        extensionList:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    key:
+                                        type: string
+                                    value:
+                                        type: string
+                        firstName:
+                            type: string
+                            description: 'First Name'
+                        fspId:
+                            type: string
+                            description: 'FSP Id'
+                        idSubValue:
+                            type: string
+                            description: 'Id Sub Value'
+                        idType:
+                            $ref: '#/components/schemas/IdType'
+                        idValue:
+                            type: string
+                            description: 'ID Value'
+                        lastName:
+                            type: string
+                        merchantClassificationCode:
+                            type: string
+                        middleName:
+                            type: string
+                        type:
+                            type: string
+                        supportedCurrencies:
+                            type: array
+                            items:
+                                type: string
+                        kycInformation:
+                            type: string
+                transactionId:
+                    type: string
+                    example: '7045667d-e774-304c-b550-c0bf3c3c69a1'
+                transactionType:
+                    type: string
+                    example: 'TRANSFER'
+                transactionRequestId:
+                    type: string
+                    example: '2d97299f-708a-1423-a36d-6df4187d513e'
+                converter:
+                    type: string
+                    example: 'converter'
+                currencyConversion:
+                    type: string
+
+        QuoteResponse:
+            type: object
+            properties:
+                expiration:
+                    type: string
+                    example: '3945-08-30T22:03:24.190Z'
+                extensionList:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: string
+                            value:
+                                type: string
+                geoCode:
+                    type: object
+                    properties:
+                        latitude:
+                            type: string
+                        longitude:
+                            type: string
+                payeeFspCommissionAmount:
+                    type: string
+                    example: '72'
+                payeeFspCommissionAmountCurrency:
+                    type: string
+                    example: 'AED'
+                payeeFspFeeAmount:
+                    type: string
+                    example: '0'
+                payeeFspFeeAmountCurrency:
+                    type: string
+                    example: 'AED'
+                payeeReceiveAmount:
+                    type: string
+                    example: '0'
+                payeeReceiveAmountCurrency:
+                    type: string
+                    example: 'AED'
+                quoteId:
+                    type: string
+                    example: '71cee55f-c58a-2a8e-8289-e18a2c80bf48'
+                transactionId:
+                    type: string
+                    example: '2861d780-60f5-5127-a73b-ab0617c00f72'
+                transferAmount:
+                    type: string
+                    example: '0.9'
+                transferAmountCurrency:
+                    type: string
+                    example: 'AED'
+
+        TransferRequest:
+            type: object
+            required:
+                - to
+            properties:
+                homeR2PTransactionId:
+                    type: string
+                    example: 'string'
+                amount:
+                    type: string
+                    example: '0.347'
+                amountType:
+                    type: string
+                    example: 'SEND'
+                currency:
+                    type: string
+                    example: 'AED'
+                from:
+                    $ref: '#/components/schemas/PartyInfo'
+                to:
+                    $ref: '#/components/schemas/PartyInfo'
+                ilpPacket:
+                    type: object
+                    properties:
+                        data:
+                            type: object
+                            properties:
+                                amount:
+                                    type: object
+                                    properties:
+                                        amount:
+                                            type: string
+                                        currency:
+                                            type: string
+                                payee:
+                                    type: object
+                                    properties:
+                                        partyIdInfo:
+                                            type: object
+                                            properties:
+                                                partyIdType:
+                                                    type: string
+                                                partyIdentifier:
+                                                    type: string
+                                payer:
+                                    type: object
+                                    properties:
+                                        partyIdInfo:
+                                            type: object
+                                            properties:
+                                                partyIdType:
+                                                    type: string
+                                                partyIdentifier:
+                                                    type: string
+                                quoteId:
+                                    type: string
+                                transactionId:
+                                    type: string
+                                transactionType:
+                                    type: object
+                                    properties:
+                                        initiator:
+                                            type: string
+                                        initiatorType:
+                                            type: string
+                                        scenario:
+                                            type: string
+                                        subScenario:
+                                            type: string
+                note:
+                    type: string
+                quote:
+                    type: object
+                    properties:
+                        expiration:
+                            type: string
+                            example: '3945-08-30T22:03:24.190Z'
+                        extensionList:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    key:
+                                        type: string
+                                    value:
+                                        type: string
+                        geoCode:
+                            type: object
+                            properties:
+                                latitude:
+                                    type: string
+                                longitude:
+                                    type: string
+                        payeeFspCommissionAmount:
+                            type: string
+                            example: '72'
+                        payeeFspCommissionAmountCurrency:
+                            type: string
+                            example: 'AED'
+                        payeeFspFeeAmount:
+                            type: string
+                            example: '0'
+                        payeeFspFeeAmountCurrency:
+                            type: string
+                            example: 'AED'
+                        payeeReceiveAmount:
+                            type: string
+                            example: '0'
+                        payeeReceiveAmountCurrency:
+                            type: string
+                            example: 'AED'
+                        quoteId:
+                            type: string
+                            example: '71cee55f-c58a-2a8e-8289-e18a2c80bf48'
+                        transactionId:
+                            type: string
+                            example: '2861d780-60f5-5127-a73b-ab0617c00f72'
+                        transferAmount:
+                            type: string
+                            example: '0.9'
+                        transferAmountCurrency:
+                            type: string
+                            example: 'AED'
+                quoteRequestExtensions:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            key:
+                                type: string
+                            value:
+                                type: string
+                subScenario:
+                    type: string
+                transactionType:
+                    type: string
+                transferId:
+                    type: string
+                transactionRequestId:
+                    type: string
+ 
+        TransferResponse:
+            type: object
+            properties:
+                completedTimestamp:
+                    type: string
+                fulfilment:
+                    type: string
+                homeTransactionId:
+                    type: string
+                transferState:
+                    type: string
