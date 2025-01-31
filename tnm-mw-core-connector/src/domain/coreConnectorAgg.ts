@@ -510,19 +510,19 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return [
             {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt === undefined ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
             },
             {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth === undefined ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
             },
             {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth === undefined ? "Not defined"  : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
             },
             {
                 "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth === undefined ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
             }
         ];
     }
