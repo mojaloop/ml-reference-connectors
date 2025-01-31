@@ -54,7 +54,7 @@ export class TNMClient implements ITNMClient {
 
     async refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse> {
         this.logger.info(`Performing refund for receipt number ${deps.receipt_number}`);
-        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.refundMoney}${deps.receipt_number}`;
+        const url = `${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.refundMoney}${deps.receipt_number}`;
 
         try {
             const res = await this.httpClient.post<undefined, TNMRefundMoneyResponse>(url, undefined, {
@@ -76,7 +76,7 @@ export class TNMClient implements ITNMClient {
 
     async collectMoney(deps: TNMInvoiceRequest): Promise<TNMInvoiceResponse>{
         this.logger.info(`Trying to collect money from customer with msisdn ${deps.msisdn}`);
-        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.collectMoney}`;
+        const url = `${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.collectMoney}`;
 
         try{
             const res = await this.httpClient.post<TNMInvoiceRequest,TNMInvoiceResponse>(url,deps,{
@@ -98,7 +98,7 @@ export class TNMClient implements ITNMClient {
 
     async sendMoney(deps: TMakePaymentRequest): Promise<TMakePaymentResponse> {
         this.logger.info(`Trying to send money to customer with number ${deps.msisdn}`);
-        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.makePayments}`;
+        const url = `${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.makePayments}`;
 
         try {
             const res = await this.httpClient.post<TMakePaymentRequest, TMakePaymentResponse>(url, deps, {
@@ -122,7 +122,7 @@ export class TNMClient implements ITNMClient {
 
     async getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse> {
         this.logger.info("Getting Access Token from TNM");
-        const url = `https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.authenticate}`;
+        const url = `${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.authenticate}`;
         this.logger.info(url);
         try {
             const res = await this.httpClient.post<TGetTokenArgs, TGetTokenResponse>(url, deps, {
@@ -142,7 +142,7 @@ export class TNMClient implements ITNMClient {
 
     async getKyc(deps: TGetKycArgs): Promise<TnmValidateResponse> {
         this.logger.info("Getting KYC Information");
-        const res = await this.httpClient.get<TnmValidateResponse>(`https://${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.validate}${deps.msisdn}`, {
+        const res = await this.httpClient.get<TnmValidateResponse>(`${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.validate}${deps.msisdn}`, {
             headers: {
                 ...this.getDefaultHeader(),
                 'Authorization': `Bearer ${await this.getAuthHeader()}`
