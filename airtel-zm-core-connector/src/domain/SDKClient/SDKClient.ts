@@ -62,7 +62,7 @@ export class SDKClient implements ISDKClient {
                     },
                 },
             );
-            this.logger.info("Response from SDK",JSON.stringify(res));
+            this.logger.info("Response from SDK",res);
             if (res.statusCode != 200) {
                 throw new Error(`Invalid response statusCode: ${res.statusCode}`);
             }
@@ -93,7 +93,7 @@ export class SDKClient implements ISDKClient {
                     },
                 },
             );
-            this.logger.info("Response from SDK",JSON.stringify(res));
+            this.logger.info("Response from SDK",res);
             if (res.statusCode != 200) {
                 const { statusCode, data, error } = res;
                 const errMessage = 'SDKClient initiate update receiveTransfer error: failed with wrong statusCode';
