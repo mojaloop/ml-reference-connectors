@@ -40,6 +40,7 @@ import {
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
     TNMUpdateSendMoneyRequest,
+    TnmValidateResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -54,6 +55,7 @@ import {
     THttpResponse,
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
+    Payee,
 } from './interfaces';
 import {
     ISDKClient,
@@ -89,21 +91,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         const lookupRes = await this.tnmClient.getKyc({ msisdn: id });
         const party = {
-            data: {
-                displayName: `${lookupRes.data.full_name}`,
-                firstName: lookupRes.data.full_name,
-                idType: this.tnmClient.tnmConfig.SUPPORTED_ID_TYPE,
-                extensionList: this.getGetPartiesExtensionList(),
-                idValue: id,
-                lastName: lookupRes.data.full_name,
-                middleName: lookupRes.data.full_name,
-                type: PartyType.CONSUMER,
-                kycInformation: `${JSON.stringify(lookupRes)}`,
-            },
+            data: this.getPartiesResponseDTO(lookupRes, id),
             statusCode: 200,
         };
         this.logger.info(`Party found`, { party });
         return party;
+    }
+
+    private getPartiesResponseDTO(lookupRes: TnmValidateResponse, id: string): Payee {
+        return {
+            displayName: `${lookupRes.data.full_name}`,
+            firstName: lookupRes.data.full_name,
+            idType: this.tnmClient.tnmConfig.SUPPORTED_ID_TYPE,
+            extensionList: this.getGetPartiesExtensionList(),
+            idValue: id,
+            lastName: lookupRes.data.full_name,
+            middleName: lookupRes.data.full_name,
+            type: PartyType.CONSUMER,
+            kycInformation: `${JSON.stringify(lookupRes)}`,
+            supportedCurrencies: config.get("tnm.TNM_CURRENCY")
+        }
     }
 
     private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
@@ -127,11 +134,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
 
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
 
         if (quoteRequest.to.idType !== this.IdType) {
@@ -218,11 +226,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            throw ValidationError.invalidExtensionListsError(
-                "ExtensionList check Failed in Payee Transfers",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "ExtensionList check Failed in Payee Transfers",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
         }
 
         if (!this.validateQuote(transfer)) {
@@ -245,7 +254,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateQuote(transfer: TtransferRequest): boolean {
-        
+
         this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
         let result = true;
         if (transfer.amountType === 'SEND') {
@@ -493,7 +502,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.full_name,
                 "middleName": res.data.full_name,
                 "lastName": res.data.full_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer)
+                "extensionList": this.getOutboundTransferExtensionList(transfer),
+                //@ts-expect-error env var has type string and not CURRENCY type
+                "supportedCurrencies": [config.get("tnm.TNM_CURRENCY")]
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -507,15 +518,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
-        if(sendMoneyRequestPayload.payer.DateAndPlaceOfBirth){
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt 
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
                 },
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
                 },
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
