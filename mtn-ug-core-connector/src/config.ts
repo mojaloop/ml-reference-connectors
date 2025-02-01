@@ -200,12 +200,17 @@ const config = Convict<IConfigSchema>({
             default: 'staging',
             env: 'MTN_ENV',
         },
-
         LEI: {
             doc: 'Environment where the lei',
             format: String,
             default: 'staging',
             env: 'LEI',
+        },
+        DFSP_CURRENCY: {
+            doc: 'DFSP Currency Independent of the Sandbox default Currency',
+            format: String,
+            default: null,
+            env: 'DFSP_CURRENCY',
         },
     },
 });

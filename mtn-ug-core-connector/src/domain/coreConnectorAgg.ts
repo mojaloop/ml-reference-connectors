@@ -171,6 +171,7 @@ export class CoreConnectorAggregate {
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
                 extensionList: this.getGetPartiesExtensionList(),
+                supportedCurrencies: config.get("mtn.DFSP_CURRENCY")
             },
             statusCode: 200,
         };
@@ -204,11 +205,12 @@ export class CoreConnectorAggregate {
         }
 
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
         }
 
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
@@ -273,11 +275,12 @@ export class CoreConnectorAggregate {
             throw ValidationError.invalidQuoteError();
         }
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            throw ValidationError.invalidExtensionListsError(
-                "ExtensionList check Failed in Payee Transfers",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
         }
 
         if (!this.validateQuote(transfer)) {
@@ -461,11 +464,13 @@ export class CoreConnectorAggregate {
                 "middleName": res.given_name,
                 "lastName": res.family_name,
                 "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer)
+                "extensionList": this.getOutboundTransferExtensionList(transfer),
+                //@ts-expect-error env var has type string and not CURRENCY type
+                "supportedCurrencies":[config.get("mtn.DFSP_CURRENCY")]
             },
             'to': {
                 'idType': transfer.payeeIdType,
-                'idValue': transfer.payeeId
+                'idValue': transfer.payeeId,
             },
             'amountType': amountType,
             'currency': transfer.sendCurrency,
@@ -475,25 +480,27 @@ export class CoreConnectorAggregate {
     }
 
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] {
-        return [
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-            }
-        ];
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+        if(sendMoneyRequestPayload.payer.DateAndPlaceOfBirth){
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt 
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                }
+            ];
+        }
     }
 
 
