@@ -110,7 +110,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             type: PartyType.CONSUMER,
             kycInformation: `${JSON.stringify(lookupRes)}`,
             supportedCurrencies: config.get("tnm.TNM_CURRENCY")
-        }
+        };
     }
 
     private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {

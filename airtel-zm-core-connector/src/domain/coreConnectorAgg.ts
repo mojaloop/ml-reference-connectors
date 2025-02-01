@@ -113,7 +113,7 @@ export class CoreConnectorAggregate {
             lastName: lookupRes.data.last_name,
             extensionList: this.getGetPartiesExtensionList(),
             supportedCurrencies:config.get("airtel.X_CURRENCY")
-        }
+        };
     }
 
     // Get Extension List DTO to be used in Party Response on Extension List
