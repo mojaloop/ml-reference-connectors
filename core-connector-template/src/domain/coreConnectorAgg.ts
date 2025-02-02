@@ -395,45 +395,65 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     async sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
-        if(amountType === "SEND"){
-            if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-                return await this.checkAndRespondToConversionTerms(res);
-            }
-            if (!this.validateReturnedQuote(res.data)) {
-                throw ValidationError.invalidReturnedQuoteError();
-            }
-        }else{
-            if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-                return await this.checkAndRespondToConversionTerms(res);
-            }
-            if (!this.validateReturnedQuote(res.data)) {
-                throw ValidationError.invalidReturnedQuoteError();
-            }
+        if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
+            return this.handleSendTransferRes(res.data);
+        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+            return this.handleReceiveTransferRes(res.data);
+        } else {
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" })
         }
-        return this.getTCbsSendMoneyResponse(res.data);
     }
 
-    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TCbsSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TCbsSendMoneyResponse> {
+        /*
+            check fxQuote
+            respond to conversion terms
+            receive response from sdk
+            check return quote
+            return normalQuote in required format for customer to review 
+        */
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!this.validateConversionTerms(res.data)) {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        if (!this.validateConversionTerms(res)) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptConversion": false
-            }, res.data.transferId);
+            }, res.transferId);
             throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
         }
-        else {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptConversion": true
-            }, res.data.transferId);
-        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptConversion": true
+        }, res.transferId);
         if (!this.validateReturnedQuote(acceptRes.data)) {
             throw ValidationError.invalidReturnedQuoteError();
+        }
+        return this.getTCbsSendMoneyResponse(acceptRes.data);
+    }
+
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TCbsSendMoneyResponse> {
+        /*
+            check returned normalQuote
+            respond to quote 
+            receive response from sdk
+            check fxQuote
+            return returned quote in format specified for customer to review 
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        if (!this.validateReturnedQuote(res)) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptQuote": false
+            }, res.transferId);
+            throw ValidationError.invalidReturnedQuoteError();
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptQuote": true
+        }, res.transferId);
+        if (!this.validateConversionTerms(acceptRes.data)) {
+            throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
         }
         return this.getTCbsSendMoneyResponse(acceptRes.data);
     }
@@ -628,17 +648,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
                 // perform refund or rollback if payment was successful
-                if(payload.transaction.status_code === "TS"){
+                if (payload.transaction.status_code === "TS") {
                     await this.handleRefund(this.getRefundRequestBody(payload));
                 }
             }
         }
     }
 
-    private async handleRefund(refund: TCbsRefundMoneyRequest): Promise<void>{
-        try{
+    private async handleRefund(refund: TCbsRefundMoneyRequest): Promise<void> {
+        try {
             await this.cbsClient.refundMoney(refund);
-        }catch(error: unknown){
+        } catch (error: unknown) {
             this.cbsClient.logFailedRefund(refund.transaction.airtel_money_id);
         }
     }
