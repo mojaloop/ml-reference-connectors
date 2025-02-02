@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
@@ -86,7 +86,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         // Transfer Requests Test  - Payee
-        test('POST /transfers: sdk-server - Should return receiveTransfer if party in airtel', async () => {
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
             const transferRequest: TtransferRequest = transferRequestDto(idType, MSISDN, "500");
             const url = `${ML_URL}/transfers`;
 
@@ -117,7 +117,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         //  Send Money - Payer
-
         test('Test POST/ send-money: response should be payee details ', async () => {
             const sendMoneyRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
             const url = `${DFSP_URL}/send-money`;
@@ -138,6 +137,35 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test('Test Put/ send-money{id}: response should be 200', async () => {
             const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
             const url = `${DFSP_URL}/send-money/${randomUUID()}`;
+
+            const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
+
+        //Merchant Payment
+        test('Test POST /merchant-payment: response should be 200', async () => {
+            const merchantPaymentRequest: TNMSendMoneyRequest = sendMoneyDTO(MSISDN, "500");
+            const url = `${DFSP_URL}/merchant-payment`;
+            const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+        });
+
+        test('Test PUT /merchant-payment/{id}: response should be 200', async () => {
+            const updateSendMoneyRequest: TNMUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
+            const url = `${DFSP_URL}/merchant-payment/${randomUUID()}`;
 
             const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
                 headers: {

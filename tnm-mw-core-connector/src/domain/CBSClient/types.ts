@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
 
  http://www.apache.org/licenses/LICENSE-2.0
 
@@ -49,6 +49,8 @@ export type TNMConfig = {
     EXPIRATION_DURATION: string,
     FSP_ID: string,
     TNM_CURRENCY: string,
+    X_COUNTRY: string,
+    LEI: string;
 }
 
 export type TGetKycArgs = {
@@ -194,19 +196,27 @@ export type TNMSendMoneyResponse = {
     "feeCurrency": string;
     "transactionId": string;
 }
+export type TNMMerchantPaymentResponse = TNMSendMoneyResponse; 
 
 export type TNMSendMoneyRequest = {
-    "homeTransactionId": string;
-    "payeeId": string;
-    "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
-    "transactionDescription": string;
-    "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+    homeTransactionId: string;
+    payeeId: string;
+    payeeIdType: components["schemas"]["PartyIdType"];
+    sendAmount: string;
+    sendCurrency: components['schemas']['Currency'];
+    receiveCurrency: components['schemas']['Currency'];
+    transactionDescription: string;
+    transactionType: components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
 }
 
 

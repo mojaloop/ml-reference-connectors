@@ -1,75 +1,8 @@
-import { TSDKOutboundTransferResponse, TtransferContinuationResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
-import {TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
+import { TSDKOutboundTransferResponse, TtransferContinuationResponse } from '../src/domain/SDKClient';
+import { TNMCallbackPayload, TNMSendMoneyRequest, TNMUpdateSendMoneyRequest, } from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse } from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
-
-type TransferAcceptInputDto = {
-  fineractAccountId?: number;
-  totalAmount?: number;
-  sdkTransferId?: number;
-};
-
-
-export const transferAcceptDto = ({
-  fineractAccountId = 1,
-  totalAmount = 123.45,
-  sdkTransferId = 999,
-}: TransferAcceptInputDto = {}): TUpdateTransferDeps =>
-  ({
-    fineractTransaction: {
-      fineractAccountId,
-      totalAmount,
-      routingCode: 'routingCode',
-      receiptNumber: 'receiptNumber',
-      bankNumber: 'bankNumber',
-    },
-    sdkTransferId,
-  }) as const;
-
-
-
-export const fineractLookUpPartyResponseDto = () =>
-  ({
-    displayName: 'Dove Love',
-    firstname: 'Dove',
-    lastname: 'Love',
-  }) as const;
-
-export const fineractVerifyBeneficiaryResponseDto = () =>
-  ({
-    currency: 'UGX',
-    amount: '100',
-    quoteId: crypto.randomUUID(),
-    transactionId: crypto.randomUUID(),
-  }) as const;
-
-export const fineractGetAccountIdResponseDto = () => ({
-  accountId: 1,
-});
-
-export const fineractReceiveTransferResponseDto = () => true;
-
-export const fineractGetSavingsAccountResponseDto = (
-  credit: boolean,
-  debit: boolean,
-  balance: number,
-  active: boolean,
-) => ({
-  status: {
-    active: active,
-  },
-  subStatus: {
-    blockCredit: credit,
-    blockDebit: debit,
-  },
-  summary: {
-    availableBalance: balance,
-  },
-});
-
-export const fineractCalculateWithdrawQuoteResponseDto = (feeAmount: number) => feeAmount;
-
 
 export const transferPatchNotificationRequestDto = (currentState: string, partyIdType: string, partyIdentifier: string, amount: string): TtransferPatchNotificationRequest => ({
   //@ts-expect-error currentState var to of type
@@ -180,7 +113,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   currency: "MWK",
   from: {
     idType: "MSISDN",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -188,7 +127,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
   transactionType: "TRANSFER"
@@ -200,75 +145,87 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "amountType": "SEND",
   "currency": "MWK",
   "from": {
-      "idType": "MSISDN",
-      "idValue": "777123456"
+    "idType": "MSISDN",
+    "idValue": "777123456",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   "to": {
-      //@ts-expect-error idType 
-      "idType": idType,
-      "idValue": idValue
+    //@ts-expect-error idType 
+    "idType": idType,
+    "idValue": idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   "ilpPacket": {
-      "data": {
-          "amount": {
-              "amount": "400",
-              "currency": "ZMW"
+    "data": {
+      "amount": {
+        "amount": "400",
+        "currency": "ZMW"
+      },
+      "payee": {
+        "partyIdInfo": {
+          "partyIdType": "MSISDN",
+          "partyIdentifier": "0882997445",
+          "fspId": "tnmmalawi"
+        },
+        "merchantClassificationCode": "1234",
+        "name": "Payee Name",
+        "personalInfo": {
+          "complexName": {
+            "firstName": "PayeeFirstName",
+            "lastName": "PayeeLastName"
           },
-          "payee": {
-              "partyIdInfo": {
-                  "partyIdType": "MSISDN",
-                  "partyIdentifier": "0882997445",
-                  "fspId": "tnmmalawi"
-              },
-              "merchantClassificationCode": "1234",
-              "name": "Payee Name",
-              "personalInfo": {
-                  "complexName": {
-                      "firstName": "PayeeFirstName",
-                      "lastName": "PayeeLastName"
-                  },
-                  "dateOfBirth": "2001-08-21"
-              },
+          "dateOfBirth": "2001-08-21"
+        },
+      },
+      "payer": {
+        "partyIdInfo": {
+          "partyIdType": "MSISDN",
+          "partyIdentifier": "0882997445",
+          "fspId": "tnmmalawi"
+        },
+        "merchantClassificationCode": "1234",
+        "name": "Payee Name",
+        "personalInfo": {
+          "complexName": {
+            "firstName": "PayeeFirstName",
+            "lastName": "PayeeLastName"
           },
-          "payer": {
-              "partyIdInfo": {
-                  "partyIdType": "MSISDN",
-                  "partyIdentifier": "0882997445",
-                  "fspId": "tnmmalawi"
-              },
-              "merchantClassificationCode": "1234",
-              "name": "Payee Name",
-              "personalInfo": {
-                  "complexName": {
-                      "firstName": "PayeeFirstName",
-                      "lastName": "PayeeLastName"
-                  },
-                  "dateOfBirth": "2001-08-21"
-              },
-          },
-          "quoteId": "2d93d09c-aa9f-411a-ba48-b315dd04d5d8",
-          "transactionId": "25394f6a-aa14-46a2-b28a-35140e842f7d",
-          "transactionType": {
-              "initiator": "PAYER",
-              "initiatorType": "CONSUMER",
-              "scenario": "TRANSFER",
-              "subScenario": "LOCALLY_DEFINED_SUBSCENARIO"
-          }
+          "dateOfBirth": "2001-08-21"
+        },
+      },
+      "quoteId": "2d93d09c-aa9f-411a-ba48-b315dd04d5d8",
+      "transactionId": "25394f6a-aa14-46a2-b28a-35140e842f7d",
+      "transactionType": {
+        "initiator": "PAYER",
+        "initiatorType": "CONSUMER",
+        "scenario": "TRANSFER",
+        "subScenario": "LOCALLY_DEFINED_SUBSCENARIO"
       }
+    }
   },
-  "transactionType":"TRANSFER",
+  "transactionType": "TRANSFER",
   "quote": {
-      "expiration": "2024-10-15T13:17:57.742Z",
-      "payeeFspCommissionAmount": "0",
-      "payeeFspCommissionAmountCurrency": "MWK",
-      "payeeFspFeeAmount": "3",
-      "payeeFspFeeAmountCurrency": "MWK",
-      "payeeReceiveAmount": "100",
-      "payeeReceiveAmountCurrency": "MWK",
-      "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
-      "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
-      "transferAmount": "103",
-      "transferAmountCurrency": "MWK"
+    "expiration": "2024-10-15T13:17:57.742Z",
+    "payeeFspCommissionAmount": "0",
+    "payeeFspCommissionAmountCurrency": "MWK",
+    "payeeFspFeeAmount": "3",
+    "payeeFspFeeAmountCurrency": "MWK",
+    "payeeReceiveAmount": "100",
+    "payeeReceiveAmountCurrency": "MWK",
+    "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
+    "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
+    "transferAmount": "103",
+    "transferAmountCurrency": "MWK"
   },
   "note": "Transfer Quote Request"
 });
@@ -285,9 +242,17 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequ
   "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Elikah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "payer": {
+    "name": "Elijah Okello",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1985-04-12",
+      "PrvcOfBirth": "Kampala",
+      "CityOfBirth": "Kampala",
+      "CtryOfBirth": "Uganda"
+
+    }
+  },
 });
 
 
@@ -310,14 +275,97 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
     },
     to: {
       idType: "MSISDN",
-      idValue: idValue
+      idValue: idValue,
+      supportedCurrencies: [
+        "ZMW"
+      ]
     },
     amountType: "SEND",
     currency: "MWK",
     amount: "1000",
     transactionType: "TRANSFER",
     currentState: currentState,
-    transferId: crypto.randomUUID()
+    transferId: crypto.randomUUID(),
+    "quoteResponse": {
+      "body": {
+        "transferAmount": {
+          "currency": "ZMW",
+          "amount": "1000"
+        },
+        "payeeReceiveAmount": {
+          "currency": "ZMW",
+          "amount": "1000"
+        },
+        "payeeFspFee": {
+          "currency": "MWK",
+          "amount": "0"
+        },
+        "payeeFspCommission": {
+          "currency": "AED",
+          "amount": "0"
+        },
+        "expiration": "2016-05-24T08:38:08.699-04:00",
+        "geoCode": {
+          "latitude": "+45.4215",
+          "longitude": "+75.6972"
+        },
+        "ilpPacket": "AYIBgQAAAAAAAASwNGxldmVsb25lLmRmc3AxLm1lci45T2RTOF81MDdqUUZERmZlakgyOVc4bXFmNEpLMHlGTFGCAUBQU0svMS4wCk5vbmNlOiB1SXlweUYzY3pYSXBFdzVVc05TYWh3CkVuY3J5cHRpb246IG5vbmUKUGF5bWVudC1JZDogMTMyMzZhM2ItOGZhOC00MTYzLTg0NDctNGMzZWQzZGE5OGE3CgpDb250ZW50LUxlbmd0aDogMTM1CkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbgpTZW5kZXItSWRlbnRpZmllcjogOTI4MDYzOTEKCiJ7XCJmZWVcIjowLFwidHJhbnNmZXJDb2RlXCI6XCJpbnZvaWNlXCIsXCJkZWJpdE5hbWVcIjpcImFsaWNlIGNvb3BlclwiLFwiY3JlZGl0TmFtZVwiOlwibWVyIGNoYW50XCIsXCJkZWJpdElkZW50aWZpZXJcIjpcIjkyODA2MzkxXCJ9IgA",
+        "condition": "string",
+        "extensionList": {
+          "extension": [
+            {
+              "key": "string",
+              "value": "string"
+            }
+          ]
+        }
+      },
+      "headers": {}
+    },
+    "fxQuotesResponse": {
+      "body": {
+        "homeTransactionId": "string",
+        "condition": "string",
+        "conversionTerms": {
+          "conversionId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "determiningTransferId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+          "initiatingFsp": "string",
+          "counterPartyFsp": "string",
+          "amountType": "RECEIVE",
+          "sourceAmount": {
+            "currency": "MWK",
+            "amount": "1000"
+          },
+          "targetAmount": {
+            "currency": "ZMW",
+            "amount": "1000"
+          },
+          "expiration": "2016-05-24T08:38:08.699-04:00",
+          "charges": [
+            {
+              "chargeType": "string",
+              "sourceAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              },
+              "targetAmount": {
+                "currency": "AED",
+                "amount": "123.45"
+              }
+            }
+          ],
+          "extensionList": {
+            "extension": [
+              {
+                "key": "string",
+                "value": "string"
+              }
+            ]
+          }
+        }
+      },
+      "headers": {}
+    }
   }
 });
 
@@ -347,11 +395,11 @@ export const tnmUpdateSendMoneyRequestDto = (idValue: string, amount: string): T
   "narration": "Test Payment"
 });
 
-export const TNMCallbackPayloadDto = ():TNMCallbackPayload => ({
+export const TNMCallbackPayloadDto = (): TNMCallbackPayload => ({
   receipt_number: crypto.randomUUID(),
   result_description: "Completed Successfully",
   result_code: "0",
   result_time: new Date().toDateString(), //Datetime
   transaction_id: crypto.randomUUID(),
-  success: true 
+  success: true
 });
