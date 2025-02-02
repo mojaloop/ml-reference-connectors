@@ -429,8 +429,7 @@ export class CoreConnectorAggregate {
                 "lastName": res.data.last_name,
                 "merchantClassificationCode": "123",
                 "extensionList": this.getOutboundTransferExtensionList(transfer),
-                //@ts-expect-error env var has type string and not CURRENCY type
-                "supportedCurrencies":[config.get("airtel.X_CURRENCY")]
+                "supportedCurrencies":[this.airtelConfig.X_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,

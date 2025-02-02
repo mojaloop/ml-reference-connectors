@@ -100,7 +100,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             middleName: res.data.first_name,
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-            lastName: res.data.last_name
+            lastName: res.data.last_name,
+            supportedCurrencies: this.cbsConfig.X_CURRENCY,
         };
     }
 
@@ -190,11 +191,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
         }
         const res = await this.cbsClient.getKyc({ msisdn: quoteRequest.to.idValue });
         const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
@@ -258,11 +260,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
         }
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
@@ -459,7 +462,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount${transferRes.amount}`);
+        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
         let result = true;
         if (
             !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
@@ -577,7 +580,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.first_name,
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer)
+                "extensionList": this.getOutboundTransferExtensionList(transfer),
+                "supportedCurrencies": [this.cbsConfig.X_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -590,25 +594,27 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] {
-        return [
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-            }
-        ]
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] | undefined{
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                }
+            ];
+        }
     }
 
     async updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse> {

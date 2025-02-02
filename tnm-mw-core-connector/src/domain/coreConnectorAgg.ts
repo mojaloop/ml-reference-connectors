@@ -503,8 +503,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "middleName": res.data.full_name,
                 "lastName": res.data.full_name,
                 "extensionList": this.getOutboundTransferExtensionList(transfer),
-                //@ts-expect-error env var has type string and not CURRENCY type
-                "supportedCurrencies": [config.get("tnm.TNM_CURRENCY")]
+                "supportedCurrencies": [this.tnmConfig.TNM_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,

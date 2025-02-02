@@ -34,8 +34,8 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient } from '../../../src/domain/CBSClient';
-import { quoteRequestDto, transferPatchNotificationRequestDto, transferRequestDto } from '../../fixtures';
+import { CBSClientFactory, ICbsClient, TCbsSendMoneyRequest } from '../../../src/domain/CBSClient';
+import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../fixtures';
 import { randomUUID } from 'crypto';
 
 const mockAxios = new MockAdapter(axios);
@@ -183,28 +183,221 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const cbsClientSendMoney = jest.spyOn(cbsClient, "sendMoney");
             const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "MSISDN", MSISDN, "1000");
             //Act
-            await ccAggregate.updateTransfer(patchNoficationPayload,randomUUID());
+            await ccAggregate.updateTransfer(patchNoficationPayload, randomUUID());
             //Assert
             expect(cbsClientSendMoney).toHaveBeenCalled();
         });
 
         test("updateReceivedTransfer should initiate compensation action when disburse funds to customer account fails", async () => {
             //Arrange 
-            cbsClient.sendMoney = jest.fn().mockImplementationOnce(()=>{
+            cbsClient.sendMoney = jest.fn().mockImplementationOnce(() => {
                 throw new Error("Failed to send money");
             });
-            const cbslogFailedPayment = jest.spyOn(cbsClient,"logFailedIncomingTransfer");
+            const cbslogFailedPayment = jest.spyOn(cbsClient, "logFailedIncomingTransfer");
             const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "MSISDN", MSISDN, "1000");
             //Act
-            await ccAggregate.updateTransfer(patchNoficationPayload,randomUUID());
+            await ccAggregate.updateTransfer(patchNoficationPayload, randomUUID());
             //Assert
             expect(cbslogFailedPayment).toHaveBeenCalled();
         });
     });
 
-    describe("Payer Tests", () => {
-        test("sendMoney should ", async () => {
-            logger.info("Write payer tests");
+    describe("Airtel Payer Tests", () => {
+        test("POST /send-money: should return payee details and fees with correct info provided", async () => {
+            cbsClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+
+            // Spying on Update Transfer
+            jest.spyOn(sdkClient, "updateTransfer");
+
+
+            // Spying on Initiate transfer
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+
+            const sendMoneyRequestBody = sendMoneyReqDTO("1000",MSISDN);
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
+
+            logger.info("Response from send money", res);
+
+            // Expecting Update Transfer to have be called
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
+
+        });
+
+
+        test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
+
+            cbsClient.collectMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "id": false,
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "response_code": "DP00800001006",
+                    "success": true
+                }
+            });
+            jest.spyOn(cbsClient, "collectMoney");
+            const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN);
+            const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(cbsClient.collectMoney).toHaveBeenCalled();
+        });
+
+
+        test("POST /merchant-payment: should return payee details and fees with correct info provided", async () => {
+            cbsClient.getKyc = jest.fn().mockResolvedValue({
+                "data": {
+                    "first_name": "Chimweso Faith Mukoko",
+                    "grade": "SUBS",
+                    "is_barred": false,
+                    "is_pin_set": false,
+                    "last_name": "Test1",
+                    "msisdn": "12****89",
+                    "dob": "yyyy-MM-dd HH:mm:ss.S",
+                    "account_status": "Y",
+                    "nationatility": "CD",
+                    "id_number": "125*****5522",
+                    "registration": {
+                        "status": "SUBS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "success",
+                    "result_code": "DP02200000001",
+                    "success": true
+                }
+            });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+
+            // Spying on Update Transfer
+            jest.spyOn(sdkClient, "updateTransfer");
+
+            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+            const merchantPaymentRequestBody = sendMoneyReqDTO("1000",MSISDN);
+            const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
+
+            logger.info("Response from merchant payment", res);
+
+
+            expect(sdkClient.updateTransfer).toHaveBeenCalled();
+
+            // Expecting INitaite Transfer to have been called
+            expect(initiateTransferSpy).toHaveBeenCalled();
+
+            // Get the Reguest being Used to call
+            const transferRequest = initiateTransferSpy.mock.calls[0][0];
+
+            // Check the Extension List is not 0
+            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            if (transferRequest.from.extensionList) {
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            }
+            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
+        });
+
+        test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
+
+            cbsClient.collectMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "id": false,
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "response_code": "DP00800001006",
+                    "success": true
+                }
+            });
+
+            jest.spyOn(cbsClient, "collectMoney");
+            const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN);
+            const res = await ccAggregate.updateSendMoney(updateMerchantPaymentReqBody, "ljzowczj");
+            logger.info("Response ", res);
+            expect(cbsClient.collectMoney).toHaveBeenCalled();
+        }
+        );
+
+
+        test("PUT /callback: should receive a transacion status code", async () => {
+
+            cbsClient.refundMoney = jest.fn().mockResolvedValue({
+                "data": {
+                    "transaction": {
+                        "airtel_money_id": "CI2****29",
+                        "status": "SUCCESS"
+                    }
+                },
+                "status": {
+                    "code": "200",
+                    "message": "SUCCESS",
+                    "result_code": "ESB000010",
+                    "success": false
+                }
+            });
+            const callBackRequest = callbackPayloadDto("1000", "TS");
+            const res = await ccAggregate.handleCallback(callBackRequest);
+            logger.info("Response ", res);
+            expect(cbsClient.refundMoney).toHaveBeenCalled();
+
+
         });
     });
 });

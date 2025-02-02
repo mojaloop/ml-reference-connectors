@@ -465,8 +465,7 @@ export class CoreConnectorAggregate {
                 "lastName": res.family_name,
                 "merchantClassificationCode": "123",
                 "extensionList": this.getOutboundTransferExtensionList(transfer),
-                //@ts-expect-error env var has type string and not CURRENCY type
-                "supportedCurrencies":[config.get("mtn.DFSP_CURRENCY")]
+                "supportedCurrencies":[this.mtnConfig.DFSP_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,
