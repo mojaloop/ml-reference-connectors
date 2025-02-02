@@ -1,4 +1,5 @@
 # Payer Update Send Money
+This sequence diagram shows the steps the core connector undertakes to handle a request responding to a quote that was shown to a customer. 
 
 ```mermaid
 sequenceDiagram
@@ -10,7 +11,7 @@ sequenceDiagram
   End
   CC->>CBS Api:POST /merchant/v2/payments
   CBS Api-->>CC:Response
-  CC-->CC: Check Response
+  CC-->>CC: Check Response
   Alt If Couldnt make reservation
   CC-->>DFSP Customer App: Response 500
   End
@@ -24,11 +25,11 @@ sequenceDiagram
   ML Connector-->>CC: Response
   CC->>CC: Check response
   Alt if http error code 500 or 504 or currentState = ERROR_OCCURED
-  CC->>CBS Api : Rolback transfer POST /standard/v2/payments/refund
+  CC->>CBS Api : Rolback transfer POST /refund/customer/funds
   CBS Api-->>CC:Check Response
   Alt if Response not Successful
   CC->>CC: Initiate manual refund
   End
   End
-  CC-->> CBS Api: Response 200
+  CC-->> DFSP Customer App: Response 200
 ```

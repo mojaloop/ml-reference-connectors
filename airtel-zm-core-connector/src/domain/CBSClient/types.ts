@@ -322,7 +322,7 @@ export type TAirtelConfig = {
     CLIENT_SECRET: string;
     GRANT_TYPE: string;
     X_COUNTRY: string;
-    X_CURRENCY: string;
+    X_CURRENCY: components["schemas"]["Currency"];
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string;

@@ -63,7 +63,7 @@ export type TMTNClientFactoryDeps = {
 export type TMTNConfig = {
     FSP_ID: string;
     X_COUNTRY: string;
-    X_CURRENCY: string;
+    X_CURRENCY: components["schemas"]["Currency"];
     MTN_COLLECTION_API_KEY: string;
     MTN_COLLECTION_CLIENT_ID: string;
     MTN_COLLECTION_SUBSCRIPTION_KEY: string;
@@ -78,7 +78,7 @@ export type TMTNConfig = {
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
     LEI: string;
-    DFSP_CURRENCY:string;
+    DFSP_CURRENCY:components["schemas"]["Currency"];
 
 }
 

@@ -34,11 +34,12 @@ import {
     TCbsCollectMoneyResponse,
     TCBSConfig,
     TCbsDisbursementRequestBody,
+    TCbsDisbursementResponse,
     TCbsKycResponse,
+    TCbsRefundMoneyRequest,
     TCbsSendMoneyRequest,
     TCbsSendMoneyResponse,
     TCBSUpdateSendMoneyRequest,
-    TMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -52,6 +53,8 @@ import {
     ValidationError,
     Party,
     TGetQuotesDeps,
+    TPayeeExtensionListEntry,
+    TPayerExtensionListEntry,
 } from './interfaces';
 import {
     ISDKClient,
@@ -60,6 +63,7 @@ import {
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
 } from './SDKClient';
+import config from '../config';
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     IdType: string;
@@ -90,13 +94,92 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return {
             idType: "MSISDN",
             idValue: res.data.msisdn,
+            extensionList: this.getGetPartiesExtensionList(),
             displayName: `${res.data.first_name} ${res.data.last_name}`,
             firstName: res.data.first_name,
             middleName: res.data.first_name,
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-            lastName: res.data.last_name
+            lastName: res.data.last_name,
+            supportedCurrencies: this.cbsConfig.X_CURRENCY,
         };
+    }
+
+    private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
+                "value": config.get("cbs.LEI")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
+                "value": config.get("cbs.X_COUNTRY")
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
+                "value": "Not Provided by CBS"
+            },
+            {
+                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
+                "value": config.get("cbs.X_COUNTRY")
+            }
+        ]
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
@@ -106,6 +189,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
+        }
+        if (!this.checkQuoteExtensionLists(quoteRequest)) {
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
         }
         const res = await this.cbsClient.getKyc({ msisdn: quoteRequest.to.idValue });
         const fees = (Number(this.cbsConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
@@ -125,6 +216,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     private getQuoteResponse(deps: TGetQuotesDeps): TQuoteResponse {
         return {
             "expiration": deps.expiration,
+            'extensionList': this.getQuoteResponseExtensionList(deps.quoteRequest),
             "payeeFspCommissionAmount": "0",
             "payeeFspCommissionAmountCurrency": this.cbsConfig.X_CURRENCY,
             "payeeFspFeeAmount": deps.fees.toString(),
@@ -137,6 +229,28 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "transactionId": deps.quoteRequest.transactionId
         };
     }
+
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+    }
+
+    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
+        let newExtensionList: TPayeeExtensionListEntry[] = [];
+
+        if (quoteRequest.extensionList) {
+            newExtensionList.push(...quoteRequest.extensionList);
+        }
+
+        if (quoteRequest.from.extensionList) {
+            newExtensionList.push(...quoteRequest.from.extensionList);
+        }
+
+        if (quoteRequest.to.extensionList) {
+            newExtensionList.push(...quoteRequest.to.extensionList);
+        }
+        return newExtensionList;
+    }
+
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
         if (transfer.to.idType != this.IdType) {
@@ -145,16 +259,29 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
+        }
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
-        this.checkAccountBarred(transfer.to.idValue);
+        await this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
-            transferState: 'RECEIVED',
+            transferState: 'RESERVED',
         };
     }
+
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
+    }
+
 
     private validateQuote(transfer: TtransferRequest): boolean {
         this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
@@ -227,15 +354,20 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
-            await this.initiateCompensationAction();
             throw ValidationError.transferNotCompletedError();
         }
         const makePaymentRequest: TCbsDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.cbsClient.sendMoney(makePaymentRequest);
+        let res: TCbsDisbursementResponse | undefined = undefined;
+        try {
+            res = await this.cbsClient.sendMoney(makePaymentRequest);
+        } catch (error: unknown) {
+            await this.initiateCompensationAction(makePaymentRequest);
+        }
     }
 
-    private async initiateCompensationAction() {
-        // todo function implementation to be defined.
+    private async initiateCompensationAction(req: TCbsDisbursementRequestBody) {
+        this.logger.error("Failed to make transfer to customer", { request: req });
+        await this.cbsClient.logFailedIncomingTransfer(req);
     }
 
     private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TCbsDisbursementRequestBody {
@@ -263,45 +395,74 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    async sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse> {
-        this.logger.info(`Received send money request for payer with ID ${transfer.payerAccount}`);
-        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer));
+    async sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse> {
+        this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
+        const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return await this.checkAndRespondToConversionTerms(res);
+            return this.handleSendTransferRes(res.data);
+        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+            return this.handleReceiveTransferRes(res.data);
+        } else {
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" })
         }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTCbsSendMoneyResponse(res.data);
     }
 
-    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TCbsSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TCbsSendMoneyResponse> {
+        /*
+            check fxQuote
+            respond to conversion terms
+            receive response from sdk
+            check return quote
+            return normalQuote in required format for customer to review 
+        */
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!this.validateConversionTerms(res.data)) {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        if (!this.validateConversionTerms(res)) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptConversion": false
-            }, res.data.transferId);
+            }, res.transferId);
             throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
         }
-        else {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptConversion": true
-            }, res.data.transferId);
-        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptConversion": true
+        }, res.transferId);
         if (!this.validateReturnedQuote(acceptRes.data)) {
             throw ValidationError.invalidReturnedQuoteError();
         }
         return this.getTCbsSendMoneyResponse(acceptRes.data);
     }
 
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TCbsSendMoneyResponse> {
+        /*
+            check returned normalQuote
+            respond to quote 
+            receive response from sdk
+            check fxQuote
+            return returned quote in format specified for customer to review 
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        if (!this.validateReturnedQuote(res)) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptQuote": false
+            }, res.transferId);
+            throw ValidationError.invalidReturnedQuoteError();
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptQuote": true
+        }, res.transferId);
+        if (!this.validateConversionTerms(acceptRes.data)) {
+            throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+        }
+        return this.getTCbsSendMoneyResponse(acceptRes.data);
+    }
+
     private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Conversion Terms with transfer response amount${transferRes.amount}`);
+        this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
         let result = true;
         if (
             !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
@@ -405,32 +566,57 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest | TMerchantPaymentRequest): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.cbsClient.getKyc({
-            msisdn: transfer.payerAccount
+            msisdn: transfer.payer.payerId
         });
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.cbsConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payerAccount,
+                'idValue': transfer.payer.payerId,
                 'fspId': this.cbsConfig.FSP_ID,
                 "displayName": `${res.data.first_name} ${res.data.last_name}`,
                 "firstName": res.data.first_name,
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
-                "merchantClassificationCode": "123",
+                "extensionList": this.getOutboundTransferExtensionList(transfer),
+                "supportedCurrencies": [this.cbsConfig.X_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
-            'amountType': transfer.amountType,
+            'amountType': amountType,
             'currency': transfer.sendCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
     }
+
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] | undefined{
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                }
+            ];
+        }
+    }
+
     async updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
 
@@ -467,8 +653,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                // perform refund or rollback
-                // const rollbackRes = await this.cbsClient.refundMoney();
+                // perform refund or rollback if payment was successful
+                if (payload.transaction.status_code === "TS") {
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
+        }
+    }
+
+    private async handleRefund(refund: TCbsRefundMoneyRequest): Promise<void> {
+        try {
+            await this.cbsClient.refundMoney(refund);
+        } catch (error: unknown) {
+            this.cbsClient.logFailedRefund(refund.transaction.airtel_money_id);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TCallbackRequest): TCbsRefundMoneyRequest {
+        return {
+            "transaction": {
+                "airtel_money_id": callbackPayload.transaction.airtel_money_id
             }
         }
     }
