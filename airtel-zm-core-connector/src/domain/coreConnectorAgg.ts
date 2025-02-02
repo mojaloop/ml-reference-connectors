@@ -39,6 +39,7 @@ import {
     AirtelError,
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
+    TAirtelKycResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -52,6 +53,7 @@ import {
     THttpResponse,
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
+    Payee,
 } from './interfaces';
 import {
     ISDKClient,
@@ -92,21 +94,26 @@ export class CoreConnectorAggregate {
 
         const lookupRes = await this.airtelClient.getKyc({ msisdn: id });
         const party = {
-            data: {
-                idType: config.get("airtel.SUPPORTED_ID_TYPE"),
-                idValue: id,
-                displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
-                firstName: lookupRes.data.first_name,
-                middleName: lookupRes.data.first_name,
-                type: PartyType.CONSUMER,
-                kycInformation: `${JSON.stringify(lookupRes)}`,
-                lastName: lookupRes.data.last_name,
-                extensionList: this.getGetPartiesExtensionList(),
-            },
+            data: this.getPartiesResponseDTO(lookupRes,id),
             statusCode: Number(lookupRes.status.code),
         };
         this.logger.info(`Party found`, { party });
         return party;
+    }
+
+    private getPartiesResponseDTO(lookupRes: TAirtelKycResponse, id: string): Payee {
+        return {
+            idType: config.get("airtel.SUPPORTED_ID_TYPE"),
+            idValue: id,
+            displayName: `${lookupRes.data.first_name} ${lookupRes.data.last_name}`,
+            firstName: lookupRes.data.first_name,
+            middleName: lookupRes.data.first_name,
+            type: PartyType.CONSUMER,
+            kycInformation: `${JSON.stringify(lookupRes)}`,
+            lastName: lookupRes.data.last_name,
+            extensionList: this.getGetPartiesExtensionList(),
+            supportedCurrencies:config.get("airtel.X_CURRENCY")
+        };
     }
 
     // Get Extension List DTO to be used in Party Response on Extension List
@@ -143,11 +150,12 @@ export class CoreConnectorAggregate {
         });
 
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "Some extensionLists are undefined",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
         }
 
         if (res.data.is_barred) {
@@ -216,11 +224,12 @@ export class CoreConnectorAggregate {
         }
 
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            throw ValidationError.invalidExtensionListsError(
-                "ExtensionList check Failed in Payee Transfers",
-                '3100',
-                500
-            );
+            // throw ValidationError.invalidExtensionListsError(
+            //     "ExtensionList check Failed in Payee Transfers",
+            //     '3100',
+            //     500
+            // );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
         }
 
         if (!this.validateQuote(transfer)) {
@@ -419,7 +428,9 @@ export class CoreConnectorAggregate {
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
                 "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer)
+                "extensionList": this.getOutboundTransferExtensionList(transfer),
+                //@ts-expect-error env var has type string and not CURRENCY type
+                "supportedCurrencies":[config.get("airtel.X_CURRENCY")]
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -433,25 +444,27 @@ export class CoreConnectorAggregate {
     }
 
     // Get OutBound Transfer Extension List DTO used in getTSDKOutboundTransferRequest DTO --(5.1.1)
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TAirtelSendMoneyRequest): TPayerExtensionListEntry[] {
-        return [
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-            }
-        ];
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TAirtelSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                }
+            ];
+        }
     }
 
 

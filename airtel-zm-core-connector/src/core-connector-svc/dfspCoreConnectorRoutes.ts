@@ -54,7 +54,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             definition: API_SPEC_FILE,
             handlers: {
                 sendMoney: this.initiateTransfer.bind(this),
-                updateSendMoney: this.updateInitiatedTransfer.bind(this),
+                sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
                 initiateMerchantPayment : this.initiateMerchantPayment.bind(this),
                 updateInitiatedMerchantPayment : this.updateInitiatedMerchantPayment.bind(this),
                 callback: this.callbackHandler.bind(this),

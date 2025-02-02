@@ -31,7 +31,7 @@ import { CoreConnectorAggregate } from 'src/domain/coreConnectorAgg';
 import { ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 
-const API_SPEC_FILE = './src/api-spec/core-connector-api-spec.-sdk.yml';
+const API_SPEC_FILE = './src/api-spec/core-connector-api-spec-sdk.yml';
 
 export class CoreConnectorRoutes extends BaseRoutes {
     private readonly aggregate: CoreConnectorAggregate;

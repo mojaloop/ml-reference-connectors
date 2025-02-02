@@ -126,7 +126,7 @@
  
  
          test('Test POST/ send-money: response should be payee details ', async () => {
-             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "20");
+             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "20","SEND");
              const url = `${DFSP_URL}/send-money`;
              const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
                  headers: {
@@ -161,7 +161,7 @@
  
  
          test('Test POST/ merchant-payment: response should be payee details ', async () => {
-             const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20");
+             const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20","RECEIVE");
              const url = `${DFSP_URL}/merchant-payment`;
              const res = await axios.post(url, JSON.stringify(merchantyRequest), {
                  headers: {
