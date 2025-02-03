@@ -16,7 +16,7 @@ Alt if Currency Not Supported
 CC-->>ML Connector: Response 500
 End
 CC->>CC:Calculate Charge
-CC->> CBS Api:GET /replace/with/api/call/for/getting/customer 
+CC->> CBS Api:GET [/replace-with-api-call-for-getting-customer] 
 CBS Api -->> CC:Response
 CC->>CC: Check Response and Customer Account status 
 Alt if Response not Successful

@@ -4,7 +4,7 @@ This sequence diagram shows the steps the core connector undertakes to handle a 
 ```mermaid
 sequenceDiagram
   autoNumber
-  DFSP Customer App->>CC: POST /send-money/{id}/acceptQuote=true | false]
+  DFSP Customer App->>CC: PUT /send-money/{id}/acceptQuote=true | false]
   CC->>CC: Check acceptQuote
   Alt If Quote not Accepted
   CC-->>DFSP Customer App: Response 500 OK

@@ -202,7 +202,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
     });
 
-    describe("Airtel Payer Tests", () => {
+    describe("Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
             cbsClient.getKyc = jest.fn().mockResolvedValue({
                 "data": {
