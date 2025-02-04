@@ -86,7 +86,13 @@ export type TNBMSendMoneyResponse = {
 
 export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
+    
 }
+
+export type TNBMInvoiceRequest = {
+    invoice_number: string;
+
+};
 
 
 export type TCallbackRequest = {
