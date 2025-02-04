@@ -1,16 +1,18 @@
+# Payer Merchant Payment 
+This sequence diagram details the process of making a merchant payment and the steps the core connector takes to make a payment in the mojaloop connector.
 ```mermaid
 sequenceDiagram
   autoNumber
-  TNM Application->>CC: POST /send-money/ {}
+  DFSP Customer App->>CC: POST /merchant-payment/ {}
   CC->>CC: Check Request
   Alt if Checks fail
-  CC-->>TNM Application: Response 400
+  CC-->>DFSP Customer App: Response 400
   End
-  CC->>ML Connector: POST /transfer /{amountType: SEND}
+  CC->>ML Connector: POST /transfer /{amountType: RECEIVE} 
   ML Connector-->>CC: Response
   CC->> CC: Check Response
   Alt if Checks fail
-  CC-->>TNM Application: Response 500
+  CC-->>DFSP Customer App: Response 500
   End
 
   Alt if WAITING_FOR_CONVERSION_ACCEPTANCE
@@ -18,18 +20,18 @@ sequenceDiagram
   CC->>CC: Check Conversion Terms
   Alt if Conversion Terms are invalid
   CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: false]
-  CC-->>TNM Application: Response 500
+  CC-->>DFSP Customer App: Response 500
   End
   CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: true]
   End
   ML Connector-->>CC:Response, Normal Quote
   Alt if response not successful
-  CC-->>TNM Application: Response 500
+  CC-->>DFSP Customer App: Response 500
   End
   CC->>CC: Check Returned Quote
   Alt if Quote is incorrect
-  CC-->>TNM Application: Response 500
+  CC-->>DFSP Customer App: Response 500
   End
-  CC-->>TNM Application: Response 200
-  TNM Application->>TNM Application:Show terms of transfer to customer
+  CC-->>DFSP Customer App: Response 200
+  DFSP Customer App->>DFSP Customer App:Show terms of transfer to customer
 ```

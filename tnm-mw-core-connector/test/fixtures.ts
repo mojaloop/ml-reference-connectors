@@ -180,7 +180,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   currency: "MWK",
   from: {
     idType: "MSISDN",
-    idValue: "978034884"
+    idValue: "978034884",
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
@@ -188,7 +194,13 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
-    idValue: idValue
+    idValue: idValue,
+    extensionList: [
+      {
+        "key": "testkey",
+        "value": "TestVal"
+      }
+    ]
   },
   transactionId: crypto.randomUUID(),
   transactionType: "TRANSFER"
@@ -201,12 +213,24 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "currency": "MWK",
   "from": {
       "idType": "MSISDN",
-      "idValue": "777123456"
+      "idValue": "777123456",
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "to": {
       //@ts-expect-error idType 
       "idType": idType,
-      "idValue": idValue
+      "idValue": idValue,
+      extensionList : [
+        {
+          "key": "testkey",
+          "value": "TestVal"
+        }
+      ]
   },
   "ilpPacket": {
       "data": {
@@ -285,9 +309,16 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequ
   "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
-  "payer": "Elikah Okello",
-  "payerAccount": idValue,
-  "dateOfBirth": "1985-04-12"
+  "payer": {
+    "name": "Elijah Okello",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1985-04-12",
+      "PrvcOfBirth": "Kampala",	
+      "CityOfBirth": "Kampala",
+      "CtryOfBirth": "Uganda"
+
+    }},
 });
 
 

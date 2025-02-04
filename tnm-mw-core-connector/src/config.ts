@@ -1,6 +1,6 @@
-import "dotenv/config";
+import 'dotenv/config';
 import Convict from 'convict';
-import { TNMConfig } from "./domain/CBSClient";
+import { TNMConfig } from './domain/CBSClient';
 
 interface IConfigSchema {
     server: {
@@ -13,8 +13,8 @@ interface IConfigSchema {
     };
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
-    }
-    tnm:TNMConfig;
+    };
+    tnm: TNMConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -64,7 +64,7 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    tnm:{
+    tnm: {
         CBS_NAME: {
             doc: 'Name of the DFSP',
             format: String,
@@ -107,25 +107,37 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'FSP_ID',
         },
+        LEI:{
+            doc: 'Legal Entity Identifier',
+            format: String,
+            default: null, // required
+            env: 'LEI',
+        },
         TNM_CURRENCY: {
             doc: 'Local Currency',
             format: String,
             default: null,
             env: 'TNM_CURRENCY',
         },
-        RECEIVING_SERVICE_CHARGE:{
+        X_COUNTRY:{
+            doc: 'Country',
+            format: String,
+            default: null, // required
+            env: 'X_COUNTRY',
+        },
+        RECEIVING_SERVICE_CHARGE: {
             doc: 'Percentage charged by TNM on request to pay',
             format: String,
             default: null,
             env: 'RECEIVING_SERVICE_CHARGE',
         },
-        SENDING_SERVICE_CHARGE:{
+        SENDING_SERVICE_CHARGE: {
             doc: 'Amount charged by TNM on disbursement to a customer wallet',
             format: String,
             default: null,
             env: 'SENDING_SERVICE_CHARGE',
-        }
-    }
+        },
+    },
 });
 
 config.validate({ allowed: 'strict' });
