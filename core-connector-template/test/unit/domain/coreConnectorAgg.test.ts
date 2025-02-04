@@ -62,7 +62,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe("Payer Tests", ()=>{
         test("test", async ()=>{
-            logger.info("Write payer tests")
+            logger.info("Write payer tests");
         });
     });
 });

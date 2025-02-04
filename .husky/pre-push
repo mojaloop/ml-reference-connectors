@@ -1,10 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 
 for dir in */; do
-    if [[ $dir == *-core-connector/ ]]; then
-    cd $dir 
-        npm run dep:check
-        npm run test:unit
-    cd -
-    fi
+    case "$dir" in
+        *-core-connector/)
+            cd "$dir" || exit 1
+            npm run dep:check
+            npm run test:unit
+            cd - > /dev/null || exit 1
+            ;;
+    esac
 done

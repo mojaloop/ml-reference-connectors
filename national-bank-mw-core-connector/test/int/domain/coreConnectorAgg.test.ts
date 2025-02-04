@@ -73,6 +73,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe('National Bank Test', () => {
 
+        test("test ccAggregate",async ()=>{
+            logger.info("Id Type",ccAggregate.IdType);
+        });
+
         // Get Parties Test  - Payee
         test('Get /parties/ACCOUNT_ID/{id}: sdk-server - Should return party info if it exists in National Bank', async () => {
             const url = `${ML_URL}/parties/ACCOUNT_NO/${ACCOUNT_NO}`;

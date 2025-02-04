@@ -164,7 +164,7 @@ paths:
           description: Bad request
 
   /callback:
-    put:
+    post:
       operationId: callback
       tags:
         - Callback Endpoint
