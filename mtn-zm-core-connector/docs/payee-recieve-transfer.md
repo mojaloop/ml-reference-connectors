@@ -18,7 +18,7 @@ CC->>CC:Validation Checks, Expiration Check, Quote Expiration Validation, Curren
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC-->>ML Connector: Response
+CC-->>ML Connector: Response RESERVED
 ML Connector->>CC: PATCH /transfers/{id}
 Alt if Current State !== COMPLETED
 CC-->>ML Connector: Response 500
