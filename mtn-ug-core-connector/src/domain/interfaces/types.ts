@@ -33,11 +33,11 @@ import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { TMTNUpdateSendMoneyRequest, TMTNTransactionEnquiryResponse, TMTNCollectMoneyResponse, TMTNKycResponse } from '../CBSClient';
-import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
+import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 
 
 
-export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson> | unknown; 
+export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson> | unknown;
 
 export type THttpRequestOptions = Omit<AxiosRequestConfig, 'url' | 'method'>;
 
@@ -64,7 +64,7 @@ export type TRequestOptions = {
 };
 
 
-export type  TPayeeExtensionListEntry = {
+export type TPayeeExtensionListEntry = {
     key?: string;
     value?: string;
 }
@@ -156,9 +156,13 @@ export type TupdateSendMoneyDeps = {
 }
 
 export type TtransactionEnquiryDeps = {
-    transactionEnquiry:TMTNTransactionEnquiryResponse, 
-        transferId: string,
-        mtnRes: TMTNCollectMoneyResponse,
-        transferAccept: TMTNUpdateSendMoneyRequest
+    transactionEnquiry: TMTNTransactionEnquiryResponse,
+    transferId: string,
+    mtnRes: TMTNCollectMoneyResponse,
+    transferAccept: TMTNUpdateSendMoneyRequest
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}

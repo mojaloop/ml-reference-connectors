@@ -142,6 +142,11 @@ export type TupdateSendMoneyDeps = {
     transferId: string
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}
+
 export interface ICoreConnectorAggregate  {
     sdkClient: ISDKClient;
     tnmClient: ITNMClient;

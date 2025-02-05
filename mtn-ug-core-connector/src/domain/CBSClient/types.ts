@@ -63,7 +63,7 @@ export type TMTNClientFactoryDeps = {
 export type TMTNConfig = {
     FSP_ID: string;
     X_COUNTRY: string;
-    X_CURRENCY: string;
+    X_CURRENCY: components["schemas"]["Currency"];
     MTN_COLLECTION_API_KEY: string;
     MTN_COLLECTION_CLIENT_ID: string;
     MTN_COLLECTION_SUBSCRIPTION_KEY: string;
@@ -78,6 +78,8 @@ export type TMTNConfig = {
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
     LEI: string;
+    DFSP_CURRENCY:components["schemas"]["Currency"];
+
 }
 
 
@@ -227,6 +229,7 @@ export type TMTNSendMoneyResponse = {
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
+    "homeTransactionId": string;
 }
 
 export type TMTNCollectMoneyRequest = {
@@ -259,5 +262,6 @@ export interface IMTNClient{
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
     getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
     getDisbursementTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
-
+    logFailedIncomingTransfer(req: TMTNDisbursementRequestBody): Promise<void>;
+    logFailedRefund(transaction_id: string): Promise<void>;
 }

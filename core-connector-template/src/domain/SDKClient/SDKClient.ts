@@ -35,6 +35,7 @@ import {
 } from './types';
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
 import { SDKClientError } from './errors';
+import { AxiosError } from 'axios';
 
 export const SDK_ROUTES = Object.freeze({
     transfers: "transfers",
@@ -70,8 +71,12 @@ export class SDKClient implements ISDKClient {
             }
             return res;
         } catch (error: unknown) {
-            const errMessage = (error as Error).message || 'Unknown Error';
+            let errMessage = (error as Error).message || 'Unknown Error';
             this.logger.error(`error in initiateTransfer: ${errMessage}`);
+            if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
             throw SDKClientError.initiateTransferError(errMessage);
         }
     }
@@ -100,8 +105,12 @@ export class SDKClient implements ISDKClient {
             return res;
         } catch (error: unknown) {
             if (error instanceof SDKClientError) throw error;
-            const errMessage = `SDKClient initiate update receiveTransfer error: ${(error as Error)?.message}`;
+            let errMessage = `SDKClient initiate update receiveTransfer error: ${(error as Error)?.message}`;
             this.logger.error(errMessage, { error });
+            if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
             throw SDKClientError.continueTransferError(errMessage);
         }
     }

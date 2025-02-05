@@ -55,4 +55,11 @@ export class SDKClientError extends BasicError {
     static genericQuoteValidationError(message: string, options?: ErrorOptions) {
         return new SDKClientError(message, options);
     }
+
+    static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
+        return new SDKClientError(
+            message,
+            options
+        );
+    }
 }

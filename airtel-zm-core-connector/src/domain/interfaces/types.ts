@@ -30,7 +30,7 @@ import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
-import {components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
+import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import { TAirtelCollectMoneyResponse, TAirtelTransactionEnquiryResponse, TAirtelUpdateSendMoneyRequest } from '../CBSClient';
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
@@ -65,7 +65,7 @@ export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferRe
 
 
 // Extension List to be used in Payee type
-export type  TPayeeExtensionListEntry = {
+export type TPayeeExtensionListEntry = {
     key?: string;
     value?: string;
 }
@@ -75,7 +75,7 @@ export type TPayerExtensionListEntry = {
     value: string;
 }
 
-  
+
 export type Payee = {
     dateOfBirth?: string;
     displayName: string;
@@ -140,10 +140,15 @@ export type TtransferPatchNotificationRequest = {
     transferId?: components['schemas']['transferId'];
 };
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}
+
 export type TtransactionEnquiryDeps = {
-    transactionEnquiry:TAirtelTransactionEnquiryResponse, 
-        transferId: string,
-        airtelRes: TAirtelCollectMoneyResponse,
-        transferAccept: TAirtelUpdateSendMoneyRequest
+    transactionEnquiry: TAirtelTransactionEnquiryResponse,
+    transferId: string,
+    airtelRes: TAirtelCollectMoneyResponse,
+    transferAccept: TAirtelUpdateSendMoneyRequest
 }
 

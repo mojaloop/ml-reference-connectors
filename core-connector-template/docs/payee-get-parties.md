@@ -1,4 +1,5 @@
 # Payee Get Parties 
+This sequence diagram shows the series of steps taken to perform an account lookup operation when a request is initiated by the SDK scheme adapter to the core connector.
 
 ```mermaid
 sequenceDiagram
