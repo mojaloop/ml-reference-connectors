@@ -576,6 +576,8 @@ export interface IAirtelClient {
     collectMoney(deps: TAirtelCollectMoneyRequest): Promise<TAirtelCollectMoneyResponse>;
     refundMoney(deps: TAirtelRefundMoneyRequest): Promise<TAirtelRefundMoneyResponse>;
     getTransactionEnquiry(deps:TAirtelTransactionEnquiryRequest): Promise<TAirtelTransactionEnquiryResponse>;
+    logFailedIncomingTransfer(req: TAirtelDisbursementRequestBody): Promise<void>;
+    logFailedRefund(airtel_money_id: string): Promise<void>;
 }
 
 

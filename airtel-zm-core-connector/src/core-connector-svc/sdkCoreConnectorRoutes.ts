@@ -49,10 +49,10 @@ export class CoreConnectorRoutes extends BaseRoutes {
         const api = new OpenAPIBackend({
             definition: API_SPEC_FILE,
             handlers: {
-                getParties: this.getParties.bind(this),
-                quoteRequests: this.quoteRequests.bind(this),
-                transfers: this.transfers.bind(this),
-                updateReceiveTransfer: this.updateTransfers.bind(this),
+                BackendPartiesGetByTypeAndID: this.getParties.bind(this),
+                BackendQuoteRequest: this.quoteRequests.bind(this),
+                BackendTransfersPost: this.transfers.bind(this),
+                BackendTransfersPut: this.updateTransfers.bind(this),
                 validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(400),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
@@ -96,12 +96,12 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const { params } = context.request;
             const id = params['ID'] as string;
             const idType = params['IdType'] as string;
-            
+
             const result = await this.aggregate.getParties(id, idType);
             return this.handleResponse(result.data, h);
         } catch (error) {
-            if(error instanceof Error){
-                this.logger.error(error,error);
+            if (error instanceof Error) {
+                this.logger.error(error, error);
             }
             return this.handleError(error, h);
         }
@@ -113,8 +113,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const quote = await this.aggregate.quoteRequest(quoteRequest);
             return this.handleResponse(quote, h);
         } catch (error: unknown) {
-            if(error instanceof Error){
-                this.logger.error(error,error);
+            if (error instanceof Error) {
+                this.logger.error(error, error);
             }
             return this.handleError(error, h);
         }
@@ -126,8 +126,8 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.receiveTransfer(transfer);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
-            if(error instanceof Error){
-                this.logger.error(error,error);
+            if (error instanceof Error) {
+                this.logger.error(error, error);
             }
             return this.handleError(error, h);
         }
@@ -142,12 +142,12 @@ export class CoreConnectorRoutes extends BaseRoutes {
             const result = await this.aggregate.updateTransfer(transfer, transferId);
             return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
-            if(error instanceof Error){
-                this.logger.error(error,error);
+            if (error instanceof Error) {
+                this.logger.error(error, error);
             }
             return this.handleError(error, h);
         }
     }
 
-    
+
 }

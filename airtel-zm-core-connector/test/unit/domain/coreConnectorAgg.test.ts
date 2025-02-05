@@ -257,7 +257,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
             const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
-            const res = await ccAggregate.sendTransfer(sendMoneyRequestBody, "SEND");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
 
             logger.info("Response from send money", res);
 
@@ -342,7 +342,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "RECEIVE");
-            const res = await ccAggregate.sendTransfer(merchantPaymentRequestBody, "RECEIVE");
+            const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
 
             logger.info("Response from merchant payment", res);
 
