@@ -97,7 +97,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TMTNSendMoneyRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
-            const result = await this.aggregate.sendTransfer(transfer,"SEND");
+            const result = await this.aggregate.sendMoney(transfer,"SEND");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
@@ -121,7 +121,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TMTNMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
-            const result = await this.aggregate.sendTransfer(transfer,"RECEIVE");
+            const result = await this.aggregate.sendMoney(transfer,"RECEIVE");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);

@@ -168,7 +168,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const sendMoneyReqPayload = sendMoneyDTO(idValue, "103", "SEND");
             //Act 
-            const res = await ccAggregate.sendTransfer(sendMoneyReqPayload, "SEND");
+            const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "SEND");
             //Assert
 
             logger.info("Response", res);
@@ -248,7 +248,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "RECEIVE");
             //Act 
-            const res = await ccAggregate.sendTransfer(sendMoneyReqPayload, "RECEIVE");
+            const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "RECEIVE");
             //Assert
 
             logger.info("Response",res);

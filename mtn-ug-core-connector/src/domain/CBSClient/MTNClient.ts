@@ -64,7 +64,6 @@ export class MTNClient implements IMTNClient {
         this.logger = logger;
     }
 
-
     // Get Default Header
 
     private getDefaultHeader(subscriptionKey: string) {
@@ -102,7 +101,7 @@ export class MTNClient implements IMTNClient {
                 headers: {
                     ...this.getDefaultHeader(deps.subscriptionKey),
                     'Authorization': `Basic ${Buffer.from(`${deps.apiClient}:${deps.apiKey}`).toString("base64")}`
-                } 
+                }
             });
 
             // Check if the status code is not 200 (OK)
@@ -279,6 +278,18 @@ export class MTNClient implements IMTNClient {
             this.logger.error(`Error Getting Token: ${error}`, { url, data: deps });
             throw error;
         }
+    }
+
+    async logFailedIncomingTransfer(req: TMTNDisbursementRequestBody): Promise<void> {
+        //todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed disbursement request", req);
+        return Promise.resolve();
+    }
+
+    async logFailedRefund(transaction_id: string): Promise<void> {
+        // todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed refund transaction id", transaction_id);
+        return Promise.resolve();
     }
 
 
