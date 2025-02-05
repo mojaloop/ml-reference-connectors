@@ -32,7 +32,6 @@ import {
     ITNMClient,
     PartyType,
     TMakePaymentRequest,
-    TMakePaymentResponse,
     TNMCallbackPayload,
     TNMConfig,
     TNMError,
