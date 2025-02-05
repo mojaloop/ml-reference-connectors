@@ -4,6 +4,16 @@ networks:
 
 
 services:
+  tnm-payouts-api:
+    image: stoplight/prism:4
+    command: mock -h 0.0.0.0 -p 5020 "/tmp/tnm-api.yaml"
+    volumes:
+      - ./src/api-spec:/tmp
+    ports:
+      - "5020:5020"
+    init: true
+    restart: unless-stopped
+
   core-connector:
     image: mojaloop/core-connector:latest
     build:

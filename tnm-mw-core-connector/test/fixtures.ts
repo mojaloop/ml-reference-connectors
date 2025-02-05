@@ -322,7 +322,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       },
       "headers": {}
     },
-    "fxQuotesResponse": {
+    "fxQuoteResponse": {
       "body": {
         "homeTransactionId": "string",
         "condition": "string",

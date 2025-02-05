@@ -309,11 +309,8 @@ export interface ITNMClient {
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
     sendMoney(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
     refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>
+    logFailedIncomingTransfer(req: TMakePaymentRequest): Promise<void>;
     collectMoney(deps: TNMInvoiceRequest): Promise<TNMInvoiceResponse>
-
-
-    //  collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
-    //  refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>;
-    //  getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse>;
+    logFailedRefund(receipt_number: string): Promise<void>;
 }
 

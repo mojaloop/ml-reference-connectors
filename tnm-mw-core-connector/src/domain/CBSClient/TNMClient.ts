@@ -52,6 +52,18 @@ export class TNMClient implements ITNMClient {
         this.logger = logger;
     }
 
+    logFailedRefund(receipt_number: string): Promise<void> {
+        // todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed refund transaction id", receipt_number);
+        return Promise.resolve();
+    }
+
+    logFailedIncomingTransfer(req: TMakePaymentRequest): Promise<void> {
+        //todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed disbursement request",req);
+        return Promise.resolve();
+    }
+
     async refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse> {
         this.logger.info(`Performing refund for receipt number ${deps.receipt_number}`);
         const url = `${this.tnmConfig.TNM_BASE_URL}${TNM_ROUTES.refundMoney}${deps.receipt_number}`;
