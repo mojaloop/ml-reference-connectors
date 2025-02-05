@@ -16,7 +16,7 @@ Alt if Customer account has issues
 CC-->> ML Connector: Response 500 mlCode: 5400
 End
 CC-->>ML Connector: Response 200 {RESERVED}
-ML Connector->>CC: PATCH /transfers/{id}
+ML Connector->>CC: PUT /transfers/{id}
 Alt if Current State !== COMPLETED
 CC-->>ML Connector: Response 500
 End

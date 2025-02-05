@@ -163,6 +163,11 @@ export type TGetQuotesDeps = {
     quoteRequest: TQuoteRequest
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}
+
 export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
     cbsClient: ICbsClient;
