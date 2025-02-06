@@ -192,6 +192,12 @@ const config = Convict<IConfigSchema>({
             default: null,
             env: 'LEI',
         },
+        DFSP_CURRENCY: {
+            doc: 'DFSP Currency Independent of the Sandbox default Currency',
+            format: String,
+            default: null,
+            env: 'DFSP_CURRENCY',
+        },
     },
 });
 

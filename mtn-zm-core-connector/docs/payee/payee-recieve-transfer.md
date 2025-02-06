@@ -18,6 +18,12 @@ CC->>CC:Validation Checks, Expiration Check, Quote Expiration Validation, Curren
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
+CC->>MTN:GET /collection/v1_0/accountholder/{accountHolderIdType}/{accountHolderId}/basicuserinfo
+MTN-->>CC: Response
+CC->>CC: Check response and customer account status 
+Alt if Customer account has issues 
+CC-->> ML Connector: Response 500 mlCode: 5400
+End
 CC-->>ML Connector: Response RESERVED
 ML Connector->>CC: PATCH /transfers/{id}
 Alt if Current State !== COMPLETED
@@ -30,7 +36,7 @@ End
 CC->>MTN: POST /disbursement/v1_0/transfer
 MTN-->CC: Response
 Alt if Response not Successful
-CC-->>ML Connector: Response 500
+CC->>CC: Log failed transaction for further action by DFSP
 End
 CC-->>ML Connector: Response 200
 

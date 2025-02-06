@@ -155,3 +155,7 @@ export type TtransactionEnquiryDeps = {
         transferAccept: TMTNUpdateSendMoneyRequest
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}

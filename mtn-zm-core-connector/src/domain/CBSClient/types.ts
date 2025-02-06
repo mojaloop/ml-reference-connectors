@@ -77,6 +77,7 @@ export type TMTNConfig = {
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
     LEI: string;
+    DFSP_CURRENCY:components["schemas"]["Currency"];
 }
 
 
@@ -224,6 +225,7 @@ export type TMTNSendMoneyResponse = {
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
+    "homeTransactionId": string;
 }
 
 
@@ -258,5 +260,7 @@ export interface IMTNClient{
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
     getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
     getDisbursementTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
+    logFailedIncomingTransfer(req: TMTNDisbursementRequestBody): Promise<void>;
+    logFailedRefund(transaction_id: string): Promise<void>;
 
 }
