@@ -552,7 +552,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
@@ -609,7 +609,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                // perform refund or rollback
                 await this.handleRefund(payload);
             }
         }
@@ -622,8 +621,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
         } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process...");
-            // todo: define a way to start a manual refund process.
-            throw error;
+            this.tnmClient.logFailedRefund(payload.receipt_number);
         }
     }
 }

@@ -40,6 +40,7 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
+    TMTNRefundRequestBody,
 } from './CBSClient';
 import {
     ILogger,
@@ -358,7 +359,7 @@ export class CoreConnectorAggregate {
             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
             "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
-            "homeTransactionId":homeTransactionId
+            "homeTransactionId": homeTransactionId
         };
     }
 
@@ -483,7 +484,7 @@ export class CoreConnectorAggregate {
                 'idValue': transfer.payeeId,
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
@@ -521,9 +522,9 @@ export class CoreConnectorAggregate {
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return this.handleSendTransferRes(res.data,transfer.homeTransactionId);
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
         } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-            return this.handleReceiveTransferRes(res.data,transfer.homeTransactionId);
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
@@ -555,7 +556,7 @@ export class CoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTMTNSendMoneyResponse(acceptRes.data,homeTransactionId);
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
@@ -584,7 +585,7 @@ export class CoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTMTNSendMoneyResponse(acceptRes.data,homeTransactionId);
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
@@ -614,10 +615,38 @@ export class CoreConnectorAggregate {
 
     async handleCallback(payload: TMTNCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-        if (payload.status === "SUCCESSFUL") {
-            await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
-        } else {
-            await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+        try {
+            if (payload.status === "SUCCESSFUL") {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+            }
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                // perform refund or rollback if payment was successful
+                if (payload.status === "SUCCESSFUL") {
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
+        }
+    }
+
+    private async handleRefund(refund: TMTNRefundRequestBody): Promise<void> {
+        try {
+            await this.mtnClient.refundMoney(refund);
+        } catch (error: unknown) {
+            this.mtnClient.logFailedRefund(refund);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TMTNCallbackPayload): TMTNRefundRequestBody {
+        return {
+            "amount": callbackPayload.amount,
+            "currency": callbackPayload.currency,
+            "externalId": callbackPayload.externalId,
+            "payerMessage": "Refund",
+            "payeeNote": callbackPayload.payeeNote,
+            "referenceIdToRefund": callbackPayload.financialTransactionId
         }
     }
 

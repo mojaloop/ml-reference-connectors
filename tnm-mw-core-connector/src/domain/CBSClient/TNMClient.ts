@@ -54,7 +54,7 @@ export class TNMClient implements ITNMClient {
 
     logFailedRefund(receipt_number: string): Promise<void> {
         // todo: to be defined based on what DFSP recommends.
-        this.logger.info("Failed refund transaction id", receipt_number);
+        this.logger.info("Failed refund transaction id ", receipt_number);
         return Promise.resolve();
     }
 
