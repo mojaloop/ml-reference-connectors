@@ -647,7 +647,7 @@ export class CoreConnectorAggregate {
             "payerMessage": "Refund",
             "payeeNote": callbackPayload.payeeNote,
             "referenceIdToRefund": callbackPayload.financialTransactionId
-        }
+        };
     }
 
 }
