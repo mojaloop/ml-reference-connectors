@@ -77,7 +77,7 @@ export type TMTNConfig = {
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
     LEI: string;
-    DFSP_CURRENCY:components["schemas"]["Currency"];
+    DFSP_CURRENCY:string;
 }
 
 
