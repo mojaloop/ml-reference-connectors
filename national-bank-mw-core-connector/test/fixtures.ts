@@ -280,7 +280,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       idValue: idValue,
       supportedCurrencies: ["MWK"]
     },
-    fxQuotesResponse: {
+    fxQuoteResponse: {
       body:{
           homeTransactionId: "",
           conversionTerms: {

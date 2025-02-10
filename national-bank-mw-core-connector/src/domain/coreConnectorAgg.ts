@@ -378,14 +378,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);   
         let result = true;
         if (
-            !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
+            !(this.cbsConfig.X_CURRENCY === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
             this.logger.error(`X_CURRENCY ${this.cbsConfig.X_CURRENCY} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             result = false;
         }
         if (transferRes.amountType === 'SEND') {
-            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount}`);
+            if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
+                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}`);
                 result = false;
             }
             if (!transferRes.to.supportedCurrencies) {
@@ -396,26 +396,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 this.logger.error(`Payee Supported Currency ${transferRes.to.supportedCurrencies} does not contain ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
             }
-            if (!(transferRes.currency === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)) {
-                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency}`);
+            if (!(transferRes.currency === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)) {
+                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
                 result = false;
             }
         } else if (transferRes.amountType === 'RECEIVE') {
-            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount}`);
+            if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount)) {
+                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`);
                 result = false;
             }
             if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
                 this.logger.error(`Currency ${transferRes.currency} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
             }
-            if (transferRes.fxQuotesResponse) {
+            if (transferRes.fxQuoteResponse) {
                 if (!transferRes.from.supportedCurrencies) {
                     this.logger.error(`Payee Supported Currency not defined`);
                     throw ValidationError.unsupportedCurrencyError();
                 }
-                if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency))) {
-                    this.logger.error(`Payee Supported Currency ${transferRes.from.supportedCurrencies} does not contain ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency}`);
+                if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.currency))) {
+                    this.logger.error(`Payee Supported Currency ${transferRes.from.supportedCurrencies} does not contain ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.currency}`);
                     result = false;
                 }
             }
@@ -431,7 +431,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             result = false;
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
-        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
+        const fxQuoteResponseBody = outboundTransferRes.fxQuoteResponse?.body;
         if (!quoteResponseBody) { 
             this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();
@@ -492,9 +492,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
+            "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
             "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
         };
     }
