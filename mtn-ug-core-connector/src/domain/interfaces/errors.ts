@@ -67,8 +67,8 @@ export class ValidationError extends BasicError {
         });
     }
 
-    static invalidReturnedQuoteError(){
-        return new ValidationError("Invalid Quote Error", {
+    static invalidReturnedQuoteError(message: string ){
+        return new ValidationError(message, {
             mlCode: '5101',
             httpCode: 500,
         });
@@ -111,12 +111,12 @@ export class ValidationError extends BasicError {
     static accountBarredError(){
         return new ValidationError("Account is Barred", {
             mlCode: '5400',
-            httpCode: 400,
+            httpCode: 500,
         });
     }
 
-    static invalidQuoteError(){
-        return new ValidationError("Invalid Quote Error", {
+    static invalidQuoteError(message: string){
+        return new ValidationError(message, {
             mlCode: '5101',
             httpCode: 400,
         });

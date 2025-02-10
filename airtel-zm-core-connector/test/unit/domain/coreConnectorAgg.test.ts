@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
@@ -257,7 +257,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
             const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
-            const res = await ccAggregate.sendTransfer(sendMoneyRequestBody, "SEND");
+            const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
 
             logger.info("Response from send money", res);
 
@@ -342,7 +342,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "RECEIVE");
-            const res = await ccAggregate.sendTransfer(merchantPaymentRequestBody, "RECEIVE");
+            const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
 
             logger.info("Response from merchant payment", res);
 

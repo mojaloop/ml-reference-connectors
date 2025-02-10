@@ -33,25 +33,30 @@ export type TCBSConfig = {
     EXPIRATION_DURATION: string;
     AIRTEL_PIN: string;
     FSP_ID: string
+    LEI: string;
 }
 
 
 export type TCbsSendMoneyRequest = {
-    "homeTransactionId": string;
-    "payeeId": string;
-    "amountType": "RECEIVE" | "SEND",
-    "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
-    "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
-    "transactionDescription": string;
-    "transactionType": components['schemas']['transferTransactionType'];
-    "payer": string;
-    "payerAccount": string;
-    "dateOfBirth": string;
+    homeTransactionId: string;
+    payeeId: string;
+    payeeIdType: components["schemas"]["PartyIdType"];
+    sendAmount: string;
+    sendCurrency: components['schemas']['Currency'];
+    receiveCurrency: components['schemas']['Currency'];
+    transactionDescription: string;
+    transactionType: components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+        DateAndPlaceOfBirth: {
+            BirthDt: string;
+            PrvcOfBirth: string;
+            CityOfBirth: string;
+            CtryOfBirth: string;
+        };
+    };
 }
-
-export type TMerchantPaymentRequest = TCbsSendMoneyRequest;
 
 export type TCbsSendMoneyResponse = {
     "payeeDetails": {
@@ -76,8 +81,6 @@ export type TCBSUpdateSendMoneyRequest = {
     "msisdn": string;
     "amount": string;
 }
-
-export type TUpdateMerchantPaymentRequest = TCBSUpdateSendMoneyRequest;
 
 export type TCallbackRequest = {
     "transaction": {
@@ -222,4 +225,6 @@ export interface ICbsClient {
     sendMoney(deps: TCbsDisbursementRequestBody): Promise<TCbsDisbursementResponse>;
     collectMoney(deps: TCbsCollectMoneyRequest): Promise<TCbsCollectMoneyResponse>;
     refundMoney(deps: TCbsRefundMoneyRequest): Promise<TCbsRefundMoneyResponse>;
+    logFailedIncomingTransfer(req: TCbsDisbursementRequestBody): Promise<void>;
+    logFailedRefund(airtel_money_id: string): Promise<void>;
 }

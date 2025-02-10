@@ -1,0 +1,664 @@
+openapi: 3.0.0
+info:
+  title: Payouts API
+  description: This API is for handling third-party payments on Mpamba Core Payment System.
+  version: 1.0.0
+servers:
+  - url: http://{{baseurl}}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    noauthAuth:
+      type: http
+      scheme: noauth
+tags:
+  - name: Authentication
+  - name: Payments
+  - name: Invoicing (USSD Push)
+  - name: Password Management
+paths:
+  /authenticate:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate
+      description: >-
+        Use this endpoint to generate a bearer token. This token will be
+        required on all transcations within the API.
+
+
+        The tokens are short-lived. Expiry time is shown on the response.
+        Default TTL is 25 hours, allowing daily automated renewals.
+
+
+        | **Key** | **Data Type** | **Description** | **Required** | **Example**
+        |
+
+        | --- | --- | --- | --- | --- |
+
+        | wallet | String | Organisation's mobile money wallet | Yes | 421246 |
+
+        | password | String | Organisation's secret password | Yes |
+        393rhewdbkd7326^#%@!9hewj |
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                wallet: "56783843"
+                password: 88JBUERE483J4N4TR
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data:
+                  token: 3|i6cvlcmyDKMzpczXol6QTbwMWzIgZI25AfwdOfCG
+                  expires_at: '2023-07-13 10:56:45'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: The given data is invalid.
+                errors:
+                  wallet:
+                    - The wallet field is required.
+                  password:
+                    - The password field is required.
+                data: null
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Invalid credentials
+                errors: []
+                trace: []
+                data: null
+  /payments/validate/{receipt_number}:
+    get:
+      tags:
+        - Payments
+      summary: Validate
+      parameters:
+        - name: receipt_number
+          in: path
+          schema:
+            type: string
+          required: true
+      description: Check if the `msisdn` has a Mpamba account
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data:
+                  full_name: Promise Mphoola
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Provide a valid TNM number
+                errors: []
+                trace: []
+                data: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Subscriber not found
+                errors: []
+                trace: []
+                data: null
+  /payments:
+    post:
+      tags:
+        - Payments
+      summary: Make Payment
+      description: >-
+        Use this API to send money from your wallet to customer's number.
+
+
+        | **Key** | **Data Type** | **Description** | **Required** | **Example**
+        |
+
+        | --- | --- | --- | --- | --- |
+
+        | msisdn | String | Phone number of the recepient | Yes | 0888800900 |
+
+        | amount | Integer | The amount of money in Kwacha to send | Yes | 300 |
+
+        | transaction_id | String | The inititiator system's transaction
+        identifier. This must be unique | Yes | AFDE7362DJS3 |
+
+        | narration | String | Any description associated with the payment | Yes
+        | Online purchase |
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                msisdn: '0886788210'
+                amount: '100'
+                transaction_id: '{{transaction_id}}'
+                narration: Payment for test
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data:
+                  transaction_id: ljzowczj
+                  receipt_number: AGC00B5MCA
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Unauthorized Source
+                  value:
+                    message: You are not allowed to make requests from this IP address.
+                    errors: []
+                    trace: []
+                    data: null
+                example-1:
+                  summary: Password Not Changed
+                  value:
+                    message: You need to change your password first
+                    errors: []
+                    trace: []
+                    data: null
+  /payments/{receipt_number}:
+    get:
+      tags:
+        - Payments
+      summary: Check Payment Status
+      parameters:
+        - name: receipt_number
+          in: path
+          schema:
+            type: string
+          required: true
+      description: >-
+        Use the request's `transaction_id` to check the status of the
+        transaction in the payment system
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data:
+                  transaction_id: ljzowczj
+                  receipt_number: AGC00B5MCA
+                  success: true
+                  result_description: '0881290645: Process service request successfully.'
+                  result_code: '0'
+                  created_at: '2023-07-12T12:20:49.000000Z'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Resource not found
+                errors: []
+                trace: []
+                data: null
+  /invoices:
+    post:
+      tags:
+        - Invoicing (USSD Push)
+      summary: Issue Invoice
+      description: >-
+        Use this API to request payment from a subscriber.
+
+
+        The subscriber will receive a USSD prompt and/or a notification on their
+        SmartApp to authorize payment
+
+
+        ## Request Payload
+
+
+        | **Key** | **Data Type** | **Description** | **Required** | **Example**
+        |
+
+        | --- | --- | --- | --- | --- |
+
+        | msisdn | String | The phone number of the customer to make the payment
+        | Yes | 0888800900 |
+
+        | amount | Integer | The amount of money in Malawi Kwacha to be paid |
+        Yes | 300 |
+
+        | invoice_number | String | The third party application's transaction
+        identifier | Yes | 36DHRG3873DY |
+
+        | description | String | Any description associated with the payment |
+        Yes | Online purchase |
+
+
+        ## Callback Payload
+
+
+        This is an async function. A callback will be sent to your callback URL
+        upon completion of the transaction.
+
+
+        The following is the data that will be sent with the callback request
+
+
+        | **Key** | **Data Type** | **Description** | **Example** |
+
+        | --- | --- | --- | --- |
+
+        | receipt_number | String | The receipt identifier generated by our
+        payment system | AGE80B5NA4 |
+
+        | result_code | Integer | The coded result status | 0 |
+
+        | result_description | String | The definition of the result code |
+        0881860790: Process service request successfully. |
+
+        | result_time | DateTime | The time the result is sent to the third
+        party callback handler | 2023-07-14 11:44:36 |
+
+        | transaction_id | String | The third party application's original
+        transaction identifier | lk2e71aj |
+
+        | success | Boolean | Whether the payment was successful or not | true |
+
+
+        ## Sample Callback Payload
+
+
+        ``` json
+
+        {
+          "receipt_number": "AGE80B5NA4",
+          "result_description": "0881860790: Process service request successfully.",
+          "result_code": "0",
+          "result_time": "2023-07-14 11:44:36",
+          "transaction_id": "lk2e71aj",
+          "success": true
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                invoice_number: '{{transaction_id}}'
+                amount: 300
+                msisdn: '265886788210'
+                description: Test invoice
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Request accepted and processing
+                errors: []
+                trace: []
+                data: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: The given data is invalid.
+                errors:
+                  invoice_number:
+                    - The invoice number field is required.
+                  amount:
+                    - The amount field is required.
+                  msisdn:
+                    - The msisdn field is required.
+                  description:
+                    - The description field is required.
+                data: null
+  /invoices/{invoice_number}:
+    get:
+      tags:
+        - Invoicing (USSD Push)
+      summary: Check Invoice Status
+      parameters:
+        - name: invoice_number
+          in: path
+          schema:
+            type: string
+          required: true
+      description: >-
+        Use the request's `invoice_number` to check the status of the
+        transaction in the payment system
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Paid Invoice
+                  value:
+                    message: Completed successfully
+                    errors: []
+                    trace: []
+                    data:
+                      invoice_number: ljzpyttk
+                      amount: '300'
+                      msisdn: '0881290645'
+                      receipt_number: AGC20B5N44
+                      settled_at: '2023-07-12 14:51:12'
+                      paid: true
+                      reversal_transcation_id: null
+                      reversed: false
+                      reversed_at: null
+                example-1:
+                  summary: Reversed Paid Invoice
+                  value:
+                    message: Completed successfully
+                    errors: []
+                    trace: []
+                    data:
+                      invoice_number: ljzpyttk
+                      amount: '300'
+                      msisdn: '0881290645'
+                      receipt_number: AGC20B5N44
+                      settled_at: '2023-07-12 14:51:12'
+                      paid: true
+                      reversal_transcation_id: 3JO70001YR
+                      reversed: true
+                      reversed_at: '2023-07-12 16:51:12'
+                example-2:
+                  summary: Pending Invoice
+                  value:
+                    message: Completed successfully
+                    errors: []
+                    trace: []
+                    data:
+                      invoice_number: ljzphsin
+                      amount: '300'
+                      msisdn: '0881290645'
+                      receipt_number: null
+                      settled_at: null
+                      paid: false
+                      reversal_transcation_id: null
+                      reversed: false
+                      reversed_at: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Resource not found
+                errors: []
+                trace: []
+                data: null
+  /invoices/refund/{receipt_number}:
+    post:
+      tags:
+        - Invoicing (USSD Push)
+      summary: Refund
+      description: >-
+        This API is used for initiating a reversal to a subscriber who has paid
+        for your service but, for some reason, the service was not successfully
+        rendered at your end. This API is meant for settling your customer
+        service disputes.
+
+
+        It takes one `URL` parameter: the`receipt_number` that was issued by
+        Payouts API when the original transaction was made.
+
+
+        | **Key** | **Data Type** | **Description** | **Example** |
+
+        | --- | --- | --- | --- |
+
+        | receipt_number | String | The receipt identifier generated by our
+        payment system | 374YETST3720 |
+      requestBody:
+        content: {}
+      parameters:
+        - name: receipt_number
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data:
+                  reversal_transaction_id: 3JO70001YR
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Invoice not found
+                errors: []
+                trace: []
+                data: null
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Failed to process the request. Please try again later.
+                errors: []
+                trace: []
+                data: null
+  /password:
+    patch:
+      tags:
+        - Password Management
+      summary: Change Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                new_password: '*}Ij1z1oVF;?A:|6hxh!%<Q/RcNKZ3R'
+                new_password_confirmation: '*}Ij1z1oVF;?A:|6hxh!%<Q/RcNKZ3R'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Completed successfully
+                errors: []
+                trace: []
+                data: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: The given data is invalid.
+                errors:
+                  new_password:
+                    - The new password field is required.
+                data: null
+  /password/forgot:
+    post:
+      tags:
+        - Password Management
+      summary: Forgot Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                wallet: '{{wallet}}'
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Password reset code has been sent to your email
+                errors: []
+                trace: []
+                data: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: The given data is invalid.
+                errors:
+                  wallet:
+                    - The wallet field is required.
+                data: null
+  /password/reset:
+    post:
+      tags:
+        - Password Management
+      summary: Reset Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                wallet: '{{wallet}}'
+                new_password: zC)f<XdH>J9uk:siMz#%xA9A_KT.j]mI
+                new_password_confirmation: zC)f<XdH>J9uk:siMz#%xA9A_KT.j]mI
+                reset_code: Y1vvid5fx8reHoDH
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Password reset successfully
+                errors: []
+                trace: []
+                data: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: The given data is invalid.
+                errors:
+                  wallet:
+                    - The wallet field is required.
+                  reset_code:
+                    - The reset code field is required.
+                  new_password:
+                    - The new password field is required.
+                data: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Reset code not found or expired
+                errors: []
+                trace: []
+                data: null

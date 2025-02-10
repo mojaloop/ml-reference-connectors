@@ -200,4 +200,16 @@ export class AirtelClient implements IAirtelClient {
         return res.access_token;
     }
 
+    logFailedRefund(airtel_money_id: string): Promise<void> {
+        // todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed refund transaction id", airtel_money_id);
+        return Promise.resolve();
+    }
+
+    logFailedIncomingTransfer(req: TAirtelDisbursementRequestBody): Promise<void> {
+        //todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed disbursement request",req);
+        return Promise.resolve();
+    }
+
 }

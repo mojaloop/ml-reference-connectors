@@ -83,10 +83,20 @@ export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
 
+export type  TPayeeExtensionListEntry = {
+    key?: string;
+    value?: string;
+}
+
+export type TPayerExtensionListEntry = {
+    key: string;
+    value: string;
+}
+
 export type Party = {
     dateOfBirth?: string;
     displayName: string;
-    extensionList?: unknown[];
+    extensionList?: TPayeeExtensionListEntry[];
     firstName: string;
     fspId?: string;
     idSubValue?: string;
@@ -153,6 +163,11 @@ export type TGetQuotesDeps = {
     quoteRequest: TQuoteRequest
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}
+
 export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
     cbsClient: ICbsClient;
@@ -163,6 +178,6 @@ export interface ICoreConnectorAggregate {
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TCbsSendMoneyRequest): Promise<TCbsSendMoneyResponse>
+    sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse>
     updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse>
 }

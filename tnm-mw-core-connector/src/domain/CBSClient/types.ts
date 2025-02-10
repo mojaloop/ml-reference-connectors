@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
 
  http://www.apache.org/licenses/LICENSE-2.0
 
@@ -48,7 +48,11 @@ export type TNMConfig = {
     RECEIVING_SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string,
     FSP_ID: string,
+<<<<<<< HEAD
     TNM_CURRENCY: string,
+=======
+    TNM_CURRENCY: components["schemas"]["Currency"],
+>>>>>>> dev
     X_COUNTRY: string,
     LEI: string;
 }
@@ -309,11 +313,8 @@ export interface ITNMClient {
     getToken(deps: TGetTokenArgs): Promise<TGetTokenResponse>;
     sendMoney(deps: TMakePaymentRequest): Promise<TMakePaymentResponse>
     refundPayment(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>
+    logFailedIncomingTransfer(req: TMakePaymentRequest): Promise<void>;
     collectMoney(deps: TNMInvoiceRequest): Promise<TNMInvoiceResponse>
-
-
-    //  collectMoney(deps: TNMCollectMoneyRequest): Promise<TNMCollectMoneyResponse>;
-    //  refundMoney(deps: TNMRefundMoneyRequest): Promise<TNMRefundMoneyResponse>;
-    //  getTransactionEnquiry(deps: TNMTransactionEnquiryRequest): Promise<TNMTransactionEnquiryResponse>;
+    logFailedRefund(receipt_number: string): Promise<void>;
 }
 

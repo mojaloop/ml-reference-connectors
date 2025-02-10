@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
@@ -23,8 +23,6 @@
  --------------
  **********/
 
- import axios from 'axios';
- import MockAdapter from 'axios-mock-adapter';
  
  import { CoreConnectorAggregate, } from '../../../src/domain';
  import {
@@ -41,12 +39,11 @@
      quoteRequestDto, 
      sendMoneyDTO, 
      transferPatchNotificationRequestDto,
-     updateSendMoneyDTO, 
+     updateSendMoneyDTO,
     
  } from '../../fixtures';
  import { randomUUID } from 'crypto';
  
- const mockAxios = new MockAdapter(axios);
  const logger = loggerFactory({ context: 'ccAgg tests' });
  const NBMConfig = config.get("nbm");
  const SDK_URL = 'http://localhost:4040';
@@ -68,7 +65,6 @@
     let sdkClient: ISDKClient;
     
     beforeEach(() => {
-        mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
         nbmClient = NBMClientFactory.createClient({ NBMConfig, httpClient, logger });
@@ -139,7 +135,7 @@
             const res = await ccAggregate.receiveTransfer(transferRequestPayload);
 
             // Assert
-            expect(res.transferState).toEqual("RECEIVED");
+            expect(res.transferState).toEqual("RESERVED");
         });
 
         test("Transfer Patch notification should credit the customer's account if request body is valid", async () => {
@@ -336,6 +332,19 @@
         
             // Assert
             expect(collectMoney).toHaveBeenCalled();
+        });
+
+        test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
+            const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
+
+            // Act
+            await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
+
+            // Assert
+            expect(updateTransferSpy).toHaveBeenCalled();
         });
 
         

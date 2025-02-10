@@ -1,8 +1,8 @@
 /*****
  License
  --------------
- Copyright © 2017 Bill & Melinda Gates Foundation
- The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
+ Copyright © 2017 Mojaloop Foundation
+ The Mojaloop files are made available by the Mojaloop Foundation under the Apache License, Version 2.0 (the "License") and you may not use these files except in compliance with the License. You may obtain a copy of the License at
  http://www.apache.org/licenses/LICENSE-2.0
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
@@ -166,9 +166,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe("TNM Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-            });
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -178,9 +175,16 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
 
             });
-            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
+<<<<<<< HEAD
+=======
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+>>>>>>> dev
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
@@ -233,9 +237,12 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test("POST /merchant-payment: ", async () => {
+<<<<<<< HEAD
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
+=======
+>>>>>>> dev
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -245,8 +252,17 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
 
             });
+<<<<<<< HEAD
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+=======
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+>>>>>>> dev
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");

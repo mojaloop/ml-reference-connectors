@@ -24,7 +24,7 @@ sequenceDiagram
   ML Connector-->>CC: Response
   CC->>CC: Check response
   Alt if error occured
-  CC->>CC: Initiate Refund 
+  CC->>CC: Initiate Refund POST /api/transfer
   End
   CC-->> DFSP Customer App: Response 200
 ```

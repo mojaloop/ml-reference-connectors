@@ -54,7 +54,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             definition: API_SPEC_FILE,
             handlers: {
                 sendMoney: this.initiateTransfer.bind(this),
-                updateSendMoney: this.updateInitiatedTransfer.bind(this),
+                sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
                 initiateMerchantPayment : this.initiateMerchantPayment.bind(this),
                 updateInitiatedMerchantPayment : this.updateInitiatedMerchantPayment.bind(this),
                 callback: this.callbackHandler.bind(this),
@@ -100,7 +100,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TAirtelSendMoneyRequest;
         try {
-            const result = await this.aggregate.sendTransfer(transfer, "SEND");
+            const result = await this.aggregate.sendMoney(transfer, "SEND");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             if(error instanceof Error){
@@ -130,7 +130,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         const transfer = request.payload as TAirtelMerchantPaymentRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
-            const result = await this.aggregate.sendTransfer(transfer,"RECEIVE");
+            const result = await this.aggregate.sendMoney(transfer,"RECEIVE");
             return this.handleResponse(result, h);
         } catch (error: unknown) {
             return this.handleError(error, h);

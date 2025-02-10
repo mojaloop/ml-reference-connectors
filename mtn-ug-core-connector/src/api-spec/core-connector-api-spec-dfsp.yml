@@ -137,12 +137,12 @@ paths:
           description: >-
             Transfer Timeout.
 
-  /merchant-payment/{id}:
+  /merchant-payment/{transferId}:
     put:
       summary: Confirm send money
       operationId: updateInitiatedMerchantPayment
       parameters:
-        - name: id
+        - name: transferId
           in: path
           required: true
           description: The ID of the transaction
@@ -183,30 +183,42 @@ components:
     callbackPayload:
       type: object
       properties:
-        transaction:
+        financialTransactionId:
+          type: string
+          example: BBZMiscxy
+          description: Unique identifier for the transaction.
+        externalId:
+          type: string
+          example: "EXT123456789"
+          description: External reference ID for the transaction.
+        amount:
+          type: string
+          example: "5000"
+          description: Transaction amount.
+        currency:
+          type: string
+          example: "UGX"
+          description: Currency of the transaction.
+        payee:
           type: object
           properties:
-            id:
+            partyIdType:
               type: string
-              example: BBZMiscxy
-              description: Unique identifier for the transaction.
-            message:
+              example: "MSISDN"
+              description: Type of identifier for the payee.
+            partyId:
               type: string
-              example: Paid UGX 5,000 to TECHNOLOGIES LIMITED Charge UGX 140, Trans ID MP210603.1234.L06941.
-              description: Transaction message detailing payment, charges, and transaction ID.
-            status_code:
-              type: string
-              example: TS
-              description: Status code of the transaction.
-            airtel_money_id:
-              type: string
-              example: MP210603.1234.L06941
-              description: Airtel money transaction ID.
-          required:
-            - id
-            - message
-            - status_code
-            - airtel_money_id
+              example: "777503758"
+              description: Payee's identifier.
+        payeeNote:
+          type: string
+          example: "Payment for services"
+          description: Note from the payee.
+        status:
+          type: string
+          example: "TS"
+          description: Status of the transaction.
+
     merchantPaymentRequest:
       type: object
       properties:
@@ -355,6 +367,9 @@ components:
           example: "USD"
         transactionId:
           type: string
+          example: "01JKB0F2WV7YVSA6CXGP977XT9"
+        homeTransactionId:
+          type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyRequest:
       type: object
@@ -435,3 +450,9 @@ components:
         amount:
           type: string
           example: "500"
+        payerMessage:
+          type: string
+          example: "Payment for services"
+        payeeNote:
+          type: string
+          example: "Thank you!"

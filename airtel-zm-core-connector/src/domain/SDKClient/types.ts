@@ -91,12 +91,12 @@ export type TSDKOutboundTransferResponse = {
     /** @description FSPID of the entity that supplied the quote response. This may not be the same as the FSPID of the entity which owns the end user account in the case of a FOREX transfer. i.e. it may be a FOREX gateway. */
     quoteResponseSource?: string;
     conversionRequestId?: components["schemas"]["CorrelationId"];
-    fxQuotesResponse?: {
+    fxQuoteResponse?: {
         body: components["schemas"]["FxQuotesPostOutboundResponse"];
         headers?: Record<string, never>;
     };
     /** @description FXPID of the entity that supplied the fxQuotes response. */
-    fxQuotesResponseSource?: string;
+    fxQuoteResponseSource?: string;
     fulfil?: {
         body: components["schemas"]["TransfersIDPutResponse"];
         headers?: Record<string, never>;
