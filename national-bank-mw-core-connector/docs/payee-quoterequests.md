@@ -30,7 +30,7 @@ Alt if account cannot receive amount
 CC-->>ML Connector: Response 500
 End
 CC->>CC:Calculate Charge
-CC->> CBS Api:GET /standard/v2/users/{msisdn}
+CC->> CBS Api:GET /api/{account_number} 
 CBS Api -->> CC:Response
 CC->>CC: Check Respomse
 Alt if Response not Successful

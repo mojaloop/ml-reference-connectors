@@ -18,7 +18,7 @@ sequenceDiagram
   Alt If Checks fail
   Core Connector-->> Mojaloop Connector: Response 400
   End
-  Core Connector->>Core Banking Api:GET /replace/with/api/call/for/getting/customer 
+  Core Connector->>Core Banking Api:GET /api/{account_number} 
   Core Banking Api-->>Core Connector: Response
   Core Connector->>Core Connector:Response Check
   Alt If Response is Not Successful

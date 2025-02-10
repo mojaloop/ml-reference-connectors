@@ -1,4 +1,4 @@
-# Payer Update Send Money
+# Payer Update Merchant Payment
 
 This sequence diagram shows the requests involved when a DFSP customer is initiating a payment request into the mojaloop scheme through a mobile, web or USSD application. The components involved in this design are the following
 
@@ -15,7 +15,7 @@ sequenceDiagram
   autoNumber
   Customer ->> DFSP Customer App: Click Continue
   DFSP Customer App->> DFSP Customer App: Debit Customer Account.
-  DFSP Customer App->>CC: PUT /send-money/{id}/acceptQuote=true | false
+  DFSP Customer App->>CC: PUT /merchant-payment/{id}/acceptQuote=true | false
   CC->>CC: Check acceptQuote
   Alt If Quote not Accepted
   CC-->>DFSP Customer App: Response 500 OK
