@@ -1,5 +1,4 @@
-# Payee Transfers for this DFSP
-
+# NBM Payee Receive Transfer
 This sequence diagram shows the requests involved in a typical transfer execution phase from the mojaloop connector to the DFSP core connector. This stage involves the mojaloop connector sending a request to credit a beneficiary's account with the funds specified in a POST /transfers request. After the POST /transfers request, if the request is successfully handled, the final result should be a funds reservation in the CBS Api. After a reserved response is sent back to the Mojaloop Connector, the Mojaloop Connector will eventually send back a patch notification that then actually credits funds to the intended beneficiary's account. There are 3 actors involved in the process i.e
 - ML Connector, the mojaloop connection middleware
 - CC, the core connector that interfaces the mojaloop connector to the core banking apis
@@ -19,14 +18,8 @@ CC->>CC:Validation Checks, Expiration Check, Quote Expiration Validation, Curren
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC->>CBS Api: POST /Reserve/funds
-CBS Api-->> CC: Reservation Response
-CC->>CC: Check response
-Alt if reservation failed
-CC-->>ML Connector: 500 Reservation Failed
-End
 CC-->>ML Connector: Response RESERVED
-ML Connector->>CC: PUT /transfers/{id}
+ML Connector->>CC: PATCH /transfers/{id}
 Alt if Current State !== COMPLETED
 CC-->>ML Connector: Response 500
 End
@@ -34,8 +27,8 @@ CC->>CC: Validation Checks, Expiration Check, Quote Expiration Validation, Curre
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC->>CBS Api: POST /standard/v3/disbursement
-CBS Api-->CC: Response
+CC->>MTN: POST /disbursement/v1_0/transfer
+MTN-->CC: Response
 Alt if Response not Successful
 CC-->>ML Connector: Response 500
 End

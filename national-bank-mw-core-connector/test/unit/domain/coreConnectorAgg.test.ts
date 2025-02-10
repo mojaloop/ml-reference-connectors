@@ -98,7 +98,7 @@
 
             // Act
             const res = await ccAggregate.getParties(ACCOUNT_NO, idType);
-
+            logger.info(JSON.stringify(res));
             // Assert
             expect(res.statusCode(200)).toEqual(200);
             expect(res.extensionList).toBeDefined();
@@ -118,7 +118,6 @@
 
             // Act
             const res = await ccAggregate.quoteRequest(quoteRequestDto(idType, ACCOUNT_NO, "1000"));
-
             // Assert
             expect(res.transferAmount).toBeDefined();
             
