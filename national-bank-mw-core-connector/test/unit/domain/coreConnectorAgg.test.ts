@@ -254,6 +254,19 @@
             // Assert
             expect(collectMoney).toHaveBeenCalled();
         });
+
+        test("Update Send Money should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
+            const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
+
+            // Act
+            await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
+
+            // Assert
+            expect(updateTransferSpy).toHaveBeenCalled();
+        });
     });
 
     describe("Merchant Core Connector Aggregate Tests", () => {
@@ -346,7 +359,6 @@
             // Assert
             expect(updateTransferSpy).toHaveBeenCalled();
         });
-
         
     });
 });
