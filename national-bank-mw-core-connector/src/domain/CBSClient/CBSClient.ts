@@ -64,6 +64,13 @@ export class NBMClient implements INBMClient {
         this.httpClient = httpClient;
         this.logger = logger;
     }
+
+    logFailedRefund(receipt_number: string): Promise<void> {
+        // todo: to be defined based on what DFSP recommends.
+        this.logger.info("Failed refund transaction id", receipt_number);
+        return Promise.resolve();
+    }
+
     NBMConfig!: TNBMConfig;
 
     async getKyc(deps: TGetKycArgs): Promise<TNBMKycResponse> {
