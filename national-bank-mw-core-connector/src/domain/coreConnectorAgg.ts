@@ -52,6 +52,7 @@ import {
     TGetQuotesDeps,
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
+    TValidationResponse,
 } from './interfaces';
 import {
     ISDKClient,
@@ -339,89 +340,137 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return await this.checkAndRespondToConversionTerms(res);
+            return this.handleSendTransferRes(res.data);
+        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+            return this.handleReceiveTransferRes(res.data);
+        } else {
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" })
         }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTCbsSendMoneyResponse(res.data);
     }
 
-    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TNBMSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TNBMSendMoneyResponse> {
+        /*
+            check fxQuote
+            respond to conversion terms
+            receive response from sdk
+            check return quote
+            return normalQuote in required format for customer to review 
+        */
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!this.validateConversionTerms(res.data)) {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateFxRes = this.validateConversionTerms(res);
+        if (!validateFxRes.result) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptConversion": false
-            }, res.data.transferId);
-            throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+            }, res.transferId);
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        else {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptConversion": true
-            }, res.data.transferId);
-        }
-        if (!this.validateReturnedQuote(acceptRes.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptConversion": true
+        }, res.transferId);
+        const validateQuoteRes = this.validateReturnedQuote(acceptRes.data);
+        if (!validateQuoteRes.result) {
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
         return this.getTCbsSendMoneyResponse(acceptRes.data);
     }
 
-    private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TNBMSendMoneyResponse> {
+        /*
+            check returned normalQuote
+            respond to quote 
+            receive response from sdk
+            check fxQuote
+            return returned quote in format specified for customer to review 
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateQuoteRes = this.validateReturnedQuote(res);
+        if (!validateQuoteRes.result) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptQuote": false
+            }, res.transferId);
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptQuote": true
+        }, res.transferId);
+        const validateFxRes = this.validateConversionTerms(acceptRes.data);
+        if (!validateFxRes.result) {
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
+        }
+        return this.getTCbsSendMoneyResponse(acceptRes.data);
+    }
+
+
+    // private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TNBMSendMoneyResponse> {
+    //     let acceptRes: THttpResponse<TtransferContinuationResponse>;
+    //     if (!this.validateConversionTerms(res.data)) {
+    //         if (!res.data.transferId) {
+    //             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+    //         }
+    //         acceptRes = await this.sdkClient.updateTransfer({
+    //             "acceptConversion": false
+    //         }, res.data.transferId);
+    //         throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+    //     }
+    //     else {
+    //         if (!res.data.transferId) {
+    //             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+    //         }
+    //         acceptRes = await this.sdkClient.updateTransfer({
+    //             "acceptConversion": true
+    //         }, res.data.transferId);
+    //     }
+    //     if (!this.validateReturnedQuote(acceptRes.data)) {
+    //         throw ValidationError.invalidReturnedQuoteError();
+    //     }
+    //     return this.getTCbsSendMoneyResponse(acceptRes.data);
+    // }
+
+    private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
         let result = true;
+        const message: string[] = [];
         if (
             !(this.cbsConfig.X_CURRENCY === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
-            this.logger.error(`X_CURRENCY ${this.cbsConfig.X_CURRENCY} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             result = false;
+            message.push(`cbsConfig.TNM_CURRENCY ${this.cbsConfig.X_CURRENCY} did not match currency returned in transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
         }
         if (transferRes.amountType === 'SEND') {
             if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}`);
                 result = false;
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}}`)
             }
-            if (!transferRes.to.supportedCurrencies) {
-                this.logger.error(`Payee Supported Currency not defined`);
-                throw SDKClientError.genericQuoteValidationError("Payee Supported Currency not defined", { httpCode: 500, mlCode: "4000" });
-            }
-            if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
-                this.logger.error(`Payee Supported Currency ${transferRes.to.supportedCurrencies} does not contain ${transferRes.quoteResponse?.body.transferAmount.currency}`);
-                result = false;
+            if (transferRes.to.supportedCurrencies) {
+                if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                    result = false;
+                    message.push(`transferRes.to.supportedCurrencies ${transferRes.to.supportedCurrencies.toString()} did not contain transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency} `)
+                }
             }
             if (!(transferRes.currency === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)) {
-                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
                 result = false;
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`)
             }
         } else if (transferRes.amountType === 'RECEIVE') {
             if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`);
                 result = false;
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`)
             }
             if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
-                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
-            }
-            if (transferRes.fxQuoteResponse) {
-                if (!transferRes.from.supportedCurrencies) {
-                    this.logger.error(`Payee Supported Currency not defined`);
-                    throw ValidationError.unsupportedCurrencyError();
-                }
-                if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.currency))) {
-                    this.logger.error(`Payee Supported Currency ${transferRes.from.supportedCurrencies} does not contain ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.currency}`);
-                    result = false;
-                }
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency}`)
             }
         }
-        return result;
+        return { result, message };
     }
 
-    private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): boolean {
+    private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Returned Quote with transfer response amount ${outboundTransferRes.amount}`);
 
         let result = true;
