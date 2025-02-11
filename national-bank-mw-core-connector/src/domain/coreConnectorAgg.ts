@@ -471,60 +471,61 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): TValidationResponse {
-        this.logger.info(`Validating Returned Quote with transfer response amount ${outboundTransferRes.amount}`);
-
+        this.logger.info(`Validating Retunred Quote with transfer response amount${outboundTransferRes.amount}`);
         let result = true;
-        if (!this.validateConversionTerms(outboundTransferRes)) {
-            result = false;
+        const message: string[] = [];
+        if (outboundTransferRes.amountType === "SEND") {
+            const validateFxRes = this.validateConversionTerms(outboundTransferRes)
+            if (!validateFxRes.result) {
+                result = false;
+                message.push(...validateFxRes.message)
+            }
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
         const fxQuoteResponseBody = outboundTransferRes.fxQuoteResponse?.body;
         if (!quoteResponseBody) {
-            this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();
         }
         if (outboundTransferRes.amountType === "SEND") {
-            if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
-                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
+            const quoteRequestAmount: string = outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount ? outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount : outboundTransferRes.amount;
+            if (!(parseFloat(quoteRequestAmount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
                 result = false;
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`)
             }
             if (!quoteResponseBody.payeeReceiveAmount) {
-                this.logger.error(`Payee Receive Amount not defined`);
                 throw SDKClientError.genericQuoteValidationError("Payee Receive Amount not defined", { httpCode: 500, mlCode: "4000" });
             }
             if (!(parseFloat(quoteResponseBody.payeeReceiveAmount.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || '0'))) {
-                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
                 result = false;
+                message.push(`quoteResponseBody.payeeReceiveAmount.amount ${quoteResponseBody.payeeReceiveAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`)
             }
             if (!(fxQuoteResponseBody?.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
-                this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
+                message.push(`fxQuoteResponseBody?.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
             }
         } else if (outboundTransferRes.amountType === "RECEIVE") {
             if (!outboundTransferRes.quoteResponse) {
-                this.logger.error(`Quote Response not defined`);
                 throw SDKClientError.noQuoteReturnedError();
             }
             if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0") + parseFloat(quoteResponseBody.payeeFspFee?.amount || "0"))) {
-                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount} + ${quoteResponseBody.payeeFspFee?.amount}`);
                 result = false;
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount} plus quoteResponseBody.payeeFspFee?.amount ${quoteResponseBody.payeeFspFee?.amount}`)
             }
 
             if (!(quoteResponseBody.payeeReceiveAmount?.amount === quoteResponseBody.transferAmount.amount)) {
-                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount?.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
+                message.push(`quoteResponseBody.payeeReceiveAmount?.amount ${quoteResponseBody.payeeReceiveAmount?.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
             }
             if (fxQuoteResponseBody) {
                 if (!(fxQuoteResponseBody.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
-                    this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                     result = false;
+                    message.push(`fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
                 }
             }
         } else {
-            this.logger.error(`Invalid amountType received ${outboundTransferRes.amountType}`);
             SDKClientError.genericQuoteValidationError("Invalid amountType received", { httpCode: 500, mlCode: "4000" });
         }
-        return result;
+        return { result, message };
     }
 
     private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TNBMSendMoneyResponse {
