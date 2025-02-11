@@ -21,6 +21,7 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
+ * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
 
  --------------
  ******/
@@ -40,6 +41,7 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
+    TMTNRefundRequestBody,
 } from './CBSClient';
 import {
     ILogger,
@@ -222,11 +224,7 @@ export class CoreConnectorAggregate {
         }
 
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            // throw ValidationError.invalidExtensionListsError(
-            //     "Some extensionLists are undefined",
-            //     '3100',
-            //     500
-            // );
+       
             this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
         }
 
@@ -300,11 +298,7 @@ export class CoreConnectorAggregate {
 
 
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            // throw ValidationError.invalidExtensionListsError(
-            //     "ExtensionList check Failed in Payee Transfers",
-            //     '3100',
-            //     500
-            // );
+          
             this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
         }
 
@@ -510,7 +504,7 @@ export class CoreConnectorAggregate {
                  'idValue': transfer.payeeId
              },
              'amountType': amountType,
-             'currency': transfer.sendCurrency,
+             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
              'amount': transfer.sendAmount,
              'transactionType': transfer.transactionType,
          };
@@ -642,13 +636,42 @@ export class CoreConnectorAggregate {
      }
  
      async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
-         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-         if(payload.status === "SUCCESSFUL"){
-             await this.sdkClient.updateTransfer({acceptQuote: true},payload.externalId);
-         }else{
-             await this.sdkClient.updateTransfer({acceptQuote: false},payload.externalId);
-         }
+        this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
+        try {
+            if (payload.status === "SUCCESSFUL") {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+            }
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                // perform refund or rollback if payment was successful
+                if (payload.status === "SUCCESSFUL") {
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
+        }
      }
+
+
+    private async handleRefund(refund: TMTNRefundRequestBody): Promise<void> {
+        try {
+            await this.mtnClient.refundMoney(refund);
+        } catch (error: unknown) {
+            this.mtnClient.logFailedRefund(refund);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TMTNCallbackPayload): TMTNRefundRequestBody {
+        return {
+            "amount": callbackPayload.amount,
+            "currency": callbackPayload.currency,
+            "externalId": callbackPayload.externalId,
+            "payerMessage": "Refund",
+            "payeeNote": callbackPayload.payeeNote,
+            "referenceIdToRefund": callbackPayload.financialTransactionId
+        };
+    }
      
  }
  

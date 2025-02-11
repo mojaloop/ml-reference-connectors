@@ -21,6 +21,7 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
+ * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
  --------------
  ******/
 
@@ -40,6 +41,7 @@ import {
     TMTNTransactionEnquiryRequest,
     TMTNCollectMoneyRequest,
     TAuthParameters,
+    TMTNRefundRequestBody,
 } from './types';
 
 
@@ -50,7 +52,8 @@ export const MTN_ROUTES = Object.freeze({
     collectMoney: '/collection/v1_0/requesttopay',
     getKyc: `/collection/v1_0/accountholder/${config.get("mtn.SUPPORTED_ID_TYPE")}/`,
     transactionCollectionEnquiry: '/collection/v2_0/payment/',
-    transactionDisbursementEnquiry: '/disbursement/v1_0/transfer/'
+    transactionDisbursementEnquiry: '/disbursement/v1_0/transfer/',
+    refund: '/disbursement/v1_0/refund'
 });
 
 export class MTNClient implements IMTNClient {
@@ -63,7 +66,7 @@ export class MTNClient implements IMTNClient {
         this.httpClient = httpClient;
         this.logger = logger;
     }
-
+    
    
 
     // Get Default Header
@@ -281,6 +284,40 @@ export class MTNClient implements IMTNClient {
             throw error;
         }
     }
+
+
+
+    async refundMoney(deps: TMTNRefundRequestBody): Promise<void> {
+        this.logger.info(`Refunding transaction ${deps}`);
+        const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.refund}`;
+        this.logger.info(url);
+        try {
+            const res = await this.httpClient.post<TMTNRefundRequestBody, unknown>(url, deps, {
+                headers: {
+                    ...this.getDefaultHeader(
+                        this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                    ),
+                    'Authorization': `${await this.getAuthHeader({
+                        subscriptionKey: this.mtnConfig.MTN_DISBURSEMENT_SUBSCRIPTION_KEY,
+                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
+                        apiClient: this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
+                        apiKey: this.mtnConfig.MTN_DISBURSEMENT_API_KEY
+                    })}`,
+                    'X-Reference-Id': deps.externalId
+                }
+            });
+            if (res.statusCode !== 202) {
+                this.logger.error(`Failed to Collect Money: ${res.statusCode}`, { url, data: deps });
+                throw MTNError.collectMoneyError();
+            }
+            this.logger.info("Refund request accepted.");
+        } catch (error: unknown) {
+            this.logger.error(`Failed to perform refund ${error}`,{ url, data: deps });
+            throw error;
+        }
+    }
+
+
      
     async logFailedIncomingTransfer(req: TMTNDisbursementRequestBody): Promise<void> {
         //todo: to be defined based on what DFSP recommends.
@@ -288,9 +325,9 @@ export class MTNClient implements IMTNClient {
         return Promise.resolve();
     }
 
-    async logFailedRefund(transaction_id: string): Promise<void> {
+    async logFailedRefund(refundReq: TMTNRefundRequestBody): Promise<void> {
         // todo: to be defined based on what DFSP recommends.
-        this.logger.info("Failed refund transaction id", transaction_id);
+        this.logger.info("Failed refund transaction id", refundReq.referenceIdToRefund);
         return Promise.resolve();
     }
 
