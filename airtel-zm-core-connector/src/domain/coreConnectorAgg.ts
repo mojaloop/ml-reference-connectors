@@ -94,7 +94,7 @@ export class CoreConnectorAggregate {
 
         const lookupRes = await this.airtelClient.getKyc({ msisdn: id });
         const party = {
-            data: this.getPartiesResponseDTO(lookupRes,id),
+            data: this.getPartiesResponseDTO(lookupRes, id),
             statusCode: Number(lookupRes.status.code),
         };
         this.logger.info(`Party found`, { party });
@@ -112,7 +112,7 @@ export class CoreConnectorAggregate {
             kycInformation: `${JSON.stringify(lookupRes)}`,
             lastName: lookupRes.data.last_name,
             extensionList: this.getGetPartiesExtensionList(),
-            supportedCurrencies:config.get("airtel.X_CURRENCY")
+            supportedCurrencies: config.get("airtel.X_CURRENCY")
         };
     }
 
@@ -149,7 +149,7 @@ export class CoreConnectorAggregate {
         });
 
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            this.logger.warn("Some extensionLists are undefined. Checks Failed",quoteRequest);
+            this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
 
         if (res.data.is_barred) {
@@ -217,7 +217,7 @@ export class CoreConnectorAggregate {
         }
 
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            this.logger.warn("Some extensionLists are undefined; Checks Failed",transfer);
+            this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
         }
 
         const validateQuoteRes = this.validateQuote(transfer);
@@ -340,7 +340,7 @@ export class CoreConnectorAggregate {
         }
     }
 
-    private async initiateCompensationAction(req: TAirtelDisbursementRequestBody ) {
+    private async initiateCompensationAction(req: TAirtelDisbursementRequestBody) {
         this.logger.error("Failed to make transfer to customer", { request: req });
         await this.airtelClient.logFailedIncomingTransfer(req);
     }
@@ -461,14 +461,14 @@ export class CoreConnectorAggregate {
                 "lastName": res.data.last_name,
                 "merchantClassificationCode": "123",
                 "extensionList": this.getOutboundTransferExtensionList(transfer),
-                "supportedCurrencies":[this.airtelConfig.X_CURRENCY]
+                "supportedCurrencies": [this.airtelConfig.X_CURRENCY]
             },
             'to': {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
         };
@@ -675,8 +675,7 @@ export class CoreConnectorAggregate {
             }
         } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process...");
-            // todo: define a way to start a manual refund process.
-            throw error;
+            this.airtelClient.logFailedRefund(payload.transaction.airtel_money_id);
         }
     }
 }

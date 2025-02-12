@@ -21,6 +21,7 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
+ * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
 
  --------------
  ******/
@@ -40,6 +41,7 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
+    TMTNRefundRequestBody,
 } from './CBSClient';
 import {
     ILogger,
@@ -640,3 +642,75 @@ export class CoreConnectorAggregate {
 }
 
 
+
+    
+ 
+     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
+         return {
+             "amount": deps.amount,
+             "amountType": "RECEIVE",
+             "currency": this.mtnConfig.X_CURRENCY,
+             "externalId": transferId,
+             "payer" :{
+                 "partyId": deps.msisdn,
+                 "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
+             },
+             "payerMessage": deps.payerMessage,
+             "payeeNote": deps.payeeNote,
+             
+         };
+     }
+ 
+ 
+ 
+     async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
+         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
+ 
+         if (!(transferAccept.acceptQuote)) {
+             throw ValidationError.quoteNotAcceptedError();
+         }
+         await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
+     }
+ 
+     async handleCallback(payload: TMTNCallbackPayload): Promise<void>{
+        this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
+        try {
+            if (payload.status === "SUCCESSFUL") {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+            }
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                // perform refund or rollback if payment was successful
+                if (payload.status === "SUCCESSFUL") {
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
+        }
+     }
+
+
+    private async handleRefund(refund: TMTNRefundRequestBody): Promise<void> {
+        try {
+            await this.mtnClient.refundMoney(refund);
+        } catch (error: unknown) {
+            this.mtnClient.logFailedRefund(refund);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TMTNCallbackPayload): TMTNRefundRequestBody {
+        return {
+            "amount": callbackPayload.amount,
+            "currency": callbackPayload.currency,
+            "externalId": callbackPayload.externalId,
+            "payerMessage": "Refund",
+            "payeeNote": callbackPayload.payeeNote,
+            "referenceIdToRefund": callbackPayload.financialTransactionId
+        };
+    }
+     
+ }
+ 
+ 
+ 
