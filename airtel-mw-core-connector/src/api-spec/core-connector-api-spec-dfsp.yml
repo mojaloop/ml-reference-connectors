@@ -257,7 +257,7 @@ components:
                   example: "Lusaka"
                 CtryOfBirth:
                   type: string
-                  example: "Malawi"
+                  example: "malawi"
               required:
                 - BirthDt
                 - CityOfBirth
