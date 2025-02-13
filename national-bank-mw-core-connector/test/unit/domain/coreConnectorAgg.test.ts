@@ -32,7 +32,7 @@
  import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
  import { loggerFactory } from '../../../src/infra/logger';
  import config from '../../../src/config';
- import { NBMClientFactory, INBMClient, } from '../../../src/domain/CBSClient';
+ import { NBMClientFactory, INBMClient, TNBMCollectMoneyRequest, } from '../../../src/domain/CBSClient';
  import { 
      sdkInitiateTransferResponseDto, 
      transferRequestDto,
@@ -51,13 +51,13 @@
  const idType = "ACCOUNT_NO";
  const ACCOUNT_NO = "1003486415";
  
-//  const collectMoneyRequest: TNBMCollectMoneyRequest = {
-//      amount: 12000,
-//      description: "Test Transaction",
-//      reference: "INV/2003/202930",
-//      credit_account: ACCOUNT_NO,
-//      currency: "MWK"
-//  };
+ const collectMoneyRequest: TNBMCollectMoneyRequest = {
+     amount: 12000,
+     description: "Test Transaction",
+     reference: "INV/2003/202930",
+     credit_account: ACCOUNT_NO,
+     currency: "MWK"
+ };
  
  describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
@@ -94,7 +94,7 @@
 
             // Act
             const res = await ccAggregate.getParties(ACCOUNT_NO, idType);
-
+            logger.info(JSON.stringify(res));
             // Assert
             expect(res.statusCode(200)).toEqual(200);
             expect(res.extensionList).toBeDefined();
@@ -114,7 +114,6 @@
 
             // Act
             const res = await ccAggregate.quoteRequest(quoteRequestDto(idType, ACCOUNT_NO, "1000"));
-
             // Assert
             expect(res.transferAmount).toBeDefined();
             
@@ -192,30 +191,68 @@
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
-            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
-            const sendMoneyReqPayload = sendMoneyDTO(ACCOUNT_NO, "103",);
-
+            const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+        
+            const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
+        
             // Act
-            const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "SEND");
-
-            // Expecting Update Transfer to have be called
+            const res = await ccAggregate.sendMoney(merchantPaymentRequest, "SEND");
+        
+            // Assert: Ensure that initiateTransfer was called
             expect(sdkClient.initiateTransfer).toHaveBeenCalled();
-
-            // Expecting INitaite Transfer to have been called
-            expect(initiateTransferSpy).toHaveBeenCalled();
-
-            // Get the Reguest being Used to call
-            const transferRequest = initiateTransferSpy.mock.calls[0][0];
-
-            // Check the Extension List is not 0
+            expect(initiateMerchantTransferSpy).toHaveBeenCalled();
+            
+            // Validate response
+            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+        });
+        
+        test("Send Money Extension List should not be empty and contain expected key", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    status: "ACTIVE"
+                }
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+            const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+        
+            const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
+        
+            // Act
+            await ccAggregate.sendMoney(merchantPaymentRequest, "SEND");
+        
+            // Get the request used to call initiateTransfer
+            const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
+        
+            // Assert: Check extensionList validity
             expect(transferRequest.from.extensionList).not.toHaveLength(0);
             if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual(
+                    "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt"
+                );
             }
-            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
+        
+            logger.info("Transfer Request being sent to Initiate Transfer", transferRequest);
+        });
+        
 
+        test("Update Send Money should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
+            const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+        
+            
+            await nbmClient.collectMoney(collectMoneyRequest);
+            // Act
+        
             // Assert
-            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+            expect(collectMoney).toHaveBeenCalled();
         });
 
         test("Update Send Money should trigger a request to pay using NBM client", async () => {
@@ -247,27 +284,67 @@
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
-
+        
             const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
-
+        
             // Act
             const res = await ccAggregate.sendMoney(merchantPaymentRequest, "RECEIVE");
-
-            // Expecting Update Transfer to have be called
+        
+            // Assert: Ensure that initiateTransfer was called
             expect(sdkClient.initiateTransfer).toHaveBeenCalled();
-            // Expecting INitaite Transfer to have been called
             expect(initiateMerchantTransferSpy).toHaveBeenCalled();
-            // Get the Reguest being Used to call
+            
+            // Validate response
+            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+        });
+        
+        test("Extension List should not be empty and contain expected key", async () => {
+            // Arrange
+            const mockKycResponse = {
+                message: "Success",
+                data: {
+                    account_number: ACCOUNT_NO,
+                    status: "ACTIVE"
+                }
+            };
+            nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
+            });
+            const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
+        
+            const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
+        
+            // Act
+            await ccAggregate.sendMoney(merchantPaymentRequest, "RECEIVE");
+        
+            // Get the request used to call initiateTransfer
             const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
-            // Check the Extension List is not 0
+        
+            // Assert: Check extensionList validity
             expect(transferRequest.from.extensionList).not.toHaveLength(0);
             if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.from.extensionList[0]["key"]).toEqual(
+                    "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt"
+                );
             }
-            logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
-
+        
+            logger.info("Transfer Request being sent to Initiate Transfer", transferRequest);
+        });
+        
+        test("Update Merchant Pay Send Money should trigger a request to pay using NBM client", async () => {
+            // Arrange
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
+            const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+            
+           
+            
+            await nbmClient.collectMoney(collectMoneyRequest);
+            // Act
+        
             // Assert
-            expect(res.payeeDetails.idValue).toEqual(ACCOUNT_NO);
+            expect(collectMoney).toHaveBeenCalled();
         });
 
         test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
@@ -282,7 +359,6 @@
             // Assert
             expect(updateTransferSpy).toHaveBeenCalled();
         });
-
         
     });
 });
