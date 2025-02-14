@@ -21,6 +21,7 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
+ * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
  --------------
  ******/
 
@@ -155,3 +156,7 @@ export type TtransactionEnquiryDeps = {
         transferAccept: TMTNUpdateSendMoneyRequest
 }
 
+export type TValidationResponse = {
+    result: boolean;
+    message: string[];
+}

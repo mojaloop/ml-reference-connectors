@@ -52,7 +52,7 @@
          });
      }
  
-     static updateTransferRequestNotDefinedError() {
+    static updateTransferRequestNotDefinedError() {
          return new SDKClientError('Update Transfer Request not defined', {
              httpCode: 500,
              mlCode: '4000',
@@ -61,6 +61,13 @@
 
      static genericQuoteValidationError(message: string, options?: ErrorOptions) {
         return new SDKClientError(message, options);
+    }
+
+    static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
+        return new SDKClientError(
+            message,
+            options
+        );
     }
  }
  
