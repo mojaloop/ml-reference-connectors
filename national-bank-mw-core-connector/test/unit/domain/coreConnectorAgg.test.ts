@@ -337,12 +337,7 @@
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
             nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
             const collectMoney = jest.spyOn(nbmClient, "collectMoney");
-            
-           
-            
             await nbmClient.collectMoney(collectMoneyRequest);
-            // Act
-        
             // Assert
             expect(collectMoney).toHaveBeenCalled();
         });
@@ -352,10 +347,8 @@
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
             sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
             const updateTransferSpy = jest.spyOn(sdkClient, "updateTransfer");
-
             // Act
             await ccAggregate.updateSendMoney(updateSendMoneyPayload, randomUUID());
-
             // Assert
             expect(updateTransferSpy).toHaveBeenCalled();
         });
