@@ -14,7 +14,14 @@ sequenceDiagram
   Alt if Checks fail
   CC-->>DFSP Customer App: Response 500
   End
-
+  Alt if WAITING_FOR_PARTY_ACCEPTANCE
+  CC->>ML Connector: PUT /transfers/{id} [acceptParty: true, transferExtensionList, quoteExtensionList]
+  ML Connector-->>CC: Response 200
+  End
+  CC->> CC: Check Response
+  Alt if Checks fail
+  CC-->>DFSP Customer App: Response 500
+  End
   Alt if WAITING_FOR_CONVERSION_ACCEPTANCE
   CC->>CC: Check Response Conversion Terms
   Alt if Conversion Terms are invalid
