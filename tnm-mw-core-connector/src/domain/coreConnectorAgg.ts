@@ -193,18 +193,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = []
-        //todo: check if the correct level of information has been provided.
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        this.logger.info(`QuoteRequest ${quoteRequest}`);
+        return {
+            ...this.getGetPartiesExtensionList()
+        };
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -245,6 +237,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
+    }
     private validateQuote(transfer: TtransferRequest): boolean {
         // todo define implmentation
         this.logger.info(`Validating code for transfer with amount ${transfer.amount}`);
@@ -427,9 +422,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
         };
     }
 
