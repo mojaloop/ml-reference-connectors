@@ -160,7 +160,7 @@ export class CoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.extensionList  && quoteRequest.extensionList.length > 0 );
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
@@ -182,9 +182,9 @@ export class CoreConnectorAggregate {
 
 
     private getQuoteResponseExtensionList(): TPayeeExtensionListEntry[] {
-        return {
+        return [
             ...this.getGetPartiesExtensionList()
-        };
+        ];
     }
 
 
@@ -475,7 +475,7 @@ export class CoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
-            'quoteRequestExtensions':this.getOutboundTransferExtensionList(transfer),
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
             'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
         };
     }
