@@ -308,7 +308,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.handleCallback(payload);
             logger.info("Response", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalledWith(
-                { acceptQuote: true }, payload.transaction_id
+                { acceptQuoteOrConversion: true }, payload.transaction_id
             );
         });
     });
