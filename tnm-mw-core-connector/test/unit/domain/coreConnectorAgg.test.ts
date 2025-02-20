@@ -111,7 +111,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             logger.info("This is the response ==>", JSON.stringify(res));
             const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
-            expect(res.extensionList?.length).toBeGreaterThan(0)
+            expect(res.extensionList?.length).toBeGreaterThan(0);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
         });
 
