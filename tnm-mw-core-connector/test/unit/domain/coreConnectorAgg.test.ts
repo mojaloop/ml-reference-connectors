@@ -243,7 +243,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "data": {
                     "full_name": "Promise Mphoola"
                 }
-
             });
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
