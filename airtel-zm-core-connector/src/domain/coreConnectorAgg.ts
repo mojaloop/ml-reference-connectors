@@ -647,9 +647,9 @@ export class CoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
         try {
             if (payload.transaction.status_code === "TS") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.transaction.id);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.transaction.id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {

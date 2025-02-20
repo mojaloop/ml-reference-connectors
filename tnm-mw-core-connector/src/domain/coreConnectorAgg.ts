@@ -602,9 +602,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction_id}`);
         try {
             if (payload.success) {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction_id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.transaction_id);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction_id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.transaction_id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {

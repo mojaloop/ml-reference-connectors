@@ -546,7 +546,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId); //todo: implement better error handling logic 
+        const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId); //todo: implement better error handling logic 
         return res.data;
     }
 }

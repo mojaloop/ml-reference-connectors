@@ -117,7 +117,8 @@
  export type TSDKTransferContinuationRequest =
      | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
      | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
-     | components['schemas']['transferContinuationAcceptConversion'];
+     | components['schemas']['transferContinuationAcceptConversion']
+     | components['schemas']['transferContinuationAcceptQuoteOrConversion']
  
  
  export type TUpdateTransferDeps = {

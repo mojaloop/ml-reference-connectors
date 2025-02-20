@@ -611,9 +611,9 @@ export class CoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
         try {
             if (payload.status === "SUCCESSFUL") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.externalId);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.externalId);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {

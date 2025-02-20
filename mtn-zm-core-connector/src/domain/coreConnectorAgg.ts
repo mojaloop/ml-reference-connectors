@@ -41,6 +41,7 @@ import {
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
     TMTNCallbackPayload,
+    TMTNRefundRequestBody,
 } from './CBSClient';
 import {
     ILogger,
@@ -618,8 +619,6 @@ export class CoreConnectorAggregate {
         };
     }
 
-
-
     async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
         this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
 
@@ -631,11 +630,39 @@ export class CoreConnectorAggregate {
 
     async handleCallback(payload: TMTNCallbackPayload): Promise<void> {
         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-        if (payload.status === "SUCCESSFUL") {
-            await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
-        } else {
-            await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+        try {
+            if (payload.status === "SUCCESSFUL") {
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.externalId);
+            } else {
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.externalId);
+            }
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                // perform refund or rollback if payment was successful
+                if (payload.status === "SUCCESSFUL") {
+                    await this.handleRefund(this.getRefundRequestBody(payload));
+                }
+            }
         }
+    }
+
+    private async handleRefund(refund: TMTNRefundRequestBody): Promise<void> {
+        try {
+            await this.mtnClient.refundMoney(refund);
+        } catch (error: unknown) {
+            this.mtnClient.logFailedRefund(refund);
+        }
+    }
+
+    private getRefundRequestBody(callbackPayload: TMTNCallbackPayload): TMTNRefundRequestBody {
+        return {
+            "amount": callbackPayload.amount,
+            "currency": callbackPayload.currency,
+            "externalId": callbackPayload.externalId,
+            "payerMessage": "Refund",
+            "payeeNote": callbackPayload.payeeNote,
+            "referenceIdToRefund": callbackPayload.financialTransactionId
+        };
     }
 
 }
