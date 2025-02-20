@@ -123,7 +123,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.quoteRequest(quoteReq);
             logger.info("Quote response", res);
             //Assert
-            expect(res.extensionList).toBeDefined;
+            expect(res.extensionList?.length).toBeGreaterThan(0);
             expect(res.payeeFspFeeAmount).toBeDefined;
         });
 
@@ -262,6 +262,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
+
 
         });
 

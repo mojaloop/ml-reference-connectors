@@ -181,7 +181,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     //TODO: Check actual response for barred accounts
@@ -194,9 +194,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         this.logger.info(`QuoteRequest ${quoteRequest}`);
-        return {
+        return [
             ...this.getGetPartiesExtensionList()
-        };
+        ];
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -396,7 +396,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);

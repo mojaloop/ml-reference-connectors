@@ -231,9 +231,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        return {
+        return [
             ...this.getGetPartiesExtensionList()
-        }
+        ]
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
