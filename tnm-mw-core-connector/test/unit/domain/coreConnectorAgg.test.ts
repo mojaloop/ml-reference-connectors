@@ -196,9 +196,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const transferRequest = initiateTransferSpy.mock.calls[0][0];
 
             // Check the Extension List is not 0
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
-            if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            if (transferRequest.quoteRequestExtensions) {
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
@@ -263,9 +263,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
 
             // Check the Extension List is not 0
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
-            if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            if (transferRequest.quoteRequestExtensions) {
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
