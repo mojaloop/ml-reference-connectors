@@ -166,9 +166,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
     describe("TNM Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-            });
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -178,8 +175,12 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
 
             });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
@@ -233,9 +234,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test("POST /merchant-payment: ", async () => {
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-            });
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -245,8 +243,12 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
 
             });
+            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
+                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");

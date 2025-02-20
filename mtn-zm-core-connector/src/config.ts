@@ -180,6 +180,18 @@ const config = Convict<IConfigSchema>({
             default: 30, // default wait time
             env: 'TRANSACTION_ENQUIRY_WAIT_TIME',
         },
+        MTN_ENV: {
+            doc: 'Environment where the connector is running. production/staging',
+            format: String,
+            default: 'staging',
+            env: 'MTN_ENV',
+        },
+        LEI: {
+            doc: 'Legal Entity Identifier',
+            format: String,
+            default: null,
+            env: 'LEI',
+        },
     },
 });
 
