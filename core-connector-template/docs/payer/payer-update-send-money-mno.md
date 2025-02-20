@@ -24,7 +24,7 @@ sequenceDiagram
   End
   ML Connector-->>CC: Response
   CC->>CC: Check response
-  Alt if http error code 500 or 504 or currentState = ERROR_OCCURED
+  Alt if http error code 500 or 504 or currentState = ERROR_OCCURED and acceptQuote=true
   CC->>CBS Api : Rolback transfer POST /refund/customer/funds
   CBS Api-->>CC:Check Response
   Alt if Response not Successful
