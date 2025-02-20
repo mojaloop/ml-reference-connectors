@@ -24,7 +24,7 @@ sequenceDiagram
   End
   ML Connector -->> CC: Response
   CC->>CC: Check Response
-  Alt if http error code 500 or 504 or currentState = ERROR_OCCURED
+  Alt if http error code 500 or 504 or currentState = ERROR_OCCURED and acceptQuote=true
   CC->>TNM API : Rolback transfer POST /invoices/refund/{receipt_number}
   TNM API-->>CC:Check Response
   Alt if Response not Successful
