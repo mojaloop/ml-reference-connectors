@@ -144,7 +144,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.quoteRequest(quoteRequest);
 
             logger.info(JSON.stringify(res));
-            expect(res.extensionList).toBeDefined;
+            expect(res.extensionList?.length).toBeGreaterThan(0);
             expect(res.payeeFspFeeAmount).toBeDefined;
 
         });

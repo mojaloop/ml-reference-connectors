@@ -191,9 +191,9 @@ export class CoreConnectorAggregate {
     // Get Quote    --(2.3)
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         this.logger.info(`QuoteRequest ${quoteRequest}`);
-        return {
+        return [
             ...this.getGetPartiesExtensionList()
-        };
+        ];
     }
 
 
