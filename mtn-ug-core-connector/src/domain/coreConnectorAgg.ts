@@ -166,7 +166,7 @@ export class CoreConnectorAggregate {
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
-            'extensionList': this.getQuoteResponseExtensionList(quoteRequest),
+            'extensionList': this.getQuoteResponseExtensionList(),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees,
