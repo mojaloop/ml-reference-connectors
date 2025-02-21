@@ -123,10 +123,6 @@ export class CoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("airtel.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("airtel.X_COUNTRY")
             }
         ];
     }
@@ -138,34 +134,30 @@ export class CoreConnectorAggregate {
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-
         if (quoteRequest.currency !== config.get("airtel.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
-
         const res = await this.airtelClient.getKyc({
             msisdn: quoteRequest.to.idValue,
 
         });
-
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
             this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
-
         if (res.data.is_barred) {
             throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
-
         const serviceCharge = Number(config.get("airtel.SERVICE_CHARGE"));
         const fees = serviceCharge / 100 * Number(quoteRequest.amount);
-
         await this.checkAccountBarred(quoteRequest.to.idValue);
-
         const quoteExpiration = config.get("airtel.EXPIRATION_DURATION");
         const expiration = new Date();
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
         const expirationJSON = expiration.toJSON();
+        return this.getQuoteResponse(expirationJSON,quoteRequest,fees);
+    }
 
+    private getQuoteResponse(expirationJSON: string, quoteRequest: TQuoteRequest, fees: number){
         return {
             expiration: expirationJSON,
             extensionList: this.getQuoteResponseExtensionList(quoteRequest),
@@ -192,7 +184,14 @@ export class CoreConnectorAggregate {
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
         this.logger.info(`QuoteRequest ${quoteRequest}`);
         return [
-            ...this.getGetPartiesExtensionList()
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("airtel.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("airtel.LEI")
+            }
         ];
     }
 
@@ -503,8 +502,7 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "displayName": transfer.getPartiesResponse !== undefined ? transfer.getPartiesResponse.body.party.name : "Chikondi Banda",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name: ""
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",

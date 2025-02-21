@@ -330,16 +330,10 @@ components:
               example: "990454454"
             fspId:
               type: string
-              example: "airtelzambia"
-            firstName:
+              example: "tnmmalawi"
+            name:
               type: string
               example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
 
         receiveAmount:
           type: string
