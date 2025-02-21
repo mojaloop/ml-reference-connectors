@@ -117,14 +117,6 @@ export class CoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("mtn.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("mtn.X_COUNTRY")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("mtn.X_COUNTRY")
             }
         ];
     }
@@ -160,13 +152,13 @@ export class CoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
-            'extensionList': this.getQuoteResponseExtensionList(quoteRequest),
+            extensionList: this.getQuoteResponseExtensionList(),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees,
@@ -181,21 +173,17 @@ export class CoreConnectorAggregate {
     }
 
 
-    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+    private getQuoteResponseExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("mtn.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("mtn.LEI")
+            }
+        ];
     }
 
 
@@ -350,9 +338,7 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name: ""
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
@@ -476,7 +462,6 @@ export class CoreConnectorAggregate {
                 "middleName": res.given_name,
                 "lastName": res.family_name,
                 "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.mtnConfig.DFSP_CURRENCY]
             },
             'to': {
@@ -487,6 +472,8 @@ export class CoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
         };
     }
 
@@ -528,6 +515,10 @@ export class CoreConnectorAggregate {
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
+    }
+
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
     }
 
     private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
@@ -572,7 +563,7 @@ export class CoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);
@@ -617,9 +608,9 @@ export class CoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
         try {
             if (payload.status === "SUCCESSFUL") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.externalId);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.externalId);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.externalId);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.externalId);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {

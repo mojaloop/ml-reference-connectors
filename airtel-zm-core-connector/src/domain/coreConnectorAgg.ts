@@ -123,10 +123,6 @@ export class CoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("airtel.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("airtel.X_COUNTRY")
             }
         ];
     }
@@ -138,34 +134,30 @@ export class CoreConnectorAggregate {
         if (quoteRequest.to.idType !== this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
-
         if (quoteRequest.currency !== config.get("airtel.X_CURRENCY")) {
             throw ValidationError.unsupportedCurrencyError();
         }
-
         const res = await this.airtelClient.getKyc({
             msisdn: quoteRequest.to.idValue,
 
         });
-
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
             this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
-
         if (res.data.is_barred) {
             throw AirtelError.payeeBlockedError("Account is barred ", 500, "5400");
         }
-
         const serviceCharge = Number(config.get("airtel.SERVICE_CHARGE"));
         const fees = serviceCharge / 100 * Number(quoteRequest.amount);
-
         await this.checkAccountBarred(quoteRequest.to.idValue);
-
         const quoteExpiration = config.get("airtel.EXPIRATION_DURATION");
         const expiration = new Date();
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
         const expirationJSON = expiration.toJSON();
+        return this.getQuoteResponse(expirationJSON,quoteRequest,fees);
+    }
 
+    private getQuoteResponse(expirationJSON: string, quoteRequest: TQuoteRequest, fees: number){
         return {
             expiration: expirationJSON,
             extensionList: this.getQuoteResponseExtensionList(quoteRequest),
@@ -183,26 +175,24 @@ export class CoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
 
     // Get Quote Resonse Extension List DTO to be used in Quote Response on Extension List
     // Get Quote    --(2.3)
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        this.logger.info(`QuoteRequest ${quoteRequest}`);
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("airtel.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("airtel.LEI")
+            }
+        ];
     }
 
 
@@ -386,6 +376,10 @@ export class CoreConnectorAggregate {
         }
     }
 
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
+    }
+
     private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TAirtelSendMoneyResponse> {
         /*
             check fxQuote
@@ -428,7 +422,7 @@ export class CoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);
@@ -460,7 +454,6 @@ export class CoreConnectorAggregate {
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
                 "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.airtelConfig.X_CURRENCY]
             },
             'to': {
@@ -471,6 +464,8 @@ export class CoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
         };
     }
 
@@ -507,8 +502,7 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "displayName": transfer.getPartiesResponse !== undefined ? transfer.getPartiesResponse.body.party.name : "Chikondi Banda",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name: ""
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
@@ -651,13 +645,12 @@ export class CoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
         try {
             if (payload.transaction.status_code === "TS") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.transaction.id);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.transaction.id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                // perform refund or rollback
                 await this.handleRefund(payload);
             }
         }

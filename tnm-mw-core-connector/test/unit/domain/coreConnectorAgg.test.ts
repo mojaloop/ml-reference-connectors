@@ -111,6 +111,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             logger.info("This is the response ==>", JSON.stringify(res));
             const fees = Number(config.get('tnm.SENDING_SERVICE_CHARGE')) / 100 * Number(quoteRequest.amount);
+            expect(res.extensionList?.length).toBeGreaterThan(0);
             expect(res.payeeFspFeeAmount).toEqual(fees.toString());
         });
 
@@ -196,9 +197,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const transferRequest = initiateTransferSpy.mock.calls[0][0];
 
             // Check the Extension List is not 0
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
-            if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            if (transferRequest.quoteRequestExtensions) {
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
@@ -263,9 +264,9 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
 
             // Check the Extension List is not 0
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
-            if (transferRequest.from.extensionList) {
-                expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            if (transferRequest.quoteRequestExtensions) {
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
@@ -307,7 +308,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await ccAggregate.handleCallback(payload);
             logger.info("Response", res);
             expect(sdkClient.updateTransfer).toHaveBeenCalledWith(
-                { acceptQuote: true }, payload.transaction_id
+                { acceptQuoteOrConversion: true }, payload.transaction_id
             );
         });
     });

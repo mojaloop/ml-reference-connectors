@@ -56,6 +56,8 @@
      skipPartyLookup?: boolean;
  };
  
+ export type TSDKOutboundTransferResponse2 = components["responses"]
+
  export type TSDKOutboundTransferResponse = {
              transferId?: components["schemas"]["CorrelationId"];
              /** @description Transaction ID from the DFSP backend, used to reconcile transactions between the Switch and DFSP backend systems. */
@@ -71,9 +73,19 @@
              currentState?: components["schemas"]["transferStatus"];
              quoteId?: components["schemas"]["CorrelationId"];
              getPartiesResponse?: {
-                 body: Record<string, never>;
-                 headers?: Record<string, never>;
-             };
+                body: {
+                    party: {
+                        partyIdInfo: {
+                            partyIdType: string,
+                            partyIdentifier: string,
+                            fspId: string
+                        },
+                        name: string,
+                        supportedCurrencies: string[],
+                    }
+                };
+                headers?: Record<string, never>;
+            };
              quoteResponse?: {
                  body: components["schemas"]["QuotesIDPutResponse"];
                  headers?: Record<string, never>;
@@ -117,7 +129,8 @@
  export type TSDKTransferContinuationRequest =
      | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
      | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
-     | components['schemas']['transferContinuationAcceptConversion'];
+     | components['schemas']['transferContinuationAcceptConversion']
+     | components['schemas']['transferContinuationAcceptQuoteOrConversion']
  
  
  export type TUpdateTransferDeps = {
@@ -131,7 +144,7 @@
      sdkTransferId: number | string;
  };
  
- export type TtransferContinuationResponse = SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
+ export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
  
  export type TSDKClientDeps = {
      logger: ILogger;

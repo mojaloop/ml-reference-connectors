@@ -220,9 +220,7 @@ export type TMTNSendMoneyResponse = {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "firstName": string;
-        "lastName": string;
-        "dateOfBirth": string;
+        "name": string;
     };
     "receiveAmount": string;
     "receiveCurrency": string;
