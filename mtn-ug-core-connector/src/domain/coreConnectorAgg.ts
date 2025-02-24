@@ -472,13 +472,13 @@ export class CoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
-            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
-            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -496,6 +496,10 @@ export class CoreConnectorAggregate {
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key":"CdtTrfTxInf.Purp.Cd",
+                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }

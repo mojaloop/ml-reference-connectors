@@ -542,7 +542,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.full_name,
                 "middleName": res.data.full_name,
                 "lastName": res.data.full_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.tnmConfig.TNM_CURRENCY]
             },
             'to': {
@@ -553,12 +552,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
-            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer),
-            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer)
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -576,6 +575,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key":"CdtTrfTxInf.Purp.Cd",
+                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }
