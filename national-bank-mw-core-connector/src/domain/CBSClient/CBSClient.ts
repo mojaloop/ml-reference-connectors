@@ -32,23 +32,17 @@ import {
     TNBMTransferMoneyRequest,
     TNBMTransferMoneyResponse,
     TNBMConfig,
- 
     TNBMKycResponse,
-
     TGetKycArgs,
     TGetTokenArgs,
     TGetTokenResponse,
-    TNBMTransactionResponse,
-    TNBMSendMoneyResponse
 } from './types';
 
 export const CBS_ROUTES = Object.freeze({
     getToken: '/auth/token',
     getKyc: '/api/',
-    // sendMoney: '/standard/v3/disbursements',
-    collectMoney: '/api/transfer',
-    refundMoney: '/standard/v2/payments/refund',
-    transactionEnquiry: '/standard/v1/payments/'
+    transferMoney: '/api/transfer',
+   
 });
 
 export class NBMClient implements INBMClient {
@@ -105,7 +99,7 @@ export class NBMClient implements INBMClient {
 
     async sendMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Sending Disbursement Body To National Bank");
-        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.transferMoney}`;
         try {
             const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps,
                 {
@@ -127,7 +121,7 @@ export class NBMClient implements INBMClient {
     }
     async makeTransfer(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Collecting Money from National Bank", deps.description);
-        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.transferMoney}`;
 
         try {
             const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps, {
@@ -149,7 +143,7 @@ export class NBMClient implements INBMClient {
 
     async refundMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Refunding Money to Customer in National Bank");
-        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
+        const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.transferMoney}`;
 
         try {
             const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps, {
