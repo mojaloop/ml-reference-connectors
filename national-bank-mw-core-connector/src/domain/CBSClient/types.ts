@@ -173,7 +173,7 @@ export type TNBMCollectMoneyRequest = {
 export type TNBMCollectMoneyResponse = {
     "message": string,
     "data": {
-        "reference_": string,
+        "reference": string,
 }
 }
 
