@@ -116,7 +116,7 @@ export class ZicbClient implements IZicbClient {
 
                 throw ZicbError.walletToWalletTransferError();
             }
-            return res.data
+            return res.data;
         } catch (error) {
             this.logger.error(`Error getting token: ${error}`, { url, data: deps });
             throw error;

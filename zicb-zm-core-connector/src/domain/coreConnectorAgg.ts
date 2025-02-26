@@ -60,7 +60,7 @@ import {
 } from './SDKClient';
 import config from '../config';
 import { PartyType, TVerifyCustomerByAccountNumberRequest, TVerifyCustomerByAccountNumberResponse, TWalletToWalletInternalFundsTransferRequest, TWalletToWalletInternalFundsTransferResponse, TZicbSendMoneyRequest, TZicbUpdateSendMoneyRequest } from './CBSClient/types';
-import { get } from 'http';
+
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     IdType: string;
@@ -108,7 +108,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "getByAccType": false,
                 "accountType": null
             }
-        }
+        };
     }
 
 
@@ -134,7 +134,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             idValue: id,
             displayName: `${res.response.accountList[0].accDesc}`,
             firstName: this.extractNames(res.response.accountList[0].accDesc).firstName,
-            middleName: this.extractNames(res.response.accountList[0].accDesc).firstName,
+            middleName: this.extractNames(res.response.accountList[0].accDesc).middleName || this.extractNames(res.response.accountList[0].accDesc).firstName,
             lastName: this.extractNames(res.response.accountList[0].accDesc).lastName,
             type: PartyType.CONSUMER,
             kycInformation: JSON.stringify(res.response.accountList),
@@ -159,10 +159,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
                 "value": config.get("zicb.X_COUNTRY")
             }
-        ]
+        ];
     }
 
-    // Get Parties   --(2)
+    // Quote Requests   --(2)
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Calculating quote for ${quoteRequest.to.idValue} and amount ${quoteRequest.amount}`);
 
@@ -222,13 +222,13 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     //  Check Quote Extension Lists -- (2.1)
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
     }
 
     //  Get Quote Response Extension List -- (2.2.1)
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = [];
+        const newExtensionList: TPayeeExtensionListEntry[] = [];
 
         if (quoteRequest.extensionList) {
             newExtensionList.push(...quoteRequest.extensionList);
@@ -317,14 +317,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     private checkSendAmounts(transfer: TtransferRequest): TValidationResponse {
         this.logger.info('Validating Type Send Quote...', { transfer });
         let result = true;
-        const message: string[] = []
+        const message: string[] = [];
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
         ) {
             result = false;
-            message.push(`transfer.amount ${transfer.amount} did not equal transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount ${transfer.quote.payeeFspCommissionAmount} `)
+            message.push(`transfer.amount ${transfer.amount} did not equal transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount ${transfer.quote.payeeFspCommissionAmount} `);
         }
 
         if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
@@ -337,7 +337,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
             result = false;
-            message.push(`transfer.quote.payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount} `)
+            message.push(`transfer.quote.payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount} `);
         }
         return { result, message };
     }
@@ -345,7 +345,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     private checkReceiveAmounts(transfer: TtransferRequest): TValidationResponse {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
-        const message: string[] = []
+        const message: string[] = [];
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
@@ -356,7 +356,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
             result = false;
-            message.push(`transfer.amount ${transfer.amount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount || 0 ${transfer.quote.payeeFspCommissionAmount} plus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount}`)
+            message.push(`transfer.amount ${transfer.amount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount || 0 ${transfer.quote.payeeFspCommissionAmount} plus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount}`);
         }
 
         if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
@@ -410,7 +410,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "srcCurrency": config.get("zicb.X_CURRENCY"),
                 "transferTyp": "INTERNAL"
             }
-        }
+        };
     }
 
     // initiateCompensationAction -- (4.2)
@@ -433,7 +433,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
             return this.handleReceiveTransferRes(res.data);
         } else {
-            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" })
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
     }
 
@@ -514,26 +514,26 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (transferRes.amountType === 'SEND') {
             if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
                 result = false;
-                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}}`)
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}}`);
             }
             if (transferRes.to.supportedCurrencies) {
                 if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
                     result = false;
-                    message.push(`transferRes.to.supportedCurrencies ${transferRes.to.supportedCurrencies.toString()} did not contain transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency} `)
+                    message.push(`transferRes.to.supportedCurrencies ${transferRes.to.supportedCurrencies.toString()} did not contain transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency} `);
                 }
             }
             if (!(transferRes.currency === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)) {
                 result = false;
-                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`)
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
             }
         } else if (transferRes.amountType === 'RECEIVE') {
             if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount)) {
                 result = false;
-                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`)
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`);
             }
             if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
                 result = false;
-                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency}`)
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             }
         }
         return { result, message };
@@ -546,10 +546,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         let result = true;
         const message: string[] = [];
         if (outboundTransferRes.amountType === "SEND") {
-            const validateFxRes = this.validateConversionTerms(outboundTransferRes)
+            const validateFxRes = this.validateConversionTerms(outboundTransferRes);
             if (!validateFxRes.result) {
                 result = false;
-                message.push(...validateFxRes.message)
+                message.push(...validateFxRes.message);
             }
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
@@ -561,18 +561,18 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             const quoteRequestAmount: string = outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount ? outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount : outboundTransferRes.amount;
             if (!(parseFloat(quoteRequestAmount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
                 result = false;
-                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`)
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`);
             }
             if (!quoteResponseBody.payeeReceiveAmount) {
                 throw SDKClientError.genericQuoteValidationError("Payee Receive Amount not defined", { httpCode: 500, mlCode: "4000" });
             }
             if (!(parseFloat(quoteResponseBody.payeeReceiveAmount.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || '0'))) {
                 result = false;
-                message.push(`quoteResponseBody.payeeReceiveAmount.amount ${quoteResponseBody.payeeReceiveAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`)
+                message.push(`quoteResponseBody.payeeReceiveAmount.amount ${quoteResponseBody.payeeReceiveAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`);
             }
             if (!(fxQuoteResponseBody?.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
                 result = false;
-                message.push(`fxQuoteResponseBody?.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
+                message.push(`fxQuoteResponseBody?.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
             }
         } else if (outboundTransferRes.amountType === "RECEIVE") {
             if (!outboundTransferRes.quoteResponse) {
@@ -580,17 +580,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             }
             if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0") + parseFloat(quoteResponseBody.payeeFspFee?.amount || "0"))) {
                 result = false;
-                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount} plus quoteResponseBody.payeeFspFee?.amount ${quoteResponseBody.payeeFspFee?.amount}`)
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount} plus quoteResponseBody.payeeFspFee?.amount ${quoteResponseBody.payeeFspFee?.amount}`);
             }
 
             if (!(quoteResponseBody.payeeReceiveAmount?.amount === quoteResponseBody.transferAmount.amount)) {
                 result = false;
-                message.push(`quoteResponseBody.payeeReceiveAmount?.amount ${quoteResponseBody.payeeReceiveAmount?.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
+                message.push(`quoteResponseBody.payeeReceiveAmount?.amount ${quoteResponseBody.payeeReceiveAmount?.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
             }
             if (fxQuoteResponseBody) {
                 if (!(fxQuoteResponseBody.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
                     result = false;
-                    message.push(`fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`)
+                    message.push(`fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
                 }
             }
         } else {
@@ -674,7 +674,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
 
     async updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void> {
-        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
+        this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.accountNo} and transfer id ${transferId}`);
         // const res = await this.zicbClient.walletToWalletInternalFundsTransfer(this.getCustomerToCollectionWalletRequestBody(updateSendMoneyDeps, transferId));
         try {
             if (!(updateSendMoneyDeps.acceptQuote)) {
@@ -705,7 +705,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "service": "BNK9930",
             "request": {
                 "amount": String(collection.amount),
-                "destAcc": collection.msisdn,
+                "destAcc": collection.accountNo,
                 "destBranch": "001",
                 "payCurrency": config.get("zicb.X_CURRENCY"),
                 "payDate": formattedDate,
@@ -716,7 +716,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "srcCurrency": config.get("zicb.X_CURRENCY"),
                 "transferTyp": "INTERNAL"
             }
-        }
+        };
     }
 
 

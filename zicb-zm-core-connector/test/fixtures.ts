@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
 import { THttpResponse, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from "../src/domain";
-import { TCallbackRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from "../src/domain/CBSClient";
+import { TZicbSendMoneyRequest, TZicbUpdateSendMoneyRequest } from "../src/domain/CBSClient";
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 import { TSDKOutboundTransferResponse } from "src/domain/SDKClient";
 
-export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "0881544547", amount: string = "1"): TQuoteRequest => ({
+export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string = "1019000001703", amount: string = "1"): TQuoteRequest => ({
   amount: amount,
   amountType: "SEND",
   extensionList: [
@@ -13,9 +13,9 @@ export const quoteRequestDto = (idType: string = "MSISDN", idValue: string = "08
       "value": "TestValue"
     }
   ],
-  currency: "MWK",
+  currency: "ZMW",
   from: {
-    idType: "MSISDN",
+    idType: "ACCOUNT_NO",
     idValue: "978034884",
     extensionList: [
       {
@@ -46,7 +46,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "transferId": crypto.randomUUID(),
   "amount": amount,
   "amountType": "SEND",
-  "currency": "MWK",
+  "currency": "ZMW",
   "from": {
     "idType": "MSISDN",
     "idValue": "777123456",
@@ -120,15 +120,15 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "quote": {
     "expiration": "2024-10-15T13:17:57.742Z",
     "payeeFspCommissionAmount": "0",
-    "payeeFspCommissionAmountCurrency": "MWK",
+    "payeeFspCommissionAmountCurrency": "ZMW",
     "payeeFspFeeAmount": "0",
-    "payeeFspFeeAmountCurrency": "MWK",
+    "payeeFspFeeAmountCurrency": "ZMW",
     "payeeReceiveAmount": "1000",
-    "payeeReceiveAmountCurrency": "MWK",
+    "payeeReceiveAmountCurrency": "ZMW",
     "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
     "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
     "transferAmount": "1000",
-    "transferAmountCurrency": "MWK"
+    "transferAmountCurrency": "ZMW"
   },
   "note": "Transfer Quote Request"
 });
@@ -214,7 +214,7 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
       amountType: 'SEND',
       amount: {
         amount: amount,
-        currency: "MWK"
+        currency: "ZMW"
       },
       transactionType: {
         scenario: 'TRANSFER',
@@ -234,12 +234,12 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
   transferId: "47e8a9cd-3d89-55c5-a15a-b57a28ad763e"
 });
 
-export const sendMoneyReqDTO = (amount: string, payerId: string): TCbsSendMoneyRequest => ({
+export const sendMoneyReqDTO = (amount: string, payerId: string): TZicbSendMoneyRequest => ({
   homeTransactionId: randomUUID(),
   payeeId: "4889343434",
   payeeIdType: "MSISDN",
   sendAmount: amount,
-  sendCurrency: "MWK",
+  sendCurrency: "ZMW",
   receiveCurrency: "UGX",
   transactionDescription: "transfer",
   transactionType: "TRANSFER",
@@ -270,26 +270,26 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       idType: "MSISDN",
       idValue: idValue,
       supportedCurrencies: [
-        'MWK'
+        'ZMW'
       ]
     },
     amountType: "SEND",
-    currency: "MWK",
+    currency: "ZMW",
     amount: "1000",
     transactionType: "TRANSFER",
     currentState: currentState,
     "quoteResponse": {
       "body": {
         "transferAmount": {
-          "currency": "MWK",
+          "currency": "ZMW",
           "amount": "1000"
         },
         "payeeReceiveAmount": {
-          "currency": "MWK",
+          "currency": "ZMW",
           "amount": "1000"
         },
         "payeeFspFee": {
-          "currency": "MWK",
+          "currency": "ZMW",
           "amount": "0"
         },
         "payeeFspCommission": {
@@ -326,11 +326,11 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
           "counterPartyFsp": "string",
           "amountType": "RECEIVE",
           "sourceAmount": {
-            "currency": "MWK",
+            "currency": "ZMW",
             "amount": "1000"
           },
           "targetAmount": {
-            "currency": "MWK",
+            "currency": "ZMW",
             "amount": "1000"
           },
           "expiration": "2016-05-24T08:38:08.699-04:00",
@@ -362,17 +362,11 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
   }
 });
 
-export const updateSendMoneyMerchantPaymentDTO = (amount: number, acceptQuote: boolean, idValue: string): TCBSUpdateSendMoneyRequest => ({
+export const updateSendMoneyMerchantPaymentDTO = (amount: number, acceptQuote: boolean, idValue: string): TZicbUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "msisdn": idValue,
-  "amount": amount.toString()
+  "accountNo": idValue,
+  "amount": amount.toString(),
+  "payerMessage": "School Fees",
+  "payeeNote": "School Fees"
 });
 
-export const callbackPayloadDto = (amount: string, transferStatus: string): TCallbackRequest => ({
-  "transaction": {
-    "id": crypto.randomUUID(),
-    "message": `Paid ZMW ${amount} to TECHNOLOGIES LIMITED Charge UGX 1, Trans ID MP210603.1234.L06941.`,
-    "status_code": transferStatus,
-    "airtel_money_id": "MP210603.1234.L06941"
-  }
-});

@@ -57,6 +57,6 @@ export class SDKClientError extends BasicError {
         return new SDKClientError(
             message,
             options
-        )
+        );
     }
 }

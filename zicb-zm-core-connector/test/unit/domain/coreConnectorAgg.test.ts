@@ -34,205 +34,503 @@ import {
 import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
 import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
-import { CBSClientFactory, ICbsClient, TCbsSendMoneyRequest } from '../../../src/domain/CBSClient';
-import { callbackPayloadDto, quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../fixtures';
+import { ZicbClientFactory, IZicbClient } from '../../../src/domain/CBSClient';
+import { quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferPatchNotificationRequestDto, transferRequestDto, updateSendMoneyMerchantPaymentDTO } from '../../fixtures';
 import { randomUUID } from 'crypto';
 
 const mockAxios = new MockAdapter(axios);
 const logger = loggerFactory({ context: 'ccAgg tests' });
-const cbsConfig = config.get("cbs");
-const SDK_URL = 'http://localhost:4040';
-const MSISDN = "0123456789"
+const zicbConfig = config.get("zicb");
+const SDK_URL = 'http://localhost:4010';
+const ACCOUNT_NO = "1019000002881";
 
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
-    let cbsClient: ICbsClient;
+    let zicbClient: IZicbClient;
     let sdkClient: ISDKClient;
 
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
         sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, SDK_URL);
-        cbsClient = CBSClientFactory.createClient({ cbsConfig, httpClient, logger });
-        ccAggregate = new CoreConnectorAggregate(sdkClient, cbsClient, cbsConfig, logger);
+        zicbClient = ZicbClientFactory.createClient({zicbConfig, httpClient, logger });
+        ccAggregate = new CoreConnectorAggregate(sdkClient, zicbClient, zicbConfig, logger);
     });
 
     describe("Payee Tests", () => {
         test(" getParties should return customer account information for id from CBS Api", async () => {
             //Arrange
-            cbsClient.getKyc = jest.fn().mockResolvedValueOnce({
-                // replace with body of cbs getKyc response body
-                "data": {
-                    "first_name": "Dealer",
-                    "grade": "SUBS",
-                    "is_barred": false,
-                    "is_pin_set": true,
-                    "last_name": "Test1",
-                    "msisdn": MSISDN,
-                    "dob": "2001-03-23",
-                    "account_status": "Y",
-                    "nationatility": "CD",
-                    "id_number": "125*****5522",
-                    "registration": {
-                        "status": "SUBS"
+            zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValueOnce({
+                "errorList": {},
+                "operation_status": "SUCCESS",
+                "preauthUUID": "2f0b5c58-c830-4630-8a3b-0b82b854656c",
+                "request": {
+                    "accountNos": "1019000001703",
+                    "accountType": null,
+                    "customerNos": null,
+                    "getByAccType": false,
+                    "getByCustNo": false
+                },
+                "request-reference": "2025182-ZICB-1739871967",
+                "response": {
+                    "accountList": [
+                        {
+                            "frozenStatus": "A",
+                            "accDesc": "CHIMWESO FAITH MUKOKO",
+                            "loanStatus": null,
+                            "accTypeDesc": "CHIMWESO FAITH MUKOKO",
+                            "accOpeningDate": null,
+                            "loanMaturityDate": null,
+                            "chequeBookFlag": "N",
+                            "lastCreditActivity": null,
+                            "loanRate": null,
+                            "overdftUtilizedAmt": 0,
+                            "accATMFacility": null,
+                            "overdftAllowed": "N",
+                            "loanLastPaidDate": null,
+                            "maturityAmount": null,
+                            "accPassBookFacility": null,
+                            "currency": "ZMW",
+                            "loanNextDueDate": null,
+                            "creditAccountOnMaturity": null,
+                            "loanAmountFinanced": null,
+                            "loanAmountDisbursed": null,
+                            "userLcRef": null,
+                            "expiryDate": null,
+                            "loanTotalAmountDue": null,
+                            "overdftLmt": 0,
+                            "loanEMI": 0,
+                            "loanAmountDue": 453.8,
+                            "loanAmount": 0,
+                            "address2": "Salama Park 256",
+                            "dealRef": "MOJAFIN",
+                            "loanType": null,
+                            "dealType": null,
+                            "actualAmount": 453.8,
+                            "loanTotalAmountPaid": 0,
+                            "address4": "Lusaka",
+                            "accStatus": "E",
+                            "accountOpenDate": 1622213596572,
+                            "address3": "Lusaka",
+                            "overdftAvailableAmt": null,
+                            "loanStartDate": "28-MAY-2021",
+                            "coreBankingDate": "18-FEB-2025",
+                            "accNo": "1019000001703",
+                            "lastDebitActivity": null,
+                            "customerName": null,
+                            "curBal": 453.8,
+                            "issueDate": null,
+                            "loanTenure": 0,
+                            "jointAccount": "S",
+                            "accType": "MOJAFIN",
+                            "closureDate": null,
+                            "address1": "Brokoli Street",
+                            "accName": null,
+                            "branchCode": "101",
+                            "prodCode": "MOJAFIN",
+                            "totalAmountAvailable": 453.8,
+                            "avlBal": 453.8,
+                            "idCustomer": "9000622",
+                            "loanAmountOverdue": null,
+                            "unclearFunds": 0
+                        }
+                    ],
+                    "tekHeader": {
+                        "errList": {},
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "SUCCESS",
+                        "tekesbrefno": "cfeaf630-dabd-e646-0a9d-e7ee3e527897",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "success",
-                    "result_code": "DP02200000001",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1739871967939
             });
             //Act
-            const res = await ccAggregate.getParties(MSISDN, "MSISDN");
+            const res = await ccAggregate.getParties(ACCOUNT_NO, "ACCOUNT_NO");
             logger.info("Get Parties Response", res);
+
+            logger.info(JSON.stringify(res.data));
+            expect(res.statusCode).toEqual(200);
+
             //Assert
-            expect(res.idValue).toEqual(MSISDN);
-            expect(res.extensionList).toBeDefined;
+            expect(res.data.idValue).toEqual(ACCOUNT_NO);
+            expect(res.data.extensionList).toBeDefined;
         });
 
         test("quoterequests should return transfer terms", async () => {
             //Arrange 
-            cbsClient.getKyc = jest.fn().mockResolvedValueOnce({
-                // replace with body of cbs getKyc response body
-                "data": {
-                    "first_name": "Dealer",
-                    "grade": "SUBS",
-                    "is_barred": false,
-                    "is_pin_set": true,
-                    "last_name": "Test1",
-                    "msisdn": MSISDN,
-                    "dob": "yyyy-MM-dd HH:mm:ss.S",
-                    "account_status": "Y",
-                    "nationatility": "CD",
-                    "id_number": "125*****5522",
-                    "registration": {
-                        "status": "SUBS"
+            zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValue({
+                "errorList": {},
+                "operation_status": "SUCCESS",
+                "preauthUUID": "2f0b5c58-c830-4630-8a3b-0b82b854656c",
+                "request": {
+                    "accountNos": "1019000001703",
+                    "accountType": null,
+                    "customerNos": null,
+                    "getByAccType": false,
+                    "getByCustNo": false
+                },
+                "request-reference": "2025182-ZICB-1739871967",
+                "response": {
+                    "accountList": [
+                        {
+                            "frozenStatus": "A",
+                            "accDesc": "CHIMWESO FAITH MUKOKO",
+                            "loanStatus": null,
+                            "accTypeDesc": "CHIMWESO FAITH MUKOKO",
+                            "accOpeningDate": null,
+                            "loanMaturityDate": null,
+                            "chequeBookFlag": "N",
+                            "lastCreditActivity": null,
+                            "loanRate": null,
+                            "overdftUtilizedAmt": 0,
+                            "accATMFacility": null,
+                            "overdftAllowed": "N",
+                            "loanLastPaidDate": null,
+                            "maturityAmount": null,
+                            "accPassBookFacility": null,
+                            "currency": "ZMW",
+                            "loanNextDueDate": null,
+                            "creditAccountOnMaturity": null,
+                            "loanAmountFinanced": null,
+                            "loanAmountDisbursed": null,
+                            "userLcRef": null,
+                            "expiryDate": null,
+                            "loanTotalAmountDue": null,
+                            "overdftLmt": 0,
+                            "loanEMI": 0,
+                            "loanAmountDue": 453.8,
+                            "loanAmount": 0,
+                            "address2": "Salama Park 256",
+                            "dealRef": "MOJAFIN",
+                            "loanType": null,
+                            "dealType": null,
+                            "actualAmount": 453.8,
+                            "loanTotalAmountPaid": 0,
+                            "address4": "Lusaka",
+                            "accStatus": "E",
+                            "accountOpenDate": 1622213596572,
+                            "address3": "Lusaka",
+                            "overdftAvailableAmt": null,
+                            "loanStartDate": "28-MAY-2021",
+                            "coreBankingDate": "18-FEB-2025",
+                            "accNo": "1019000001703",
+                            "lastDebitActivity": null,
+                            "customerName": null,
+                            "curBal": 453.8,
+                            "issueDate": null,
+                            "loanTenure": 0,
+                            "jointAccount": "S",
+                            "accType": "MOJAFIN",
+                            "closureDate": null,
+                            "address1": "Brokoli Street",
+                            "accName": null,
+                            "branchCode": "101",
+                            "prodCode": "MOJAFIN",
+                            "totalAmountAvailable": 453.8,
+                            "avlBal": 453.8,
+                            "idCustomer": "9000622",
+                            "loanAmountOverdue": null,
+                            "unclearFunds": 0
+                        }
+                    ],
+                    "tekHeader": {
+                        "errList": {},
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "SUCCESS",
+                        "tekesbrefno": "cfeaf630-dabd-e646-0a9d-e7ee3e527897",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "success",
-                    "result_code": "DP02200000001",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1739871967939
             });
+
             const quoteReq: TQuoteRequest = quoteRequestDto();
             //Act 
             const res = await ccAggregate.quoteRequest(quoteReq);
             logger.info("Quote response", res);
+
+
             //Assert
-            expect(res.extensionList).toBeDefined;
+            expect(res.extensionList).not.toHaveLength(0);
             expect(res.payeeFspFeeAmount).toBeDefined;
         });
 
         test("receiveTransfers should return transfer transferState as RESERVED", async () => {
             //Arrange 
-            cbsClient.getKyc = jest.fn().mockResolvedValueOnce({
-                // replace with body of cbs getKyc response body
-                "data": {
-                    "first_name": "Dealer",
-                    "grade": "SUBS",
-                    "is_barred": false,
-                    "is_pin_set": true,
-                    "last_name": "Test1",
-                    "msisdn": MSISDN,
-                    "dob": "yyyy-MM-dd HH:mm:ss.S",
-                    "account_status": "Y",
-                    "nationatility": "CD",
-                    "id_number": "125*****5522",
-                    "registration": {
-                        "status": "SUBS"
+            zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValueOnce({
+                "errorList": {},
+                "operation_status": "SUCCESS",
+                "preauthUUID": "2f0b5c58-c830-4630-8a3b-0b82b854656c",
+                "request": {
+                    "accountNos": "1019000001703",
+                    "accountType": null,
+                    "customerNos": null,
+                    "getByAccType": false,
+                    "getByCustNo": false
+                },
+                "request-reference": "2025182-ZICB-1739871967",
+                "response": {
+                    "accountList": [
+                        {
+                            "frozenStatus": "A",
+                            "accDesc": "CHIMWESO FAITH MUKOKO",
+                            "loanStatus": null,
+                            "accTypeDesc": "CHIMWESO FAITH MUKOKO",
+                            "accOpeningDate": null,
+                            "loanMaturityDate": null,
+                            "chequeBookFlag": "N",
+                            "lastCreditActivity": null,
+                            "loanRate": null,
+                            "overdftUtilizedAmt": 0,
+                            "accATMFacility": null,
+                            "overdftAllowed": "N",
+                            "loanLastPaidDate": null,
+                            "maturityAmount": null,
+                            "accPassBookFacility": null,
+                            "currency": "ZMW",
+                            "loanNextDueDate": null,
+                            "creditAccountOnMaturity": null,
+                            "loanAmountFinanced": null,
+                            "loanAmountDisbursed": null,
+                            "userLcRef": null,
+                            "expiryDate": null,
+                            "loanTotalAmountDue": null,
+                            "overdftLmt": 0,
+                            "loanEMI": 0,
+                            "loanAmountDue": 453.8,
+                            "loanAmount": 0,
+                            "address2": "Salama Park 256",
+                            "dealRef": "MOJAFIN",
+                            "loanType": null,
+                            "dealType": null,
+                            "actualAmount": 453.8,
+                            "loanTotalAmountPaid": 0,
+                            "address4": "Lusaka",
+                            "accStatus": "E",
+                            "accountOpenDate": 1622213596572,
+                            "address3": "Lusaka",
+                            "overdftAvailableAmt": null,
+                            "loanStartDate": "28-MAY-2021",
+                            "coreBankingDate": "18-FEB-2025",
+                            "accNo": "1019000001703",
+                            "lastDebitActivity": null,
+                            "customerName": null,
+                            "curBal": 453.8,
+                            "issueDate": null,
+                            "loanTenure": 0,
+                            "jointAccount": "S",
+                            "accType": "MOJAFIN",
+                            "closureDate": null,
+                            "address1": "Brokoli Street",
+                            "accName": null,
+                            "branchCode": "101",
+                            "prodCode": "MOJAFIN",
+                            "totalAmountAvailable": 453.8,
+                            "avlBal": 453.8,
+                            "idCustomer": "9000622",
+                            "loanAmountOverdue": null,
+                            "unclearFunds": 0
+                        }
+                    ],
+                    "tekHeader": {
+                        "errList": {},
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "SUCCESS",
+                        "tekesbrefno": "cfeaf630-dabd-e646-0a9d-e7ee3e527897",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "success",
-                    "result_code": "DP02200000001",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1739871967939
             });
-            const transferReq: TtransferRequest = transferRequestDto("MSISDN", MSISDN, "1000");
+            const transferReq: TtransferRequest = transferRequestDto("ACCOUNT_NO", ACCOUNT_NO, "1000");
             //Act
             const res = await ccAggregate.receiveTransfer(transferReq);
             //Assert
             expect(res.transferState).toEqual("RESERVED");
             expect(res.homeTransactionId).toBeDefined;
+            expect(transferReq).not.toBeFalsy();
         });
 
         test("updateReceivedTransfer should disburse funds to customer account", async () => {
             //Arrange 
-            cbsClient.sendMoney = jest.fn().mockResolvedValueOnce({
-                "data": {
-                    "transaction": {
-                        "reference_id": "APC**4",
-                        "airtel_money_id": "product-partner-**41",
-                        "id": "AB***141",
-                        "status": "TS",
-                        "message": "Transaction Successful"
+            zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValueOnce({
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "response_code": "DP00900001001",
-                    "code": "200",
-                    "success": true,
-                    "message": "SUCCESS"
-                }
+                "status": 200,
+                "timestamp": 1720015166319
             });
-            const cbsClientSendMoney = jest.spyOn(cbsClient, "sendMoney");
-            const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "MSISDN", MSISDN, "1000");
+            const zicbClientSendMoney = jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
+            const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "ACCOUNT_NO", ACCOUNT_NO, "1000");
             //Act
             await ccAggregate.updateTransfer(patchNoficationPayload, randomUUID());
             //Assert
-            expect(cbsClientSendMoney).toHaveBeenCalled();
+            expect(zicbClientSendMoney).toHaveBeenCalled();
         });
 
-        test("updateReceivedTransfer should initiate compensation action when disburse funds to customer account fails", async () => {
-            //Arrange 
-            cbsClient.sendMoney = jest.fn().mockImplementationOnce(() => {
-                throw new Error("Failed to send money");
-            });
-            const cbslogFailedPayment = jest.spyOn(cbsClient, "logFailedIncomingTransfer");
-            const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "MSISDN", MSISDN, "1000");
-            //Act
-            await ccAggregate.updateTransfer(patchNoficationPayload, randomUUID());
-            //Assert
-            expect(cbslogFailedPayment).toHaveBeenCalled();
-        });
+        // test("updateReceivedTransfer should initiate compensation action when disburse funds to customer account fails", async () => {
+        //     //Arrange 
+        //     cbsClient.sendMoney = jest.fn().mockImplementationOnce(() => {
+        //         throw new Error("Failed to send money");
+        //     });
+        //     const cbslogFailedPayment = jest.spyOn(cbsClient, "logFailedIncomingTransfer");
+        //     const patchNoficationPayload: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", "MSISDN", MSISDN, "1000");
+        //     //Act
+        //     await ccAggregate.updateTransfer(patchNoficationPayload, randomUUID());
+        //     //Assert
+        //     expect(cbslogFailedPayment).toHaveBeenCalled();
+        // });
     });
 
     describe("Payer Tests", () => {
         test("POST /send-money: should return payee details and fees with correct info provided", async () => {
-            cbsClient.getKyc = jest.fn().mockResolvedValue({
-                "data": {
-                    "first_name": "Chimweso Faith Mukoko",
-                    "grade": "SUBS",
-                    "is_barred": false,
-                    "is_pin_set": false,
-                    "last_name": "Test1",
-                    "msisdn": "12****89",
-                    "dob": "yyyy-MM-dd HH:mm:ss.S",
-                    "account_status": "Y",
-                    "nationatility": "CD",
-                    "id_number": "125*****5522",
-                    "registration": {
-                        "status": "SUBS"
+            zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValue({
+                "errorList": {},
+                "operation_status": "SUCCESS",
+                "preauthUUID": "2f0b5c58-c830-4630-8a3b-0b82b854656c",
+                "request": {
+                    "accountNos": "1019000001703",
+                    "accountType": null,
+                    "customerNos": null,
+                    "getByAccType": false,
+                    "getByCustNo": false
+                },
+                "request-reference": "2025182-ZICB-1739871967",
+                "response": {
+                    "accountList": [
+                        {
+                            "frozenStatus": "A",
+                            "accDesc": "CHIMWESO FAITH MUKOKO",
+                            "loanStatus": null,
+                            "accTypeDesc": "CHIMWESO FAITH MUKOKO",
+                            "accOpeningDate": null,
+                            "loanMaturityDate": null,
+                            "chequeBookFlag": "N",
+                            "lastCreditActivity": null,
+                            "loanRate": null,
+                            "overdftUtilizedAmt": 0,
+                            "accATMFacility": null,
+                            "overdftAllowed": "N",
+                            "loanLastPaidDate": null,
+                            "maturityAmount": null,
+                            "accPassBookFacility": null,
+                            "currency": "ZMW",
+                            "loanNextDueDate": null,
+                            "creditAccountOnMaturity": null,
+                            "loanAmountFinanced": null,
+                            "loanAmountDisbursed": null,
+                            "userLcRef": null,
+                            "expiryDate": null,
+                            "loanTotalAmountDue": null,
+                            "overdftLmt": 0,
+                            "loanEMI": 0,
+                            "loanAmountDue": 453.8,
+                            "loanAmount": 0,
+                            "address2": "Salama Park 256",
+                            "dealRef": "MOJAFIN",
+                            "loanType": null,
+                            "dealType": null,
+                            "actualAmount": 453.8,
+                            "loanTotalAmountPaid": 0,
+                            "address4": "Lusaka",
+                            "accStatus": "E",
+                            "accountOpenDate": 1622213596572,
+                            "address3": "Lusaka",
+                            "overdftAvailableAmt": null,
+                            "loanStartDate": "28-MAY-2021",
+                            "coreBankingDate": "18-FEB-2025",
+                            "accNo": "1019000001703",
+                            "lastDebitActivity": null,
+                            "customerName": null,
+                            "curBal": 453.8,
+                            "issueDate": null,
+                            "loanTenure": 0,
+                            "jointAccount": "S",
+                            "accType": "MOJAFIN",
+                            "closureDate": null,
+                            "address1": "Brokoli Street",
+                            "accName": null,
+                            "branchCode": "101",
+                            "prodCode": "MOJAFIN",
+                            "totalAmountAvailable": 453.8,
+                            "avlBal": 453.8,
+                            "idCustomer": "9000622",
+                            "loanAmountOverdue": null,
+                            "unclearFunds": 0
+                        }
+                    ],
+                    "tekHeader": {
+                        "errList": {},
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "SUCCESS",
+                        "tekesbrefno": "cfeaf630-dabd-e646-0a9d-e7ee3e527897",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "success",
-                    "result_code": "DP02200000001",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1739871967939
             });
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
 
             // Spying on Update Transfer
@@ -242,7 +540,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Spying on Initiate transfer
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
-            const sendMoneyRequestBody = sendMoneyReqDTO("1000",MSISDN);
+            const sendMoneyRequestBody = sendMoneyReqDTO("1000",ACCOUNT_NO);
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
 
             logger.info("Response from send money", res);
@@ -268,66 +566,166 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
 
-            cbsClient.collectMoney = jest.fn().mockResolvedValue({
-                "data": {
-                    "transaction": {
-                        "id": false,
-                        "status": "SUCCESS"
+            zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "SUCCESS",
-                    "result_code": "ESB000010",
-                    "response_code": "DP00800001006",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1720015166319
             });
-            jest.spyOn(cbsClient, "collectMoney");
-            const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN);
+            jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
+            const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
             const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
             logger.info("Response ", res);
-            expect(cbsClient.collectMoney).toHaveBeenCalled();
+            expect(zicbClient.walletToWalletInternalFundsTransfer).toHaveBeenCalled();
         });
 
 
         test("POST /merchant-payment: should return payee details and fees with correct info provided", async () => {
-            cbsClient.getKyc = jest.fn().mockResolvedValue({
-                "data": {
-                    "first_name": "Chimweso Faith Mukoko",
-                    "grade": "SUBS",
-                    "is_barred": false,
-                    "is_pin_set": false,
-                    "last_name": "Test1",
-                    "msisdn": "12****89",
-                    "dob": "yyyy-MM-dd HH:mm:ss.S",
-                    "account_status": "Y",
-                    "nationatility": "CD",
-                    "id_number": "125*****5522",
-                    "registration": {
-                        "status": "SUBS"
+            zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValue({
+                "errorList": {},
+                "operation_status": "SUCCESS",
+                "preauthUUID": "2f0b5c58-c830-4630-8a3b-0b82b854656c",
+                "request": {
+                    "accountNos": "1019000001703",
+                    "accountType": null,
+                    "customerNos": null,
+                    "getByAccType": false,
+                    "getByCustNo": false
+                },
+                "request-reference": "2025182-ZICB-1739871967",
+                "response": {
+                    "accountList": [
+                        {
+                            "frozenStatus": "A",
+                            "accDesc": "CHIMWESO FAITH MUKOKO",
+                            "loanStatus": null,
+                            "accTypeDesc": "CHIMWESO FAITH MUKOKO",
+                            "accOpeningDate": null,
+                            "loanMaturityDate": null,
+                            "chequeBookFlag": "N",
+                            "lastCreditActivity": null,
+                            "loanRate": null,
+                            "overdftUtilizedAmt": 0,
+                            "accATMFacility": null,
+                            "overdftAllowed": "N",
+                            "loanLastPaidDate": null,
+                            "maturityAmount": null,
+                            "accPassBookFacility": null,
+                            "currency": "ZMW",
+                            "loanNextDueDate": null,
+                            "creditAccountOnMaturity": null,
+                            "loanAmountFinanced": null,
+                            "loanAmountDisbursed": null,
+                            "userLcRef": null,
+                            "expiryDate": null,
+                            "loanTotalAmountDue": null,
+                            "overdftLmt": 0,
+                            "loanEMI": 0,
+                            "loanAmountDue": 453.8,
+                            "loanAmount": 0,
+                            "address2": "Salama Park 256",
+                            "dealRef": "MOJAFIN",
+                            "loanType": null,
+                            "dealType": null,
+                            "actualAmount": 453.8,
+                            "loanTotalAmountPaid": 0,
+                            "address4": "Lusaka",
+                            "accStatus": "E",
+                            "accountOpenDate": 1622213596572,
+                            "address3": "Lusaka",
+                            "overdftAvailableAmt": null,
+                            "loanStartDate": "28-MAY-2021",
+                            "coreBankingDate": "18-FEB-2025",
+                            "accNo": "1019000001703",
+                            "lastDebitActivity": null,
+                            "customerName": null,
+                            "curBal": 453.8,
+                            "issueDate": null,
+                            "loanTenure": 0,
+                            "jointAccount": "S",
+                            "accType": "MOJAFIN",
+                            "closureDate": null,
+                            "address1": "Brokoli Street",
+                            "accName": null,
+                            "branchCode": "101",
+                            "prodCode": "MOJAFIN",
+                            "totalAmountAvailable": 453.8,
+                            "avlBal": 453.8,
+                            "idCustomer": "9000622",
+                            "loanAmountOverdue": null,
+                            "unclearFunds": 0
+                        }
+                    ],
+                    "tekHeader": {
+                        "errList": {},
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "SUCCESS",
+                        "tekesbrefno": "cfeaf630-dabd-e646-0a9d-e7ee3e527897",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "success",
-                    "result_code": "DP02200000001",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1739871967939
             });
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
 
             // Spying on Update Transfer
             jest.spyOn(sdkClient, "updateTransfer");
 
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
-            const merchantPaymentRequestBody = sendMoneyReqDTO("1000",MSISDN);
+            const merchantPaymentRequestBody = sendMoneyReqDTO("1000",ACCOUNT_NO);
             const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
 
             logger.info("Response from merchant payment", res);
@@ -351,53 +749,66 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
 
-            cbsClient.collectMoney = jest.fn().mockResolvedValue({
-                "data": {
-                    "transaction": {
-                        "id": false,
-                        "status": "SUCCESS"
+            zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
                     }
                 },
-                "status": {
-                    "code": "200",
-                    "message": "SUCCESS",
-                    "result_code": "ESB000010",
-                    "response_code": "DP00800001006",
-                    "success": true
-                }
+                "status": 200,
+                "timestamp": 1720015166319
             });
 
-            jest.spyOn(cbsClient, "collectMoney");
-            const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, MSISDN);
+            jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
+            const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
             const res = await ccAggregate.updateSendMoney(updateMerchantPaymentReqBody, "ljzowczj");
             logger.info("Response ", res);
-            expect(cbsClient.collectMoney).toHaveBeenCalled();
+            expect(zicbClient.walletToWalletInternalFundsTransfer).toHaveBeenCalled();
         }
         );
 
 
-        test("PUT /callback: should receive a transacion status code", async () => {
-
-            cbsClient.refundMoney = jest.fn().mockResolvedValue({
-                "data": {
-                    "transaction": {
-                        "airtel_money_id": "CI2****29",
-                        "status": "SUCCESS"
-                    }
-                },
-                "status": {
-                    "code": "200",
-                    "message": "SUCCESS",
-                    "result_code": "ESB000010",
-                    "success": false
-                }
-            });
-            const callBackRequest = callbackPayloadDto("1000", "TS");
-            const res = await ccAggregate.handleCallback(callBackRequest);
-            logger.info("Response ", res);
-            expect(cbsClient.refundMoney).toHaveBeenCalled();
-
-
-        });
+      
     });
 });

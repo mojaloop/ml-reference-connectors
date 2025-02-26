@@ -90,7 +90,7 @@ export type TZicbMerchantPaymentResponse = TZicbSendMoneyResponse;
 
 export type TZicbUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
-    "msisdn": string;
+    "accountNo": string;
     "amount": string;
     "payerMessage": string;
     "payeeNote": string;
