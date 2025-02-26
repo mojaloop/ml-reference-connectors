@@ -386,7 +386,7 @@ export const tSDKOutboundTransferRequestDTO = (): TSDKOutboundTransferRequest =>
     "displayName": "Chimweso Faith Mukoko Test1",
     "extensionList": [],
     "firstName": "Chimweso Faith Mukoko",
-    "fspId": "airtelmalawi",
+    "fspId": "airtelzambia",
     "idType": "MSISDN",
     "idValue": "971938765",
     "lastName": "Test1",

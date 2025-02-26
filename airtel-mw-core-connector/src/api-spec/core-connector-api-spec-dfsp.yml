@@ -257,7 +257,11 @@ components:
                   example: "Lusaka"
                 CtryOfBirth:
                   type: string
+<<<<<<< HEAD
                   example: "malawi"
+=======
+                  example: "Zambia"
+>>>>>>> b324befa322b5b94b68ad4e11fc9e18e507af8ee
               required:
                 - BirthDt
                 - CityOfBirth
@@ -290,7 +294,7 @@ components:
               example: "990454454"
             fspId:
               type: string
-              example: "airtelmalawi"
+              example: "airtelzambia"
             firstName:
               type: string
               example: "Niza"
@@ -330,7 +334,7 @@ components:
               example: "990454454"
             fspId:
               type: string
-              example: "airtelmalawi"
+              example: "airtelzambia"
             firstName:
               type: string
               example: "Niza"
@@ -406,7 +410,7 @@ components:
                   example: "Lusaka"
                 CtryOfBirth:
                   type: string
-                  example: "malawi"
+                  example: "Zambia"
               required:
                 - BirthDt
                 - CityOfBirth
