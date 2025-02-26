@@ -29,18 +29,17 @@ import { IHTTPClient, ILogger } from '../interfaces';
 import { CBSError } from './errors';
 import {
     INBMClient,
-    TNBMCollectMoneyRequest,
-    TNBMCollectMoneyResponse,
+    TNBMTransferMoneyRequest,
+    TNBMTransferMoneyResponse,
     TNBMConfig,
-    TNBMDisbursementRequestBody,
-    TNBMDisbursementResponse,
+ 
     TNBMKycResponse,
-    TNBMRefundMoneyRequest,
-    TNBMRefundMoneyResponse,
+
     TGetKycArgs,
     TGetTokenArgs,
     TGetTokenResponse,
-    TNBMTransactionResponse
+    TNBMTransactionResponse,
+    TNBMSendMoneyResponse
 } from './types';
 
 export const CBS_ROUTES = Object.freeze({
@@ -104,11 +103,11 @@ export class NBMClient implements INBMClient {
         }
     }
 
-    async sendMoney(deps: TNBMDisbursementRequestBody): Promise<TNBMDisbursementResponse> {
+    async sendMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Sending Disbursement Body To National Bank");
         const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
         try {
-            const res = await this.httpClient.post<TNBMDisbursementRequestBody, TNBMDisbursementResponse>(url, deps,
+            const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps,
                 {
                     headers: {
                         ...this.getDefaultHeader(),
@@ -117,7 +116,7 @@ export class NBMClient implements INBMClient {
                 }
             );
 
-            if (res.data.status.code !== '200') {
+            if (res.data.message !== 'Success') {
                 throw CBSError.disbursmentError();
             }
             return res.data;
@@ -126,12 +125,12 @@ export class NBMClient implements INBMClient {
             throw error;
         }
     }
-    async collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse> {
+    async makeTransfer(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Collecting Money from National Bank", deps.description);
         const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.collectMoney}`;
 
         try {
-            const res = await this.httpClient.post<TNBMCollectMoneyRequest, TNBMCollectMoneyResponse>(url, deps, {
+            const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
@@ -148,18 +147,18 @@ export class NBMClient implements INBMClient {
         }
     }
 
-    async refundMoney(deps: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse> {
+    async refundMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse> {
         this.logger.info("Refunding Money to Customer in National Bank");
         const url = `${this.cbsConfig.DFSP_BASE_URL}${CBS_ROUTES.refundMoney}`;
 
         try {
-            const res = await this.httpClient.post<TNBMRefundMoneyRequest, TNBMRefundMoneyResponse>(url, deps, {
+            const res = await this.httpClient.post<TNBMTransferMoneyRequest, TNBMTransferMoneyResponse>(url, deps, {
                 headers: {
                     ...this.getDefaultHeader(),
                     'Authorization': `Bearer ${await this.getAuthHeader()}`,
                 }
             });
-            if (res.data.status.code !== '200') {
+            if (res.data.message !== 'Success') {
                 throw CBSError.refundMoneyError();
             }
             return res.data;
@@ -172,8 +171,6 @@ export class NBMClient implements INBMClient {
     private getDefaultHeader() {
         return {
             'Content-Type': 'application/json',
-            'X-Country': this.cbsConfig.X_COUNTRY,
-            'X-Currency': this.cbsConfig.X_CURRENCY,
         };
     }
 
@@ -187,22 +184,4 @@ export class NBMClient implements INBMClient {
         return res.access_token;
     }
 
-    //Mock Function for NBM to simulate debiting the customer
-    async mockCollectMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse> {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const response: TNBMTransactionResponse = {
-                    success: true,
-                    message: `Account ${debitAccountId} debited and account ${creditAccountId} credited successfully.`,
-                    transactionId: `txn_${Math.floor(Math.random() * 100000)}`,
-                    debitAccountId,
-                    creditAccountId,
-                    amount,
-                    status: "credited",
-                    timestamp: new Date().toISOString(),
-                };
-                resolve(response);
-            }, 1000);
-        });
-    }
 }

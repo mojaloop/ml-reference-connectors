@@ -29,9 +29,9 @@ import { randomUUID } from 'crypto';
 import config from '../config';
 import {
     INBMClient,
-    TNBMCollectMoneyRequest,
+    TNBMTransferMoneyRequest,
     TNBMConfig,
-    TNBMDisbursementRequestBody,
+   
     TNBMInvoiceRequest,
     TNBMKycResponse,
     TNBMSendMoneyRequest,
@@ -101,7 +101,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             extensionList: this.getPartiesExtensionList(),
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
-            supportedCurrencies: config.get("nbm.X_CURRENCY")
+            supportedCurrencies: config.get("nbm.CURRENCY")
         };
     }
 
@@ -113,12 +113,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("nbm.X_COUNTRY")
+                "value": config.get("nbm.COUNTRY")
             },
 
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("nbm.X_COUNTRY")
+                "value": config.get("nbm.COUNTRY")
             }
         ];
     }
@@ -137,7 +137,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             // );
             this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
-        if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
+        if (quoteRequest.currency !== this.cbsConfig.CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
         const res = await this.nbmClient.getKyc({ account_number: quoteRequest.to.idValue });
@@ -163,11 +163,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return {
             "expiration": deps.expiration,
             "payeeFspCommissionAmount": "0",
-            "payeeFspCommissionAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeFspCommissionAmountCurrency": this.cbsConfig.CURRENCY,
             "payeeFspFeeAmount": deps.fees.toString(),
-            "payeeFspFeeAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeFspFeeAmountCurrency": this.cbsConfig.CURRENCY,
             "payeeReceiveAmount": deps.quoteRequest.amount,
-            "payeeReceiveAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeReceiveAmountCurrency": this.cbsConfig.CURRENCY,
             "quoteId": deps.quoteRequest.quoteId,
             "transferAmount": (deps.fees + Number(deps.quoteRequest.amount)).toString(),
             "transferAmountCurrency": deps.quoteRequest.currency,
@@ -203,7 +203,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             // )
             this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
         }
-        if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
+        if (transfer.currency !== this.cbsConfig.CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.validateQuote(transfer)) {
@@ -302,15 +302,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             await this.initiateCompensationAction();
             throw ValidationError.transferNotCompletedError();
         }
-        const makePaymentRequest: TNBMDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.nbmClient.sendMoney(makePaymentRequest); //todo: define better error handling logic
+        const makePaymentRequest: TNBMTransferMoneyRequest = this.getMakePaymentRequestBody(updateTransferPayload);
+        await this.nbmClient.makeTransfer(makePaymentRequest); //todo: define better error handling logic
     }
 
     private async initiateCompensationAction() {
         // todo function implementation to be defined.
     }
 
-    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMDisbursementRequestBody {
+    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMTransferMoneyRequest {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
         }
@@ -320,17 +320,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         return {
-            "payee": {
-                "msisdn": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
-                "wallet_type": "NORMAL",
-            },
-            "reference": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned",
-            "pin": this.cbsConfig.AIRTEL_PIN,
-            "transaction": {
-                "amount": Number(requestBody.quoteRequest.body.amount.amount),
-                "id": requestBody.transferId,
-                "type": "B2B"
-            }
+            amount: requestBody.quoteRequest.body.amount.amount,
+            description: requestBody.quoteRequest.body.transactionId,
+            reference: requestBody.transferId,
+            credit_account: requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
+            currency: requestBody.quoteRequest.body.amount.currency
         };
     }
 
@@ -437,10 +431,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         let result = true;
         const message: string[] = [];
         if (
-            !(this.cbsConfig.X_CURRENCY === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)
+            !(this.cbsConfig.CURRENCY === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
             result = false;
-            message.push(`cbsConfig.TNM_CURRENCY ${this.cbsConfig.X_CURRENCY} did not match currency returned in transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
+            message.push(`cbsConfig.TNM_CURRENCY ${this.cbsConfig.CURRENCY} did not match currency returned in transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
         }
         if (transferRes.amountType === 'SEND') {
             if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
@@ -562,7 +556,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
                 "merchantClassificationCode": "123",
                 extensionList: this.getOutboundTransferExtensionList(transfer),
-                "supportedCurrencies": [config.get("nbm.X_CURRENCY")]
+                "supportedCurrencies": [config.get("nbm.CURRENCY")]
             },
             'to': {
                 'idType': transfer.payeeIdType,
@@ -604,15 +598,5 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         const res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId); //todo: implement better error handling logic 
         return res.data;
-    }
-
-    private getTCbsCollectMoneyRequest(collection: TNBMUpdateSendMoneyRequest, transferId: string): TNBMCollectMoneyRequest {
-        return {
-            "amount": 10000,
-            "description": collection.acceptQuote.toString(),
-            "reference": "Test",
-            "credit_account": "10034867",	
-            "currency": "MWK" 
-        };
     }
 }

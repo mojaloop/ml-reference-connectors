@@ -32,7 +32,7 @@
  import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
  import { loggerFactory } from '../../../src/infra/logger';
  import config from '../../../src/config';
- import { NBMClientFactory, INBMClient, TNBMCollectMoneyRequest, } from '../../../src/domain/CBSClient';
+ import { NBMClientFactory, INBMClient, TNBMTransferMoneyRequest, } from '../../../src/domain/CBSClient';
  import { 
      sdkInitiateTransferResponseDto, 
      transferRequestDto,
@@ -51,8 +51,8 @@
  const idType = "ACCOUNT_NO";
  const ACCOUNT_NO = "1003486415";
  
- const collectMoneyRequest: TNBMCollectMoneyRequest = {
-     amount: 12000,
+ const collectMoneyRequest: TNBMTransferMoneyRequest = {
+     amount: "12000",
      description: "Test Transaction",
      reference: "INV/2003/202930",
      credit_account: ACCOUNT_NO,
@@ -73,7 +73,7 @@
         // Mock dependencies
         nbmClient.getToken = jest.fn();
         nbmClient.getKyc = jest.fn();
-        nbmClient.collectMoney = jest.fn();
+        nbmClient.makeTransfer = jest.fn();
         nbmClient.sendMoney = jest.fn();
     });
 
@@ -140,7 +140,7 @@
 
         test("Transfer Patch notification should credit the customer's account if request body is valid", async () => {
             // Arrange
-            nbmClient.sendMoney = jest.fn().mockImplementation(() => {
+            nbmClient.makeTransfer = jest.fn().mockImplementation(() => {
                 return;
             });
             const patchNotificationPayload = transferPatchNotificationRequestDto(
@@ -159,7 +159,7 @@
 
         test("Transfer Patch notification should credit the Merchant's account if request body is valid", async () => {
             // Arrange
-            nbmClient.collectMoney = jest.fn().mockImplementation(() => {
+            nbmClient.makeTransfer = jest.fn().mockImplementation(() => {
                 return;
             });
             const patchNotificationPayload = transferPatchNotificationRequestDto(
@@ -244,11 +244,11 @@
         test("Update Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
-            nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-            const collectMoney = jest.spyOn(nbmClient, "collectMoney");
+            nbmClient.makeTransfer = jest.fn().mockResolvedValueOnce(undefined);
+            const collectMoney = jest.spyOn(nbmClient, "makeTransfer");
         
             
-            await nbmClient.collectMoney(collectMoneyRequest);
+            await nbmClient.makeTransfer(collectMoneyRequest);
             // Act
         
             // Assert
@@ -335,11 +335,11 @@
         test("Update Merchant Pay Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
             const updateSendMoneyPayload = updateSendMoneyDTO(true);
-            nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-            const collectMoney = jest.spyOn(nbmClient, "collectMoney");
-            await nbmClient.collectMoney(collectMoneyRequest);
+            nbmClient.makeTransfer = jest.fn().mockResolvedValueOnce(undefined);
+            const makeTransfer = jest.spyOn(nbmClient, "makeTransfer");
+            await nbmClient.makeTransfer(collectMoneyRequest);
             // Assert
-            expect(collectMoney).toHaveBeenCalled();
+            expect(makeTransfer).toHaveBeenCalled();
         });
 
         test("Update Merchant Payment should trigger a request to pay using NBM client", async () => {
