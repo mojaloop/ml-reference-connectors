@@ -4,13 +4,13 @@ This sequence diagram details the process of updating an initiated merchant paym
 ```mermaid
 sequenceDiagram
   autoNumber
-  DFSP Customer App->>DFSP Customer App: Seek customer consent and debit funds from customer wallet if customer consents
-  DFSP Customer App->>CC: POST /merchant-payment/{id}/acceptTerms=true | false
+  ZICB App->>ZICB App: Seek customer consent and debit funds from customer wallet if customer consents
+  ZICB App->>CC: POST /merchant-payment/{id}/acceptTerms=true | false
   CC->>CC: Check acceptTerms
   Alt If Quote not Accepted
   CC->>ML Connector:PUT  /transfers/{id} {acceptConversion = false}
   ML Connector-->>CC: Response 
-  CC-->>DFSP Customer App: Response 500 OK
+  CC-->>ZICB App: Response 500 OK
   End
   CC->>ML Connector:PUT  /transfers/{id} {acceptConversion = true}
   ML Connector-->>CC: Response
@@ -22,5 +22,5 @@ sequenceDiagram
   CC->>CC: Initiate manual refund
   End
   End
-  CC-->> DFSP Customer App: Response 200
+  CC-->> ZICB App: Response 200
 ```

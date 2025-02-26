@@ -135,9 +135,9 @@ export class ZicbClient implements IZicbClient {
 
 
 
-    logFailedRefund(zicb_transfer_id: string): Promise<void> {
+    logFailedRefund(zicb_transfer_request: TWalletToWalletInternalFundsTransferRequest): Promise<void> {
         // todo: to be defined based on what DFSP recommends.
-        this.logger.info("Failed refund transaction id", zicb_transfer_id);
+        this.logger.info("Failed refund transaction request body", zicb_transfer_request);
         return Promise.resolve();
     }
 

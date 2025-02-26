@@ -39,8 +39,8 @@ export type TZicbConfig = {
     EXPIRATION_DURATION: string;
     FSP_ID: string
     LEI: string;
-    DISBURSEMENT_ACCOUNT_NO:string;
-    COLLECTION_ACCOUNT_NO:string;
+    DISBURSEMENT_ACCOUNT_NO: string;
+    COLLECTION_ACCOUNT_NO: string;
 }
 
 // Request coming from Zicb to CC
@@ -92,7 +92,10 @@ export type TZicbUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "msisdn": string;
     "amount": string;
+    "payerMessage": string;
+    "payeeNote": string;
 }
+
 
 
 
@@ -266,7 +269,7 @@ export interface IZicbClient {
     httpClient: IHTTPClient;
     logger: ILogger;
     verifyCustomerByAccountNumber(deps: TVerifyCustomerByAccountNumberRequest): Promise<TVerifyCustomerByAccountNumberResponse>;
-    walletToWalletInternalFundsTransfer(deps: TWalletToWalletInternalFundsTransferRequest) : Promise<TWalletToWalletInternalFundsTransferResponse>;
+    walletToWalletInternalFundsTransfer(deps: TWalletToWalletInternalFundsTransferRequest): Promise<TWalletToWalletInternalFundsTransferResponse>;
     logFailedIncomingTransfer(req: TWalletToWalletInternalFundsTransferRequest): Promise<void>;
-    logFailedRefund(zicb_transfer_id: string): Promise<void>;
+    logFailedRefund(zicb_transfer_request: TWalletToWalletInternalFundsTransferRequest): Promise<void>;
 }

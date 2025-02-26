@@ -179,5 +179,5 @@ export interface ICoreConnectorAggregate {
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TZicbSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TZicbSendMoneyResponse>
-    updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<TWalletToWalletInternalFundsTransferResponse>
+    updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void>
 }

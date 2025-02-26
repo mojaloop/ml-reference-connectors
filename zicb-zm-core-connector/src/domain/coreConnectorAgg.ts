@@ -33,7 +33,7 @@ import {
     TZicbConfig,
     TZicbSendMoneyResponse,
 
-} from './zicbClient';
+} from './CBSClient';
 import {
     ILogger,
     TQuoteResponse,
@@ -59,7 +59,7 @@ import {
     TtransferContinuationResponse,
 } from './SDKClient';
 import config from '../config';
-import { PartyType, TVerifyCustomerByAccountNumberRequest, TVerifyCustomerByAccountNumberResponse, TWalletToWalletInternalFundsTransferRequest } from './CBSClient/types';
+import { PartyType, TVerifyCustomerByAccountNumberRequest, TVerifyCustomerByAccountNumberResponse, TWalletToWalletInternalFundsTransferRequest, TWalletToWalletInternalFundsTransferResponse, TZicbSendMoneyRequest, TZicbUpdateSendMoneyRequest } from './CBSClient/types';
 import { get } from 'http';
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
@@ -90,7 +90,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         const party = {
             data: this.getPartiesResponse(res, id),
-            statusCode: Number(res.status.code),
+            statusCode: Number(res.status),
         };
         this.logger.info(`Party found`, { party });
         return party;
@@ -141,9 +141,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             extensionList: this.getGetPartiesExtensionList(),
             supportedCurrencies: this.zicbConfig.X_CURRENCY,
         };
-    }   
+    }
 
-     //  Get Parties Response -- (1.2.2)
+    //  Get Parties Response -- (1.2.2)
 
     private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
         return [
@@ -162,7 +162,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         ]
     }
 
-       // Get Parties   --(2)
+    // Get Parties   --(2)
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Calculating quote for ${quoteRequest.to.idValue} and amount ${quoteRequest.amount}`);
 
@@ -183,7 +183,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         const fees = (Number(this.zicbConfig.SENDING_SERVICE_CHARGE) / 100) * Number(quoteRequest.amount);
 
- 
+
         // TODO: check if frozen status in account list response implies that the account is blocked
 
         await this.checkAccountBarred(quoteRequest.to.idValue);
@@ -250,7 +250,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
         const verifyCustomerByAccountNumberRequestBody = this.getVerifyByCustomerAccountNumberRequestBody(id);
         const res = await this.zicbClient.verifyCustomerByAccountNumber(verifyCustomerByAccountNumberRequestBody);
-        
+
         // Currently all the account responses have a frozen status of "A" , what does it mean??
 
         if (res.response.accountList[0].frozenStatus !== "A") {
@@ -290,7 +290,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-   
+
 
     // Validate Quote -- (3.1)
 
@@ -367,7 +367,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
 
-   
+
     // update Transfer -- (4)
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
@@ -375,13 +375,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferNotCompletedError();
         }
         const disbursementToCustomerWalletRequest: TWalletToWalletInternalFundsTransferRequest = this.getDisbursementToCustomerWalletRequestBody(updateTransferPayload);
-        try{
+        try {
             await this.zicbClient.walletToWalletInternalFundsTransfer(disbursementToCustomerWalletRequest);
         } catch (error: unknown) {
             await this.initiateCompensationAction(disbursementToCustomerWalletRequest);
         }
     }
 
+    // getDisbursementToCustomerWalletRequestBody DTO -- (4.1)
     private getDisbursementToCustomerWalletRequestBody(requestBody: TtransferPatchNotificationRequest): TWalletToWalletInternalFundsTransferRequest {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
@@ -395,23 +396,24 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         const formattedDate = today.toISOString().split('T')[0];
 
         return {
-            "service":"BNK9930",
-            "request":{
-                "amount":  String(requestBody.quoteRequest.body.amount.amount),
+            "service": "BNK9930",
+            "request": {
+                "amount": String(requestBody.quoteRequest.body.amount.amount),
                 "destAcc": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
                 "destBranch": "001",
                 "payCurrency": config.get("zicb.X_CURRENCY"),
                 "payDate": formattedDate,
                 "referenceNo": Date.now().toString(),
                 "remarks": "Payer's Message in Mojaloop Switch",
-                "srcAcc": config.get("zicb.DISBURSEMENT_ACCOUNT_NO"), 
+                "srcAcc": config.get("zicb.DISBURSEMENT_ACCOUNT_NO"),
                 "srcBranch": "101",
-                "srcCurrency":  config.get("zicb.X_CURRENCY"),
+                "srcCurrency": config.get("zicb.X_CURRENCY"),
                 "transferTyp": "INTERNAL"
             }
         }
     }
 
+    // initiateCompensationAction -- (4.2)
     private async initiateCompensationAction(req: TWalletToWalletInternalFundsTransferRequest) {
         this.logger.error("Failed to make transfer to customer", { request: req });
         await this.zicbClient.logFailedIncomingTransfer(req);
@@ -421,7 +423,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
 
     // Payer
-    async sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TZicbSendMoneyResponse> {
+    // Send Money -- (5)
+
+    async sendMoney(transfer: TZicbSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TZicbSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
@@ -432,6 +436,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" })
         }
     }
+
+    // Handle Send Transfer -- (5.1)
 
     private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TZicbSendMoneyResponse> {
         /*
@@ -459,8 +465,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTCbsSendMoneyResponse(acceptRes.data);
+        return this.getTZicbSendMoneyResponse(acceptRes.data);
     }
+
+    // Handle Recieve Transfer  -- (5.2)
 
     private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TZicbSendMoneyResponse> {
         /*
@@ -488,8 +496,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTCbsSendMoneyResponse(acceptRes.data);
+        return this.getTZicbSendMoneyResponse(acceptRes.data);
     }
+
+    // Validate Conversion Terms (5.2.1)
 
     private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
@@ -528,6 +538,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
         return { result, message };
     }
+
+    // Validate Returned  Quote (5.2.2)
 
     private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Retunred Quote with transfer response amount${outboundTransferRes.amount}`);
@@ -587,7 +599,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return { result, message };
     }
 
-    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TZicbSendMoneyResponse {
+    private getTZicbSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TZicbSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -606,20 +618,23 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
-        const res = await this.zicbClient.getKyc({
-            msisdn: transfer.payer.payerId
-        });
+    private async getTSDKOutboundTransferRequest(transfer: TZicbSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+
+        const verifyCustomerByAccountNumberRequestBody = this.getVerifyByCustomerAccountNumberRequestBody(transfer.payer.payerId);
+        const res = await this.zicbClient.verifyCustomerByAccountNumber(verifyCustomerByAccountNumberRequestBody);
+
+
+
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.zicbConfig.SUPPORTED_ID_TYPE,
                 'idValue': transfer.payer.payerId,
                 'fspId': this.zicbConfig.FSP_ID,
-                "displayName": `${res.data.first_name} ${res.data.last_name}`,
-                "firstName": res.data.first_name,
-                "middleName": res.data.first_name,
-                "lastName": res.data.last_name,
+                "displayName": `${res.response.accountList[0].accDesc}`,
+                "firstName": this.extractNames(res.response.accountList[0].accDesc).firstName,
+                "middleName": this.extractNames(res.response.accountList[0].accDesc).firstName,
+                "lastName": this.extractNames(res.response.accountList[0].accDesc).lastName,
                 "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.zicbConfig.X_CURRENCY]
             },
@@ -634,7 +649,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TZicbSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -657,63 +672,81 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
     }
 
-    async updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse> {
+
+    async updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
-
-        if (!(updateSendMoneyDeps.acceptQuote)) {
-            throw ValidationError.quoteNotAcceptedError();
-        }
-        return await this.zicbClient.collectMoney(this.getTCbsCollectMoneyRequest(updateSendMoneyDeps, transferId));
-    }
-
-    private getTCbsCollectMoneyRequest(collection: TCBSUpdateSendMoneyRequest, transferId: string): TCbsCollectMoneyRequest {
-        return {
-            "reference": "string",
-            "subscriber": {
-                "country": this.zicbConfig.X_COUNTRY,
-                "currency": this.zicbConfig.X_CURRENCY,
-                "msisdn": collection.msisdn,
-            },
-            "transaction": {
-                "amount": Number(collection.amount),
-                "country": this.zicbConfig.X_COUNTRY,
-                "currency": this.zicbConfig.X_CURRENCY,
-                "id": transferId,
-            }
-        };
-    }
-
-    async handleCallback(payload: TCallbackRequest): Promise<void> {
-        this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
+        // const res = await this.zicbClient.walletToWalletInternalFundsTransfer(this.getCustomerToCollectionWalletRequestBody(updateSendMoneyDeps, transferId));
         try {
-            if (payload.transaction.status_code === "TS") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
-            } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+            if (!(updateSendMoneyDeps.acceptQuote)) {
+                await this.sdkClient.updateTransfer({ acceptQuote: false }, transferId);
+                throw ValidationError.quoteNotAcceptedError();
+            }
+            else {
+                await this.sdkClient.updateTransfer({ acceptQuote: true }, transferId);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
                 // perform refund or rollback if payment was successful
-                if (payload.transaction.status_code === "TS") {
-                    await this.handleRefund(this.getRefundRequestBody(payload));
+                if (updateSendMoneyDeps.acceptQuote) {
+                    await this.handleRefund(this.getCollectionWalletToCustomerRequestBody(updateSendMoneyDeps, transferId));
                 }
             }
         }
     }
 
-    private async handleRefund(refund: TCbsRefundMoneyRequest): Promise<void> {
-        try {
-            await this.zicbClient.refundMoney(refund);
-        } catch (error: unknown) {
-            this.zicbClient.logFailedRefund(refund.transaction.airtel_money_id);
-        }
-    }
+    // Get CustomerToCollectionWalletRequestBody DTO -- (6.1)
+    private getCollectionWalletToCustomerRequestBody(collection: TZicbUpdateSendMoneyRequest, transferId: string): TWalletToWalletInternalFundsTransferRequest {
+        this.logger.info(`Getting Customer Funds with ${transferId}`);
 
-    private getRefundRequestBody(callbackPayload: TCallbackRequest): TCbsRefundMoneyRequest {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+
         return {
-            "transaction": {
-                "airtel_money_id": callbackPayload.transaction.airtel_money_id
+            "service": "BNK9930",
+            "request": {
+                "amount": String(collection.amount),
+                "destAcc": collection.msisdn,
+                "destBranch": "001",
+                "payCurrency": config.get("zicb.X_CURRENCY"),
+                "payDate": formattedDate,
+                "referenceNo": Date.now().toString(),
+                "remarks": collection.payerMessage,
+                "srcAcc":  config.get("zicb.COLLECTION_ACCOUNT_NO"),
+                "srcBranch": "101",
+                "srcCurrency": config.get("zicb.X_CURRENCY"),
+                "transferTyp": "INTERNAL"
             }
         }
     }
+
+
+
+    // async handleCallback(payload: TCallbackRequest): Promise<void> {
+    //     this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
+    //     try {
+    //         if (payload.transaction.status_code === "TS") {
+    //             await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
+    //         } else {
+    //             await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+    //         }
+    //     } catch (error: unknown) {
+    //         if (error instanceof SDKClientError) {
+    //             // perform refund or rollback if payment was successful
+    //             if (payload.transaction.status_code === "TS") {
+    //                 await this.handleRefund(this.getRefundRequestBody(payload));
+    //             }
+    //         }
+    //     }
+    // }
+
+    private async handleRefund(refund: TWalletToWalletInternalFundsTransferRequest): Promise<TWalletToWalletInternalFundsTransferResponse | undefined> {
+        try {
+            return await this.zicbClient.walletToWalletInternalFundsTransfer(refund);
+
+        } catch (error: unknown) {
+            this.zicbClient.logFailedRefund(refund);
+        }
+    }
+
+
 }
