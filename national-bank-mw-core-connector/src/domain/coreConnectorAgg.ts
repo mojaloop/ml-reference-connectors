@@ -289,7 +289,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         try {
             await this.nbmClient.makeTransfer(makePaymentRequest);
         } catch (err: unknown) {
-            await this.initiateCompensationAction(makePaymentRequest)
+            await this.initiateCompensationAction(makePaymentRequest);
         }
     }
 
@@ -573,7 +573,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             return res.data;
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                await this.handleRefund(updateSendMoneyDeps,transerId)
+                await this.handleRefund(updateSendMoneyDeps,transerId);
             }
         }
     }
@@ -581,7 +581,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     private async handleRefund(deps: TNBMUpdateSendMoneyRequest, transferId: string) {
         try {
             if (deps.acceptQuote) {
-                await this.nbmClient.makeTransfer(this.getRefundPayload(deps,transferId))
+                await this.nbmClient.makeTransfer(this.getRefundPayload(deps,transferId));
             }
         } catch (error: unknown) {
             this.logger.error("Refund failed. Initiating manual process....");
@@ -596,6 +596,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             "reference": transferId,
             "credit_account": deps.account,
             "currency": this.nbmClient.NBMConfig.CURRENCY
-        }
+        };
     }
 }
