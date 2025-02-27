@@ -6,6 +6,7 @@
  http://www.apache.org/licenses/LICENSE-2.0
  Unless required by applicable law or agreed to in writing, the Mojaloop files are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+
  Contributors
  --------------
  This is the official list (alphabetical ordering) of the Mojaloop project contributors for this file.
@@ -22,82 +23,92 @@
 
  --------------
  ******/
-'use strict';
+ 'use strict';
 
-import {
-    ISDKClient,
-    TSDKClientDeps,
-    TtransferContinuationResponse,
-    TSDKOutboundTransferRequest,
-    TSDKTransferContinuationRequest,
-    TSDKOutboundTransferResponse,
-} from './types';
-import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
-import { SDKClientError } from './errors';
-
-export class SDKClient implements ISDKClient {
-    private readonly logger: ILogger;
-    private readonly httpClient: IHTTPClient;
-    private readonly SDK_SCHEME_ADAPTER_BASE_URL: string;
-
-    constructor(deps: TSDKClientDeps) {
-        this.logger = deps.logger;
-        this.httpClient = deps.httpClient;
-        this.SDK_SCHEME_ADAPTER_BASE_URL = deps.schemeAdapterUrl;
-    }
-
-    async initiateTransfer(
-        transfer: TSDKOutboundTransferRequest,
-    ): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
-        this.logger.info('SDKClient initiate receiveTransfer', transfer);
-        const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
-            `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
-            transfer,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            },
-        );
-        
-        this.logger.info('initiateTransfer response', res);
-        
-        if (res.statusCode != 200) {
-            throw new Error(`Invalid response statusCode: ${res.statusCode}`);
-        }
-        
-        return res;
-        
-    }
-
-    async updateTransfer(
-        transferAccept: TSDKTransferContinuationRequest,
-        id: string,
-    ): Promise<THttpResponse<TtransferContinuationResponse>> {
-        this.logger.info('SDKClient initiate update receiveTransfer %s', transferAccept);
-        try {
-            const res = await this.httpClient.put<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
-                `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers/${id}`,
-                transferAccept,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                },
-            );
-            if (res.statusCode != 200) {
-                const { statusCode, data, error } = res;
-                const errMessage = 'SDKClient initiate update receiveTransfer error: failed with wrong statusCode';
-                this.logger.warn(errMessage, { statusCode, data, error });
-                throw SDKClientError.continueTransferError(errMessage, { httpCode: statusCode });
+ import {
+     ISDKClient,
+     TSDKClientDeps,
+     TtransferContinuationResponse,
+     TSDKOutboundTransferRequest,
+     TSDKTransferContinuationRequest,
+     TSDKOutboundTransferResponse,
+ } from './types';
+ import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
+ import { SDKClientError } from './errors';
+import { AxiosError } from 'axios';
+ 
+ export class SDKClient implements ISDKClient {
+     private readonly logger: ILogger;
+     private readonly httpClient: IHTTPClient;
+     private readonly SDK_SCHEME_ADAPTER_BASE_URL: string;
+ 
+     constructor(deps: TSDKClientDeps) {
+         this.logger = deps.logger;
+         this.httpClient = deps.httpClient;
+         this.SDK_SCHEME_ADAPTER_BASE_URL = deps.schemeAdapterUrl;
+     }
+ 
+     async initiateTransfer(
+         transfer: TSDKOutboundTransferRequest,
+     ): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
+         this.logger.info('SDKClient initiate Transfer', transfer);
+         try {
+             const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
+                 `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers`,
+                 transfer,
+                 {
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                 },
+             );
+             if (res.statusCode != 200) {
+                 throw new Error(`Invalid response statusCode: ${res.statusCode}`);
+             }
+             return res;
+         } catch (error: unknown) {
+             let errMessage = (error as Error).message || 'Unknown Error';
+             this.logger.error(`error in initiateTransfer: ${errMessage}`);
+             if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
             }
-            return res;
-        } catch (error: unknown) {
-            
-            if (error instanceof SDKClientError) throw error;
-            const errMessage = `SDKClient initiate update receiveTransfer error: ${(error as Error)?.message}`;
-            this.logger.error(errMessage, { error });
-            throw SDKClientError.continueTransferError(errMessage);
-        }
-    }
-}
+             throw SDKClientError.initiateTransferError(errMessage);
+         }
+     }
+ 
+     async updateTransfer(
+         transferAccept: TSDKTransferContinuationRequest,
+         id: string,
+     ): Promise<THttpResponse<TtransferContinuationResponse>> {
+         this.logger.info('SDKClient initiate update receiveTransfer %s', transferAccept);
+         try {
+             const res = await this.httpClient.put<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
+                 `${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers/${id}`,
+                 transferAccept,
+                 {
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                 },
+             );
+             if (res.statusCode != 200) {
+                 const { statusCode, data, error } = res;
+                 const errMessage = 'SDKClient initiate update receiveTransfer error: failed with wrong statusCode';
+                 this.logger.warn(errMessage, { statusCode, data, error });
+                 throw SDKClientError.continueTransferError(errMessage, { httpCode: statusCode });
+             }
+             return res;
+         } catch (error: unknown) {
+             if (error instanceof SDKClientError) throw error;
+             let errMessage = `SDKClient initiate update receiveTransfer error: ${(error as Error)?.message}`;
+             this.logger.error(errMessage, { error });
+             if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
+             throw SDKClientError.continueTransferError(errMessage);
+         }
+     }
+ }
+ 

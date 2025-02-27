@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-'use strict';
-
-import { TJson } from './types';
-
-export type ErrorOptions = {
-    cause?: Error;
-    httpCode: number;
-    mlCode?: string;
-    details?: TJson;
-};
-
-type RefundDetails = {
-    amount: number;
-    fineractAccountId: number;
-};
-=======
 /*****
  License
  --------------
@@ -34,25 +17,7 @@ type RefundDetails = {
  Gates Foundation organization for an example). Those individuals should have
  their names indented and be marked with a '-'. Email address can be added
  optionally within square brackets <email>.
->>>>>>> dbb2c7c5824ea4cb2c8a40d675a4fff64eacf76c
-
-export class BasicError extends Error {
-    cause?: Error;
-    httpCode?: number;
-    mlCode?: string; // Mojaloop error code
-    details?: TJson;
-    constructor(message: string, options?: ErrorOptions) {
-        super(message, options);
-        Error.captureStackTrace(this, BasicError);
-        this.name = this.constructor.name;
-        this.httpCode = options?.httpCode;
-        this.mlCode = options?.mlCode;
-        this.details = options?.details;
-    }
-}
-
-<<<<<<< HEAD
-=======
+ 
  - Okello Ivan Elijah <elijahokello90@gmail.com>
 
  --------------
@@ -89,7 +54,6 @@ export class BasicError extends Error {
     }
 }
 
->>>>>>> dev
 export class ValidationError extends BasicError {
     static invalidExtensionListsError(message: string, mlCode: string, httpCode: number) {
         return new ValidationError(message, {
@@ -135,24 +99,14 @@ export class ValidationError extends BasicError {
             httpCode: 400,
         });
     }
-<<<<<<< HEAD
-    static invalidQuoteError() {
-        return new ValidationError("Invalid Quote Error", {
-=======
     static invalidQuoteError(message: string) {
         return new ValidationError(message, {
->>>>>>> dev
             mlCode: '5101',
             httpCode: 400,
         });
     }
-<<<<<<< HEAD
-    static invalidReturnedQuoteError() {
-        return new ValidationError("Invalid Quote Error", {
-=======
     static invalidReturnedQuoteError(message:string) {
         return new ValidationError(message, {
->>>>>>> dev
             mlCode: '5101',
             httpCode: 500,
         });

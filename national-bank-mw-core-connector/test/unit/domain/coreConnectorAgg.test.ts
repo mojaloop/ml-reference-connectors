@@ -189,6 +189,9 @@
             };
             nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
@@ -217,6 +220,9 @@
             };
             nbmClient.getKyc = jest.fn().mockResolvedValueOnce(mockKycResponse);
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
@@ -243,7 +249,7 @@
 
         test("Update Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
-            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            updateSendMoneyDTO(true);
             nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
             const collectMoney = jest.spyOn(nbmClient, "collectMoney");
         
@@ -283,6 +289,9 @@
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
         
             const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
@@ -311,6 +320,9 @@
             sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
+            });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
         
             const merchantPaymentRequest = sendMoneyDTO(ACCOUNT_NO, "103");
@@ -334,7 +346,7 @@
         
         test("Update Merchant Pay Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
-            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            updateSendMoneyDTO(true);
             nbmClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
             const collectMoney = jest.spyOn(nbmClient, "collectMoney");
             

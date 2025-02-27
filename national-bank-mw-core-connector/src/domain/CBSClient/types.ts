@@ -120,7 +120,7 @@ export type TNBMKycResponse = {
     };
     "message": string
 }
-3;
+
 export type TGetTokenArgs = {
     clientId: string;
     clientSecret: string;
@@ -220,4 +220,6 @@ export interface INBMClient {
     collectMoney(deps: TNBMCollectMoneyRequest): Promise<TNBMCollectMoneyResponse>;
     refundMoney(deps: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse>;
     mockCollectMoney(debitAccountId: string, creditAccountId: string, amount: number): Promise<TNBMTransactionResponse>
+    logFailedIncomingTransfer(req: TNBMDisbursementRequestBody): Promise<void>;
+    logFailedRefund(refundReq: TNBMRefundMoneyRequest): Promise<void>;
 }

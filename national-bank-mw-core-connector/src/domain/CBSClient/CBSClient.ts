@@ -63,12 +63,6 @@ export class NBMClient implements INBMClient {
         this.logger = logger;
     }
 
-    logFailedRefund(receipt_number: string): Promise<void> {
-        // todo: to be defined based on what DFSP recommends.
-        this.logger.info("Failed refund transaction id", receipt_number);
-        return Promise.resolve();
-    }
-
     NBMConfig!: TNBMConfig;
 
     async getKyc(deps: TGetKycArgs): Promise<TNBMKycResponse> {
@@ -204,5 +198,14 @@ export class NBMClient implements INBMClient {
                 resolve(response);
             }, 1000);
         });
+    }
+
+    logFailedIncomingTransfer(req: TNBMDisbursementRequestBody): Promise<void> {
+        this.logger.info("Failed Incoming payment",req);
+        return Promise.resolve();
+    }
+    logFailedRefund(refundReq: TNBMRefundMoneyRequest): Promise<void> {
+        this.logger.info("Failed refund request",refundReq);
+        return Promise.resolve();
     }
 }
