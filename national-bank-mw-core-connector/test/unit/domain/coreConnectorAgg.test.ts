@@ -249,7 +249,7 @@
 
         test("Update Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
-            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            updateSendMoneyDTO(true);
             nbmClient.makeTransfer = jest.fn().mockResolvedValueOnce(undefined);
             const collectMoney = jest.spyOn(nbmClient, "makeTransfer");
         
@@ -346,7 +346,7 @@
         
         test("Update Merchant Pay Send Money should trigger a request to pay using NBM client", async () => {
             // Arrange
-            const updateSendMoneyPayload = updateSendMoneyDTO(true);
+            updateSendMoneyDTO(true);
             nbmClient.makeTransfer = jest.fn().mockResolvedValueOnce(undefined);
             const makeTransfer = jest.spyOn(nbmClient, "makeTransfer");
             await nbmClient.makeTransfer(collectMoneyRequest);
