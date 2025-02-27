@@ -179,13 +179,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
-<<<<<<< HEAD
-=======
 
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
->>>>>>> dev
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
@@ -238,12 +235,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test("POST /merchant-payment: ", async () => {
-<<<<<<< HEAD
-            sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
-                ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
-            });
-=======
->>>>>>> dev
             tnmClient.getKyc = jest.fn().mockResolvedValue({
                 "message": "Completed successfully",
                 "errors": [],
@@ -253,17 +244,12 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
 
             });
-<<<<<<< HEAD
-            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
-                ...sdkUpdateTransferResponseDto(MSISDN_NO, "1000")
-=======
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
             sdkClient.updateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_QUOTE_ACCEPTANCE")
->>>>>>> dev
             });
             const initiateMerchantTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
             const sendMoneyRequestBody = sendMoneyDTO(MSISDN_NO, "1000");

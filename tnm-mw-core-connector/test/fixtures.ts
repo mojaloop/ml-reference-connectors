@@ -145,27 +145,6 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "amountType": "SEND",
   "currency": "MWK",
   "from": {
-<<<<<<< HEAD
-      "idType": "MSISDN",
-      "idValue": "777123456",
-      extensionList : [
-        {
-          "key": "testkey",
-          "value": "TestVal"
-        }
-      ]
-  },
-  "to": {
-      //@ts-expect-error idType 
-      "idType": idType,
-      "idValue": idValue,
-      extensionList : [
-        {
-          "key": "testkey",
-          "value": "TestVal"
-        }
-      ]
-=======
     "idType": "MSISDN",
     "idValue": "777123456",
     extensionList: [
@@ -185,7 +164,6 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
         "value": "TestVal"
       }
     ]
->>>>>>> dev
   },
   "ilpPacket": {
     "data": {
@@ -269,20 +247,12 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequ
     "payerId": idValue,
     "DateAndPlaceOfBirth": {
       "BirthDt": "1985-04-12",
-<<<<<<< HEAD
-      "PrvcOfBirth": "Kampala",	
-      "CityOfBirth": "Kampala",
-      "CtryOfBirth": "Uganda"
-
-    }},
-=======
       "PrvcOfBirth": "Kampala",
       "CityOfBirth": "Kampala",
       "CtryOfBirth": "Uganda"
 
     }
   },
->>>>>>> dev
 });
 
 

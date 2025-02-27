@@ -175,11 +175,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
             logger.info(JSON.stringify(res.data));
             expect(res.status).toEqual(200);
-<<<<<<< HEAD
-        })
-=======
         });
->>>>>>> dev
 
         // TNM Callback
         test('Test PUT /callback; response should be 200', async () => {

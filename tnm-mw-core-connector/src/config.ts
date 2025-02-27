@@ -108,11 +108,7 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'FSP_ID',
         },
-<<<<<<< HEAD
-        LEI:{
-=======
         LEI: {
->>>>>>> dev
             doc: 'Legal Entity Identifier',
             format: String,
             default: null, // required
@@ -124,11 +120,7 @@ const config = Convict<IConfigSchema>({
             default: null,
             env: 'TNM_CURRENCY',
         },
-<<<<<<< HEAD
-        X_COUNTRY:{
-=======
         X_COUNTRY: {
->>>>>>> dev
             doc: 'Country',
             format: String,
             default: null, // required

@@ -48,11 +48,7 @@ export type TNMConfig = {
     RECEIVING_SERVICE_CHARGE: string;
     EXPIRATION_DURATION: string,
     FSP_ID: string,
-<<<<<<< HEAD
-    TNM_CURRENCY: string,
-=======
     TNM_CURRENCY: components["schemas"]["Currency"],
->>>>>>> dev
     X_COUNTRY: string,
     LEI: string;
 }
