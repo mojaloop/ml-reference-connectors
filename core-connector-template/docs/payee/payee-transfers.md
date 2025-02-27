@@ -27,7 +27,7 @@ End
 CC->>CBS Api: POST [/disburse-funds-to-customer-account]
 CBS Api-->>CC: Response
 Alt if Response not Successful
-CC->>CC: Log failed transaction for further action by DFSP
+CC->>CC: Implement corrective action. Log resolution
 End
 CC-->>ML Connector: Response 200
 

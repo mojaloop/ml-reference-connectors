@@ -59,14 +59,12 @@
              httpCode: 400,
          });
      }
- 
-     static invalidReturnedQuoteError(){
-         return new ValidationError("Invalid Quote Error", {
-             mlCode: '5101',
-             httpCode: 500,
-         });
-     }
- 
+     static invalidReturnedQuoteError(message: string ){
+        return new ValidationError(message, {
+            mlCode: '5101',
+            httpCode: 500,
+        });
+    }
      static invalidConversionQuoteError(message: string, mlCode: string, httpCode: number){
          return new ValidationError(message, {
              mlCode: mlCode,
@@ -108,12 +106,13 @@
          });
      }
  
-     static invalidQuoteError(){
-         return new ValidationError("Invalid Quote Error", {
-             mlCode: '5101',
-             httpCode: 400,
-         });
-     }
+     static invalidQuoteError(message: string){
+        return new ValidationError(message, {
+            mlCode: '5101',
+            httpCode: 400,
+        });
+    }
+
  
      static transferNotCompletedError(){
          return new ValidationError("Transfer Not Completed Error", {

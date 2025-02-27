@@ -34,7 +34,6 @@ import {
     TCbsCollectMoneyResponse,
     TCBSConfig,
     TCbsDisbursementRequestBody,
-    TCbsDisbursementResponse,
     TCbsKycResponse,
     TCbsRefundMoneyRequest,
     TCbsSendMoneyRequest,
@@ -111,74 +110,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("cbs.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrTp.Cd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Dept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.SubDept",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.StrtNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNb",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.BldgNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Flr",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstBx",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Room",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.PstCd",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.TwnLctnNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.DstrctNm",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.CtrySubDvsn",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("cbs.X_COUNTRY")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.AdrLine",
-                "value": "Not Provided by CBS"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("cbs.X_COUNTRY")
             }
         ]
     }
@@ -227,24 +158,20 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0)
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0)
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        let newExtensionList: TPayeeExtensionListEntry[] = [];
-
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("cbs.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("cbs.LEI")
+            }
+        ]
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -409,6 +336,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
     }
 
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0)
+    }
+
     private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TCbsSendMoneyResponse> {
         /*
             check fxQuote
@@ -451,7 +382,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);
@@ -570,9 +502,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name: ""
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
@@ -596,7 +526,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.first_name,
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.cbsConfig.X_CURRENCY]
             },
             'to': {
@@ -604,13 +533,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TCbsSendMoneyRequest,amountType: "SEND"|"RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -628,6 +559,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key":"CdtTrfTxInf.Purp.Cd",
+                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }
@@ -663,13 +598,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction.id}`);
         try {
             if (payload.transaction.status_code === "TS") {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.transaction.id);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction.id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.transaction.id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
-                // perform refund or rollback if payment was successful
                 if (payload.transaction.status_code === "TS") {
                     await this.handleRefund(this.getRefundRequestBody(payload));
                 }

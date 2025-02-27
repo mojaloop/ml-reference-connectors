@@ -291,16 +291,9 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            name:
               type: string
               example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
-
         receiveAmount:
           type: string
           example: "140.00"
@@ -331,15 +324,9 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            name:
               type: string
               example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
 
         receiveAmount:
           type: string

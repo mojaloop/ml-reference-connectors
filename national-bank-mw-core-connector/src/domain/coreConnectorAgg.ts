@@ -566,35 +566,11 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse | undefined> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps} `);
-        let res: THttpResponse<TtransferContinuationResponse>;
-        try {
-            if (updateSendMoneyDeps.acceptQuote) {
-                res = await this.sdkClient.updateTransfer({ acceptQuote: true }, transerId);
-            } else {
-                res = await this.sdkClient.updateTransfer({ acceptQuote: false }, transerId);
-            }
-            return res.data;
-        } catch (error: unknown) {
-            if(error instanceof SDKClientError){
-                await this.handleRefund(this.getRefundRequestPayload());
-            }
-        }
-    }
 
-    private getRefundRequestPayload(){
-        return {
-            transaction: {
-                "airtel_money_id": ""
-            }
-        };
-    }
-
-    async handleRefund(refundReq: TNBMRefundMoneyRequest): Promise<TNBMRefundMoneyResponse | undefined> {
-        try{
-            const res = await this.nbmClient.refundMoney(refundReq);
-            return res;
-        }catch(error: unknown){
-            await this.nbmClient.logFailedRefund(refundReq);
+        if (!(updateSendMoneyDeps.acceptQuote)) {
+            throw ValidationError.quoteNotAcceptedError();
         }
+        const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId); //todo: implement better error handling logic 
+        return res.data;
     }
 }

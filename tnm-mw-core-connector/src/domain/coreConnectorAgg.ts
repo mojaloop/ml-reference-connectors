@@ -119,14 +119,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("tnm.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": "Malawi"
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": "Malawi"
             }
         ];
     }
@@ -164,6 +156,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         expiration.setHours(expiration.getHours() + Number(quoteExpiration));
         const expirationJSON = expiration.toJSON();
 
+        return this.getQuoteResponse(expirationJSON,quoteRequest,fees);
+    }
+
+    private getQuoteResponse(expirationJSON: string,quoteRequest: TQuoteRequest,fees: number){
         return {
             expiration: expirationJSON,
             extensionList: this.getQuoteResponseExtensionList(quoteRequest),
@@ -181,7 +177,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     //TODO: Check actual response for barred accounts
@@ -193,17 +189,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        this.logger.info(`QuoteRequest ${quoteRequest}`);
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("tnm.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("tnm.LEI")
+            }
+        ];
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -240,6 +236,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
+    }
+    
     private validateQuote(transfer: TtransferRequest): TValidationResponse {
         this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
         let result = true;
@@ -399,7 +399,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);
@@ -518,9 +518,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : "",
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
@@ -544,7 +542,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "firstName": res.data.full_name,
                 "middleName": res.data.full_name,
                 "lastName": res.data.full_name,
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [this.tnmConfig.TNM_CURRENCY]
             },
             'to': {
@@ -555,10 +552,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -576,6 +575,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key":"CdtTrfTxInf.Purp.Cd",
+                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }
@@ -603,9 +606,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         this.logger.info(`Handling callback for transaction with id ${payload.transaction_id}`);
         try {
             if (payload.success) {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, payload.transaction_id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.transaction_id);
             } else {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, payload.transaction_id);
+                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.transaction_id);
             }
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
