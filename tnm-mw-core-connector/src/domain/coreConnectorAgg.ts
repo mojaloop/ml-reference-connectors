@@ -586,7 +586,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
 
     async updateSendMoney(updateSendMoneyDeps: TNMUpdateSendMoneyRequest, transferId: string): Promise<TNMInvoiceResponse> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.msisdn} and transfer id ${transferId}`);
-
+ 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
