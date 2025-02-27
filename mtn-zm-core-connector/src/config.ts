@@ -21,6 +21,7 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
+ * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
  --------------
  ******/
 
@@ -191,6 +192,12 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null,
             env: 'LEI',
+        },
+        DFSP_CURRENCY: {
+            doc: 'DFSP Currency Independent of the Sandbox default Currency',
+            format: String,
+            default: null,
+            env: 'DFSP_CURRENCY',
         },
     },
 });

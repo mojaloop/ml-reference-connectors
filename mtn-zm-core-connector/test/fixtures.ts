@@ -128,7 +128,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       "headers": {}
     },
     transferId: crypto.randomUUID(),
-    "fxQuotesResponse": {
+    "fxQuoteResponse": {
       "body": {
         "homeTransactionId": "string",
         "condition": "string",

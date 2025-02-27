@@ -77,6 +77,7 @@ export type TMTNConfig = {
     SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
     MTN_ENV: string;
     LEI: string;
+    DFSP_CURRENCY:components["schemas"]["Currency"];
 }
 
 
@@ -174,11 +175,10 @@ export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
-    "amountType": "RECEIVE" | "SEND",
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
+    "sendAmount": string; "amountType": "RECEIVE" | "SEND";
     "sendCurrency": components['schemas']['Currency'];
-    "receiveCurrency": string;
+    "receiveCurrency":  components['schemas']['Currency'];
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
     payer: {
@@ -224,6 +224,7 @@ export type TMTNSendMoneyResponse = {
     "fees": string;
     "feeCurrency": string;
     "transactionId": string;
+    "homeTransactionId": string;
 }
 
 
@@ -248,6 +249,15 @@ export type TAuthParameters = {
     tokenUrl: string;
 }
 
+export type TMTNRefundRequestBody = {
+    "amount": string;
+    "currency": string;
+    "externalId": string;
+    "payerMessage": string;
+    "payeeNote": string;
+    "referenceIdToRefund": string;
+}
+
 export interface IMTNClient{
     mtnConfig: TMTNConfig;
     httpClient: IHTTPClient;
@@ -256,7 +266,10 @@ export interface IMTNClient{
     getKyc(deps: TGetKycArgs): Promise<TMTNKycResponse>;
     collectMoney(deps: TMTNCollectMoneyRequest): Promise<void>;
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
+    refundMoney(deps: TMTNRefundRequestBody): Promise<void>;
     getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
     getDisbursementTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
+    logFailedIncomingTransfer(req: TMTNDisbursementRequestBody): Promise<void>;
+    logFailedRefund(refundReq: TMTNRefundRequestBody): Promise<void>;
 
 }
