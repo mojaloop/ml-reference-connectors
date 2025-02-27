@@ -236,7 +236,8 @@
             const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
         
             // Assert: Check extensionList validity
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            expect(transferRequest.transferRequestExtensions).not.toHaveLength(0);
             if (transferRequest.from.extensionList) {
                 expect(transferRequest.from.extensionList[0]["key"]).toEqual(
                     "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt"
@@ -334,7 +335,8 @@
             const transferRequest = initiateMerchantTransferSpy.mock.calls[0][0];
         
             // Assert: Check extensionList validity
-            expect(transferRequest.from.extensionList).not.toHaveLength(0);
+            expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
+            expect(transferRequest.transferRequestExtensions).not.toHaveLength(0);
             if (transferRequest.from.extensionList) {
                 expect(transferRequest.from.extensionList[0]["key"]).toEqual(
                     "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt"

@@ -149,7 +149,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     private getQuoteResponse(deps: TGetQuotesDeps): TQuoteResponse {
@@ -170,17 +170,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        this.logger.info(`QuoteRequest ${quoteRequest}`);
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("nbm.COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("nbm.LEI")
+            }
+        ];
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -286,7 +286,16 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferNotCompletedError();
         }
         const makePaymentRequest: TNBMTransferMoneyRequest = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.nbmClient.makeTransfer(makePaymentRequest); //todo: define better error handling logic
+        try {
+            await this.nbmClient.makeTransfer(makePaymentRequest);
+        } catch (err: unknown) {
+            await this.initiateCompensationAction(makePaymentRequest)
+        }
+    }
+
+    private async initiateCompensationAction(req: TNBMTransferMoneyRequest) {
+        this.logger.error("Failed to make transfer to customer", { request: req });
+        await this.nbmClient.logFailedIncomingTransfer(req);
     }
 
     private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMTransferMoneyRequest {
@@ -318,6 +327,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
+    }
+
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
     }
 
     private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TNBMSendMoneyResponse> {
@@ -362,7 +375,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
         }
         const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
+        if (!validateQuoteRes.result && this.checkPayeeKYCInformation(res)) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptQuote": false
             }, res.transferId);
@@ -507,7 +520,6 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "displayName": `${res.data.account_number}`,
 
                 "merchantClassificationCode": "123",
-                extensionList: this.getOutboundTransferExtensionList(transfer),
                 "supportedCurrencies": [config.get("nbm.CURRENCY")]
             },
             'to': {
@@ -515,13 +527,15 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
             'amount': transfer.sendAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNBMSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
@@ -539,6 +553,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 {
                     "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key":"CdtTrfTxInf.Purp.Cd",
+                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }
@@ -550,7 +568,34 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId); //todo: implement better error handling logic 
-        return res.data;
+        try {
+            const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId);
+            return res.data;
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                await this.handleRefund(updateSendMoneyDeps,transerId)
+            }
+        }
+    }
+
+    private async handleRefund(deps: TNBMUpdateSendMoneyRequest, transferId: string) {
+        try {
+            if (deps.acceptQuote) {
+                await this.nbmClient.makeTransfer(this.getRefundPayload(deps,transferId))
+            }
+        } catch (error: unknown) {
+            this.logger.error("Refund failed. Initiating manual process....");
+            this.nbmClient.logFailedIncomingTransfer(this.getRefundPayload(deps,transferId));
+        }
+    }
+
+    private getRefundPayload(deps: TNBMUpdateSendMoneyRequest, transferId: string): TNBMTransferMoneyRequest {
+        return {
+            "amount": deps.amount,
+            "description": "Refund",
+            "reference": transferId,
+            "credit_account": deps.account,
+            "currency": this.nbmClient.NBMConfig.CURRENCY
+        }
     }
 }

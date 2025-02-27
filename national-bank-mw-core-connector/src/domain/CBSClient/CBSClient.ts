@@ -172,4 +172,15 @@ export class NBMClient implements INBMClient {
         return res.access_token;
     }
 
+
+    async logFailedRefund(refundReq: TNBMTransferMoneyRequest): Promise<void> {
+        this.logger.info('Failed to refund transfer', refundReq);
+        return Promise.resolve();
+    }
+
+    async logFailedIncomingTransfer(req: TNBMTransferMoneyRequest): Promise<void> {
+        this.logger.info("Failed to send funds to customer account",req);
+        return Promise.resolve();
+    }
+
 }

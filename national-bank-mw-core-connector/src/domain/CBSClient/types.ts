@@ -84,6 +84,8 @@ export type TNBMSendMoneyResponse = {
 
 export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
+    "account": string;
+    "amount": string;
     
 }
 
@@ -161,4 +163,6 @@ export interface INBMClient {
     makeTransfer(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse>;
     sendMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse>;
     refundMoney(deps: TNBMTransferMoneyRequest): Promise<TNBMTransferMoneyResponse>;
+    logFailedRefund(refundReq: TNBMTransferMoneyRequest): Promise<void>;
+    logFailedIncomingTransfer(req: TNBMTransferMoneyRequest): Promise<void>;
 }
