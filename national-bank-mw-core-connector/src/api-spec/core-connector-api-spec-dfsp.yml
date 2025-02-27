@@ -429,7 +429,7 @@ components:
       properties:
         acceptQuote:
           type: boolean
-        msisdn:
+        account:
           type: string
           example: "777503758"
         amount:
