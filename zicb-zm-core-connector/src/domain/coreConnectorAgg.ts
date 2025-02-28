@@ -672,7 +672,8 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
     }
 
-
+    // Update Send Money --(6)
+    
     async updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.accountNo} and transfer id ${transferId}`);
         // const res = await this.zicbClient.walletToWalletInternalFundsTransfer(this.getCustomerToCollectionWalletRequestBody(updateSendMoneyDeps, transferId));

@@ -25,9 +25,18 @@
 
 import axios from 'axios';
 import { Service } from '../../../src/core-connector-svc';
+import { loggerFactory } from '../../../src/infra/logger';
+import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
+import { quoteRequestDto, transferPatchNotificationRequestDto, transferRequestDto } from '../../fixtures';
+import { randomUUID } from 'crypto';
 
-const SDK_SERVER_URL = 'http://localhost:3003';
+
+const logger = loggerFactory({ context: 'ccAgg tests' });
+const ML_URL = 'http://localhost:3003';
 const DFSP_SERVER_URL = 'http://localhost:3004';
+
+const ACCOUNT_NO = "1019000003353"
+const idType = "ACCOUNT_NO";
 
 describe('CoreConnectorAggregate Tests -->', () => {
 
@@ -44,11 +53,65 @@ describe('CoreConnectorAggregate Tests -->', () => {
             const res = await axios.get(`${DFSP_SERVER_URL}/health`);
             expect(res.status).toEqual(200);
         });
+
+
+        
+        test('Get /parties/ACCOUNT_NO/{id}: sdk-server - Should return party info if it exists in Zicb', async () => {
+            const url = `${ML_URL}/parties/ACCOUNT_NO/${ACCOUNT_NO}`;
+            const res = await axios.get(url);
+            logger.info(res.data);
+
+            expect(res.status).toEqual(200);
+
+        });
+
+
+        test('POST /quoterequests: sdk-server - Should return quote if party info exists', async () => {
+            const quoteRequest: TQuoteRequest = quoteRequestDto();
+            const url = `${ML_URL}/quoterequests`;
+
+            const res = await axios.post(url, JSON.stringify(quoteRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
+
+            expect(res.status).toEqual(200);
+        });
+
+
+        
+        test('POST /transfers: sdk-server - Should return receiveTransfer if party in ZICB', async () => {
+            const transferRequest: TtransferRequest = transferRequestDto(idType, ACCOUNT_NO, "5");
+            const url = `${ML_URL}/transfers`;
+            const res = await axios.post(url, JSON.stringify(transferRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(201);
+        });
+
+        test('PUT /transfers/{id}: sdk server - Should return 200  ', async () => {
+            const patchNotificationRequest: TtransferPatchNotificationRequest = transferPatchNotificationRequestDto("COMPLETED", idType, ACCOUNT_NO, "5");
+            const url = `${ML_URL}/transfers/${randomUUID()}`;
+            const res = await axios.put(url, JSON.stringify(patchNotificationRequest), {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            logger.info(JSON.stringify(res.data));
+            expect(res.status).toEqual(200);
+        });
+
+
     });
 
     describe("Payee Tests", () => {
         test("GET /health for SDK Server", async ()=>{
-            const res = await axios.get(`${SDK_SERVER_URL}/health`);
+            const res = await axios.get(`${ML_URL}/health`);
             expect(res.status).toEqual(200);
         });
     });

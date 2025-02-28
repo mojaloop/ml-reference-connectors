@@ -9,7 +9,7 @@ CC->>CC:Validation Checks, Expiration Check, Quote Expiration Validation, Curren
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC->>ZICB:  POST /api/json/commercials/zicb/banking
+CC->>ZICB:  POST /api/json/commercials/zicb/banking , Service Number : "BNK9911", KYC retrieval
 ZICB-->>CC: Response 
 CC->>CC: Check response and customer account status 
 Alt if Customer account has issues 
@@ -24,7 +24,7 @@ CC->>CC: Validation Checks, Expiration Check, Quote Expiration Validation, Curre
 Alt if Checks Fail
 CC-->>ML Connector: Response 400
 End
-CC->>ZICB:  POST /api/json/commercials/zicb/banking
+CC->>ZICB:  POST /api/json/commercials/zicb/banking , Service Number : "BNK9930", Wallet To Wallet payment
 ZICB-->>CC: Response
 Alt if Response not Successful
 CC->>CC: Log failed transaction for further action by ZICB

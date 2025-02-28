@@ -13,10 +13,10 @@ Alt if Id Type invalid
 CC-->>ML Connector: Response 400 Bad Rquest
 End
 Alt if Currency Not Supported
-CC-->>ML Connector: Response 500
+CC-->>ML Connector: Response 400
 End
 CC->>CC:Calculate Charge
-CC->> ZICB: POST /api/json/commercials/zicb/banking
+CC->> ZICB: POST /api/json/commercials/zicb/banking , Service Number : "BNK9911", KYC retrieval
 ZICB -->> CC:Response
 CC->>CC: Check Response and Customer Account status 
 Alt if Response not Successful

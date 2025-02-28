@@ -41,6 +41,7 @@ export type TZicbConfig = {
     LEI: string;
     DISBURSEMENT_ACCOUNT_NO: string;
     COLLECTION_ACCOUNT_NO: string;
+    REQUEST_TIMEOUT: number;
 }
 
 // Request coming from Zicb to CC

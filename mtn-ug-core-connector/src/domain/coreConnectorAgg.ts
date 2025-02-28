@@ -151,6 +151,8 @@ export class CoreConnectorAggregate {
 
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
+
+        
         await this.checkAccountBarred(quoteRequest.to.idValue);
         const quoteExpiration = config.get("mtn.EXPIRATION_DURATION");
         const expiration = new Date();

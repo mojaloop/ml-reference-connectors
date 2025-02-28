@@ -352,7 +352,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "status": 200,
                 "timestamp": 1739871967939
             });
-            const transferReq: TtransferRequest = transferRequestDto("ACCOUNT_NO", ACCOUNT_NO, "1000");
+            const transferReq: TtransferRequest = transferRequestDto("ACCOUNT_NO", ACCOUNT_NO, "5");
             //Act
             const res = await ccAggregate.receiveTransfer(transferReq);
             //Assert
@@ -540,7 +540,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Spying on Initiate transfer
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
-            const sendMoneyRequestBody = sendMoneyReqDTO("1000",ACCOUNT_NO);
+            const sendMoneyRequestBody = sendMoneyReqDTO("5",ACCOUNT_NO);
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
 
             logger.info("Response from send money", res);
@@ -725,7 +725,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             jest.spyOn(sdkClient, "updateTransfer");
 
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
-            const merchantPaymentRequestBody = sendMoneyReqDTO("1000",ACCOUNT_NO);
+            const merchantPaymentRequestBody = sendMoneyReqDTO("5",ACCOUNT_NO);
             const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
 
             logger.info("Response from merchant payment", res);

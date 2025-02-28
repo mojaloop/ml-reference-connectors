@@ -71,7 +71,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
   "ilpPacket": {
     "data": {
       "amount": {
-        "amount": "400",
+        "amount": "5",
         "currency": "ZMW"
       },
       "payee": {
@@ -123,11 +123,11 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
     "payeeFspCommissionAmountCurrency": "ZMW",
     "payeeFspFeeAmount": "0",
     "payeeFspFeeAmountCurrency": "ZMW",
-    "payeeReceiveAmount": "1000",
+    "payeeReceiveAmount": "5",
     "payeeReceiveAmountCurrency": "ZMW",
     "quoteId": "1d0a1eae-02de-4bdb-beb5-fb87f200fa4e",
     "transactionId": "13b362e2-8a73-4e81-a6a1-88cb142cf027",
-    "transferAmount": "1000",
+    "transferAmount": "5",
     "transferAmountCurrency": "ZMW"
   },
   "note": "Transfer Quote Request"
@@ -233,6 +233,9 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
   },
   transferId: "47e8a9cd-3d89-55c5-a15a-b57a28ad763e"
 });
+
+
+// Payer Request DTOs
 
 export const sendMoneyReqDTO = (amount: string, payerId: string): TZicbSendMoneyRequest => ({
   homeTransactionId: randomUUID(),

@@ -33,11 +33,11 @@ import config from '../config';
 import { CoreConnectorRoutes } from './sdkCoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { CBSClientFactory } from '../domain/CBSClient';
+import { ZicbClientFactory } from '../domain/CBSClient';
 import { SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
 
-export const logger = loggerFactory({ context: config.get("cbs.CBS_NAME") });
+export const logger = loggerFactory({ context: config.get("zicb.CBS_NAME") });
 
 export class Service {
     static coreConnectorAggregate: CoreConnectorAggregate;
@@ -47,9 +47,9 @@ export class Service {
 
     static async start(httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance()) {
         this.httpClient = httpClient;
-        const cbsConfig = config.get("cbs");
-        const cbsClient = CBSClientFactory.createClient({
-            cbsConfig,
+        const zicbConfig = config.get("zicb");
+        const zicbClient = ZicbClientFactory.createClient({
+            zicbConfig,
             httpClient,
             logger
         });
@@ -59,7 +59,7 @@ export class Service {
             httpClient,
             config.get('sdkSchemeAdapter.SDK_BASE_URL'),
         );
-        this.coreConnectorAggregate = new CoreConnectorAggregate(sdkClient,cbsClient,cbsConfig, logger);
+        this.coreConnectorAggregate = new CoreConnectorAggregate(sdkClient,zicbClient,zicbConfig, logger);
 
         await this.setupAndStartUpServer();
         logger.info('Core Connector Server started');

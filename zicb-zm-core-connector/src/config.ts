@@ -143,6 +143,13 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'COLLECTION_ACCOUNT_NO',
         },
+        REQUEST_TIMEOUT:{
+            doc: 'Request Timeout',
+            format: String,
+            default: null, // required
+            env: 'REQUEST_TIMEOUT',
+        },
+        
     }
 });
 

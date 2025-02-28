@@ -9,7 +9,7 @@ sequenceDiagram
   Alt If Checks fail
   CC-->>ML Connector: Response 400
   End
-  CC->>ZICB: POST /api/json/commercials/zicb/banking
+  CC->>ZICB: POST /api/json/commercials/zicb/banking , Service Number : "BNK9911", KYC retrieval
   ZICB-->>CC: Response
   CC->>CC:Response Check
   Alt If Response is Not Successful

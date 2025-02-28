@@ -16,7 +16,7 @@ sequenceDiagram
   ML Connector-->>CC: Response
   CC->>CC: Check response
   Alt if http error code 500,400, 504 or currentState = ERROR_OCCURED
-  CC->>ZICB CBS : Rolback transfer POST api/json/commercials/zicb/banking
+  CC->>ZICB CBS : Rolback transfer  POST /api/json/commercials/zicb/banking , Service Number : "BNK9930", Wallet To Wallet payment
   ZICB CBS-->>CC:Check Response
   Alt if Response not Successful
   CC->>CC: Initiate manual refund
