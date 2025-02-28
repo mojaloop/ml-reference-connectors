@@ -32,8 +32,8 @@
      // think, if it's better to have a separate class
      static continueTransferError(message: string, options?: ErrorOptions) {
          const {
-           httpCode = 500,
-           mlCode = httpCode === 504 ? '2004' : '2001'
+             httpCode = 500,
+             mlCode = httpCode === 504 ? '2004' : '2001'
          } = options || {};
          return new SDKClientError(message, { mlCode, httpCode });
      }
@@ -52,22 +52,21 @@
          });
      }
  
-    static updateTransferRequestNotDefinedError() {
+     static updateTransferRequestNotDefinedError() {
          return new SDKClientError('Update Transfer Request not defined', {
              httpCode: 500,
              mlCode: '4000',
          });
      }
-
-     static genericQuoteValidationError(message: string, options?: ErrorOptions) {
-        return new SDKClientError(message, options);
-    }
-
-    static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
-        return new SDKClientError(
-            message,
-            options
-        );
-    }
- }
  
+     static genericQuoteValidationError(message: string, options?: ErrorOptions) {
+         return new SDKClientError(message, options);
+     }
+ 
+     static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
+         return new SDKClientError(
+             message,
+             options
+         );
+     }
+ }

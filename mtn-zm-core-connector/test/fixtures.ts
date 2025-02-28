@@ -416,6 +416,29 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
+export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "amountType": amountType,
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "sendAmount": amount,
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "MWK",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
+});
+
+
 export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
   "amountType": amountType,
