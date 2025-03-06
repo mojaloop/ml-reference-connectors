@@ -34,6 +34,7 @@ export type TCBSConfig = {
     AIRTEL_PIN: string;
     FSP_ID: string
     LEI: string;
+    REQUEST_TIMEOUT: number;
 }
 
 
