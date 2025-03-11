@@ -673,18 +673,22 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Update Send Money --(6)
-    
-    async updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void> {
+
+    async updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<THttpResponse<TtransferContinuationResponse>> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps.accountNo} and transfer id ${transferId}`);
         // const res = await this.zicbClient.walletToWalletInternalFundsTransfer(this.getCustomerToCollectionWalletRequestBody(updateSendMoneyDeps, transferId));
+
+        let sdkRes;
         try {
             if (!(updateSendMoneyDeps.acceptQuote)) {
-                await this.sdkClient.updateTransfer({ acceptQuote: false }, transferId);
+                sdkRes = await this.sdkClient.updateTransfer({ acceptQuote: false }, transferId);
                 throw ValidationError.quoteNotAcceptedError();
             }
             else {
-                await this.sdkClient.updateTransfer({ acceptQuote: true }, transferId);
+                sdkRes = await this.sdkClient.updateTransfer({ acceptQuote: true }, transferId);
             }
+
+            return sdkRes;
         } catch (error: unknown) {
             if (error instanceof SDKClientError) {
                 // perform refund or rollback if payment was successful
@@ -692,6 +696,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                     await this.handleRefund(this.getCollectionWalletToCustomerRequestBody(updateSendMoneyDeps, transferId));
                 }
             }
+            throw error;
         }
     }
 
@@ -712,7 +717,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "payDate": formattedDate,
                 "referenceNo": Date.now().toString(),
                 "remarks": collection.payerMessage,
-                "srcAcc":  config.get("zicb.COLLECTION_ACCOUNT_NO"),
+                "srcAcc": config.get("zicb.COLLECTION_ACCOUNT_NO"),
                 "srcBranch": "101",
                 "srcCurrency": config.get("zicb.X_CURRENCY"),
                 "transferTyp": "INTERNAL"

@@ -35,7 +35,7 @@ const logger = loggerFactory({ context: 'ccAgg tests' });
 const ML_URL = 'http://localhost:3003';
 const DFSP_SERVER_URL = 'http://localhost:3004';
 
-const ACCOUNT_NO = "1019000003353"
+const ACCOUNT_NO = "1019000003353";
 const idType = "ACCOUNT_NO";
 
 describe('CoreConnectorAggregate Tests -->', () => {

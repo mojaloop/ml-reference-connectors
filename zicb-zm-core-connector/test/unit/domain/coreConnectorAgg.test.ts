@@ -58,7 +58,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
     });
 
     describe("Payee Tests", () => {
-        test(" getParties should return customer account information for id from CBS Api", async () => {
+        test(" getParties should return customer account information for id from ZICB Api", async () => {
             //Arrange
             zicbClient.verifyCustomerByAccountNumber = jest.fn().mockResolvedValueOnce({
                 "errorList": {},
@@ -564,64 +564,73 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
 
-        // test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
+        test("PUT /send-money/{Id}: should initiate request to pay to customer wallet", async () => {
 
-        //     zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
-        //         "errorList": {
-        //             "AC-VAC05": "Account 1010035376132 Dormant",
-        //             "ST-SAVE-054": "Failed to Save",
-        //             "UP-PMT-90": "Insufficient account balance"
-        //         },
-        //         "operation_status": "FAIL",
-        //         "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
-        //         "request": {
-        //             "amount": "2000",
-        //             "destAcc": "1010035376132",
-        //             "destBranch": "001",
-        //             "payCurrency": "ZMW",
-        //             "payDate": "2024-07-03",
-        //             "referenceNo": "1720015165",
-        //             "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
-        //             "srcAcc": "1019000002881",
-        //             "srcBranch": "101",
-        //             "srcCurrency": "ZMW",
-        //             "transferTyp": "INTERNAL"
-        //         },
-        //         "request-reference": "202437-ZICB-1720015166",
-        //         "response": {
-        //             "amountCredit": null,
-        //             "amountDebit": null,
-        //             "destAcc": null,
-        //             "destBranch": null,
-        //             "exchangeRate": null,
-        //             "payCurrency": null,
-        //             "payDate": null,
-        //             "srcAcc": null,
-        //             "srcBranch": null,
-        //             "srcCurrency": null,
-        //             "tekHeader": {
-        //                 "errList": {
-        //                     "AC-VAC05": "Account 1010035376132 Dormant",
-        //                     "ST-SAVE-054": "Failed to Save",
-        //                     "UP-PMT-90": "Insufficient account balance"
-        //                 },
-        //                 "hostrefno": null,
-        //                 "msgList": {},
-        //                 "status": "FAIL",
-        //                 "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
-        //                 "username": "TEKESBRETAIL",
-        //                 "warnList": {}
-        //             }
-        //         },
-        //         "status": 200,
-        //         "timestamp": 1720015166319
-        //     });
-        //     jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
-        //     const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
-        //     const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
-        //     logger.info("Response ", res);
-        //     expect(zicbClient.walletToWalletInternalFundsTransfer).toHaveBeenCalled();
-        // });
+            zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
+                    }
+                },
+                "status": 200,
+                "timestamp": 1720015166319
+            });
+
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "COMPLETED")
+            });
+
+            jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
+            const updateSendMoneyReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
+            const res = await ccAggregate.updateSendMoney(updateSendMoneyReqBody, "ljzowczj");
+            logger.info("Response ", res);
+
+            // Assertion to check if the response has a current state of 'Completed'
+            expect(res.data.currentState).toEqual("COMPLETED");
+            
+            
+        });
 
 
         test("POST /merchant-payment: should return payee details and fees with correct info provided", async () => {
@@ -744,69 +753,75 @@ describe('CoreConnectorAggregate Tests -->', () => {
             if (transferRequest.from.extensionList) {
                 expect(transferRequest.from.extensionList[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
-            logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
+            logger.info("Transfer Request  being sent to Initiate Transfer", transferRequest);
         });
 
-        // test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
+        test("PUT /merchant-payment/{Id}: should initiate request to pay to customer wallet", async () => {
 
-        //     zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
-        //         "errorList": {
-        //             "AC-VAC05": "Account 1010035376132 Dormant",
-        //             "ST-SAVE-054": "Failed to Save",
-        //             "UP-PMT-90": "Insufficient account balance"
-        //         },
-        //         "operation_status": "FAIL",
-        //         "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
-        //         "request": {
-        //             "amount": "2000",
-        //             "destAcc": "1010035376132",
-        //             "destBranch": "001",
-        //             "payCurrency": "ZMW",
-        //             "payDate": "2024-07-03",
-        //             "referenceNo": "1720015165",
-        //             "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
-        //             "srcAcc": "1019000002881",
-        //             "srcBranch": "101",
-        //             "srcCurrency": "ZMW",
-        //             "transferTyp": "INTERNAL"
-        //         },
-        //         "request-reference": "202437-ZICB-1720015166",
-        //         "response": {
-        //             "amountCredit": null,
-        //             "amountDebit": null,
-        //             "destAcc": null,
-        //             "destBranch": null,
-        //             "exchangeRate": null,
-        //             "payCurrency": null,
-        //             "payDate": null,
-        //             "srcAcc": null,
-        //             "srcBranch": null,
-        //             "srcCurrency": null,
-        //             "tekHeader": {
-        //                 "errList": {
-        //                     "AC-VAC05": "Account 1010035376132 Dormant",
-        //                     "ST-SAVE-054": "Failed to Save",
-        //                     "UP-PMT-90": "Insufficient account balance"
-        //                 },
-        //                 "hostrefno": null,
-        //                 "msgList": {},
-        //                 "status": "FAIL",
-        //                 "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
-        //                 "username": "TEKESBRETAIL",
-        //                 "warnList": {}
-        //             }
-        //         },
-        //         "status": 200,
-        //         "timestamp": 1720015166319
-        //     });
+            zicbClient.walletToWalletInternalFundsTransfer = jest.fn().mockResolvedValue({
+                "errorList": {
+                    "AC-VAC05": "Account 1010035376132 Dormant",
+                    "ST-SAVE-054": "Failed to Save",
+                    "UP-PMT-90": "Insufficient account balance"
+                },
+                "operation_status": "FAIL",
+                "preauthUUID": "80626448-d8e5-48fe-a40c-8446495e4be3",
+                "request": {
+                    "amount": "2000",
+                    "destAcc": "1010035376132",
+                    "destBranch": "001",
+                    "payCurrency": "ZMW",
+                    "payDate": "2024-07-03",
+                    "referenceNo": "1720015165",
+                    "remarks": "Being payment for zxy invoice numner 12345 refred 12345",
+                    "srcAcc": "1019000002881",
+                    "srcBranch": "101",
+                    "srcCurrency": "ZMW",
+                    "transferTyp": "INTERNAL"
+                },
+                "request-reference": "202437-ZICB-1720015166",
+                "response": {
+                    "amountCredit": null,
+                    "amountDebit": null,
+                    "destAcc": null,
+                    "destBranch": null,
+                    "exchangeRate": null,
+                    "payCurrency": null,
+                    "payDate": null,
+                    "srcAcc": null,
+                    "srcBranch": null,
+                    "srcCurrency": null,
+                    "tekHeader": {
+                        "errList": {
+                            "AC-VAC05": "Account 1010035376132 Dormant",
+                            "ST-SAVE-054": "Failed to Save",
+                            "UP-PMT-90": "Insufficient account balance"
+                        },
+                        "hostrefno": null,
+                        "msgList": {},
+                        "status": "FAIL",
+                        "tekesbrefno": "d64fa5dd-2eb7-c284-c4d1-9fe7f183ab49",
+                        "username": "TEKESBRETAIL",
+                        "warnList": {}
+                    }
+                },
+                "status": 200,
+                "timestamp": 1720015166319
+            });
 
-        //     jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
-        //     const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
-        //     const res = await ccAggregate.updateSendMoney(updateMerchantPaymentReqBody, "ljzowczj");
-        //     logger.info("Response ", res);
-        //     expect(zicbClient.walletToWalletInternalFundsTransfer).toHaveBeenCalled();
-        // }
-        // );
+            sdkClient.updateTransfer = jest.fn().mockResolvedValue({
+                ...sdkInitiateTransferResponseDto(ACCOUNT_NO, "COMPLETED")
+            });
+
+            jest.spyOn(zicbClient, "walletToWalletInternalFundsTransfer");
+            const updateMerchantPaymentReqBody = updateSendMoneyMerchantPaymentDTO(10, true, ACCOUNT_NO);
+            const res = await ccAggregate.updateSendMoney(updateMerchantPaymentReqBody, "ljzowczj");
+            logger.info("Response ", res);
+
+             // Assertion to check if the response has a current state of 'Completed'
+             expect(res.data.currentState).toEqual("COMPLETED");
+        }
+        );
 
 
       

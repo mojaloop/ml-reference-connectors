@@ -33,7 +33,7 @@ import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import {  IZicbClient, TVerifyCustomerByAccountNumberResponse, TZicbConfig, TZicbSendMoneyRequest, TZicbSendMoneyResponse, TZicbUpdateSendMoneyRequest } from '../CBSClient';
-import { ISDKClient } from '../SDKClient';
+import { ISDKClient, TtransferContinuationResponse } from '../SDKClient';
 
 export type TJson = string | number | boolean | null |{ [x: string]: TJson } | Array<TJson>;
 
@@ -179,5 +179,5 @@ export interface ICoreConnectorAggregate {
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TZicbSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TZicbSendMoneyResponse>
-    updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<void>
+    updateSendMoney(updateSendMoneyDeps: TZicbUpdateSendMoneyRequest, transferId: string): Promise<THttpResponse<TtransferContinuationResponse>>
 }
