@@ -1,4 +1,4 @@
-import "crypto";
+import { randomUUID } from "crypto";
 import { THttpResponse, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from "../src/domain";
 import { TZicbSendMoneyRequest, TZicbUpdateSendMoneyRequest } from "../src/domain/CBSClient";
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -26,7 +26,7 @@ export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string =
   },
   initiator: "PAYER",
   initiatorType: "CONSUMER",
-  quoteId: crypto.randomUUID(),
+  quoteId: randomUUID(),
   to: {
     //@ts-expect-error partyIdType var not of type IdType
     idType: idType,
@@ -38,12 +38,12 @@ export const quoteRequestDto = (idType: string = "ACCOUNT_NO", idValue: string =
       }
     ]
   },
-  transactionId: crypto.randomUUID(),
+  transactionId: randomUUID(),
   transactionType: "TRANSFER"
 });
 
 export const transferRequestDto = (idType: string, idValue: string, amount: string): TtransferRequest => ({
-  "transferId": crypto.randomUUID(),
+  "transferId": randomUUID(),
   "amount": amount,
   "amountType": "SEND",
   "currency": "ZMW",
@@ -238,7 +238,7 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 // Payer Request DTOs
 
 export const sendMoneyReqDTO = (amount: string, payerId: string): TZicbSendMoneyRequest => ({
-  homeTransactionId: crypto.randomUUID(),
+  homeTransactionId: randomUUID(),
   payeeId: "4889343434",
   payeeIdType: "MSISDN",
   sendAmount: amount,
@@ -261,7 +261,7 @@ export const sendMoneyReqDTO = (amount: string, payerId: string): TZicbSendMoney
 export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
   statusCode: 200,
   data: {
-    homeTransactionId: crypto.randomUUID(),
+    homeTransactionId: randomUUID(),
     from: {
       idType: "MSISDN",
       idValue: idValue,
@@ -317,7 +317,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       },
       "headers": {}
     },
-    transferId: crypto.randomUUID(),
+    transferId: randomUUID(),
     "fxQuoteResponse": {
       "body": {
         "homeTransactionId": "string",
