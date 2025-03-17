@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import "crypto";
 import { THttpResponse, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from "../src/domain";
 import { TZicbSendMoneyRequest, TZicbUpdateSendMoneyRequest } from "../src/domain/CBSClient";
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -238,7 +238,7 @@ export const transferPatchNotificationRequestDto = (currentState: string, partyI
 // Payer Request DTOs
 
 export const sendMoneyReqDTO = (amount: string, payerId: string): TZicbSendMoneyRequest => ({
-  homeTransactionId: randomUUID(),
+  homeTransactionId: crypto.randomUUID(),
   payeeId: "4889343434",
   payeeIdType: "MSISDN",
   sendAmount: amount,
