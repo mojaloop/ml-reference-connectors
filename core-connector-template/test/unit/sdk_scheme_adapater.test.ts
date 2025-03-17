@@ -32,9 +32,9 @@ import {
     SDKClientFactory,
     TSDKOutboundTransferRequest,
     TSDKTransferContinuationRequest,
-} from '../../../src/domain/SDKClient';
-import { AxiosClientFactory } from '../../../src/infra/axiosHttpClient';
-import { loggerFactory } from '../../../src/infra/logger';
+} from '../../src/domain/SDKClient';
+import { AxiosClientFactory } from '../../src/infra/axiosHttpClient';
+import { loggerFactory } from '../../src/infra/logger';
 
 const mockAxios = new MockAdapter(axios);
 const SDK_URL = 'http://localhost:4040';
