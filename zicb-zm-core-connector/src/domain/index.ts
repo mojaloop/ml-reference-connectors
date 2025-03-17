@@ -24,30 +24,5 @@
  --------------
  ******/
 
-'use strict';
-
-import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
-
-import config from '../../config';
-
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
-});
-
-export class AxiosClientFactory {
-    static createAxiosClientInstance() {
-        return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
-        });
-    }
-}
+export * from './coreConnectorAgg';
+export * from './interfaces';

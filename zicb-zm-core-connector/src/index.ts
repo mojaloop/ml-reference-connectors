@@ -26,28 +26,37 @@
 
 'use strict';
 
-import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
+import { logger, Service } from './core-connector-svc';
 
-import config from '../../config';
+Service.start();
 
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
+async function _handle_int_and_term_signals(signal: NodeJS.Signals): Promise<void> {
+    logger.warn(`Service - ${signal} received - cleaning up...`);
+    let clean_exit = false;
+    setTimeout(() => {
+        clean_exit || process.abort();
+    }, 5000);
+
+    // call graceful stop routine
+    await Service.stop();
+
+    clean_exit = true;
+    process.exit();
+}
+
+//catches ctrl+c event
+process.on('SIGINT', _handle_int_and_term_signals.bind(this));
+//catches program termination event
+process.on('SIGTERM', _handle_int_and_term_signals.bind(this));
+
+//do something when app is closing
+/* istanbul ignore next */
+process.on('exit', async () => {
+    logger.info('Service - exiting...');
 });
 
-export class AxiosClientFactory {
-    static createAxiosClientInstance() {
-        return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
-        });
-    }
-}
+/* istanbul ignore next */
+process.on('uncaughtException', (err: Error) => {
+    logger.error(`UncaughtException: ${err?.message}`, err);
+    process.exit(999);
+});

@@ -26,28 +26,37 @@
 
 'use strict';
 
-import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
+import { BasicError, ErrorOptions } from '../interfaces';
 
-import config from '../../config';
+export class SDKClientError extends BasicError {
+    // think, if it's better to have a separate class
+    static continueTransferError(message: string, options?: ErrorOptions) {
+        const { httpCode = 500, mlCode = httpCode === 504 ? '2004' : '2001' } = options || {};
+        return new SDKClientError(message, { mlCode, httpCode });
+    }
 
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
-});
-
-export class AxiosClientFactory {
-    static createAxiosClientInstance() {
-        return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
+    static initiateTransferError(message = 'InitiateTransferError') {
+        return new SDKClientError(message, {
+            httpCode: 500,
+            mlCode: '2000',
         });
+    }
+
+    static noQuoteReturnedError() {
+        return new SDKClientError('Quote response is not defined', {
+            httpCode: 500,
+            mlCode: '3200',
+        });
+    }
+
+    static genericQuoteValidationError(message: string, options?: ErrorOptions) {
+        return new SDKClientError(message, options);
+    }
+
+    static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
+        return new SDKClientError(
+            message,
+            options
+        );
     }
 }

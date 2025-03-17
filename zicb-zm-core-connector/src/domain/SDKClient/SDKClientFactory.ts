@@ -23,31 +23,17 @@
 
  --------------
  ******/
-
 'use strict';
 
-import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
+import { SDKClient } from './SDKClient';
+import { IHTTPClient, ILogger } from '../interfaces';
 
-import config from '../../config';
-
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
-});
-
-export class AxiosClientFactory {
-    static createAxiosClientInstance() {
-        return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
+export class SDKClientFactory {
+    static getSDKClientInstance(logger: ILogger, httpClient: IHTTPClient, sdk_url: string) {
+        return new SDKClient({
+            logger,
+            httpClient,
+            schemeAdapterUrl: sdk_url,
         });
     }
 }

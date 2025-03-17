@@ -23,31 +23,29 @@
 
  --------------
  ******/
-
 'use strict';
 
-import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
+import { BasicError } from '../interfaces';
 
-import config from '../../config';
+export class ZicbError extends BasicError {
+    static getCustomerInformationError() {
+        return new ZicbError("Get Customer Information Failed From Zicb", {
+            httpCode: 500,
+            mlCode: '5000',
+        });
+    }
+    static walletToWalletTransferError() {
+        return new ZicbError("Wallet to Wallet Transfer Failed To Zicb", {
+            httpCode: 500,
+            mlCode: '5000',
+        });
+    }
 
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
-});
-
-export class AxiosClientFactory {
-    static createAxiosClientInstance() {
-        return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
+   
+    static payeeBlockedError(message: string, httpCode:number, mlCode:string) {
+        return new ZicbError(message, {
+            httpCode: httpCode,
+            mlCode: mlCode,
         });
     }
 }

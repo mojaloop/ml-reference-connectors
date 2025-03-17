@@ -33,7 +33,9 @@ import { loggerFactory } from '../logger';
 import config from '../../config';
 
 export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: config.get("cbs.REQUEST_TIMEOUT"),
+
+
+    timeout: config.get("zicb.REQUEST_TIMEOUT"),
     headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',

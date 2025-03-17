@@ -1,6 +1,6 @@
 import "dotenv/config";
 import Convict from 'convict';
-import { TCBSConfig } from "./domain/CBSClient";
+import {TZicbConfig } from "./domain/CBSClient";
 
 interface IConfigSchema {
     server: {
@@ -14,7 +14,7 @@ interface IConfigSchema {
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
     }
-    cbs:TCBSConfig;
+    zicb:TZicbConfig;
 }
 
 const config = Convict<IConfigSchema>({
@@ -64,7 +64,7 @@ const config = Convict<IConfigSchema>({
             env: 'SDK_BASE_URL',
         },
     },
-    cbs:{
+    zicb:{
         CBS_NAME: {
             doc: 'Name of the DFSP',
             format: String,
@@ -77,23 +77,11 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'DFSP_BASE_URL',
         },
-        CLIENT_ID:{
-            doc: 'Client ID for api user',
+        AUTH_KEY:{
+            doc: 'API Auth Key',
             format: String,
             default: null, // required
-            env: 'CLIENT_ID',
-        },
-        CLIENT_SECRET:{
-            doc: 'Client Secret for api user',
-            format: String,
-            default: null, // required
-            env: 'CLIENT_SECRET',
-        },
-        GRANT_TYPE:{
-            doc: 'Airtel Grant Type',
-            format: String,
-            default: null, // required
-            env: 'GRANT_TYPE',
+            env: 'AUTH_KEY',
         },
         X_COUNTRY:{
             doc: 'Country',
@@ -131,12 +119,6 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'EXPIRATION_DURATION',
         },
-        AIRTEL_PIN:{
-            doc: 'Airtel disbursement PIN',
-            format: String,
-            default: null, // required
-            env: 'AIRTEL_PIN',
-        },
         FSP_ID:{
             doc: 'FSP Identifier',
             format: String,
@@ -149,12 +131,25 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'LEI',
         },
+        DISBURSEMENT_ACCOUNT_NO:{
+            doc: 'Account Number from where the funds come from to the customer',
+            format: String,
+            default: null, // required
+            env: 'DISBURSEMENT_ACCOUNT_NO',
+        },
+        COLLECTION_ACCOUNT_NO:{
+            doc: 'Account Number from where the funds go  to when the customer initiates a transfer',
+            format: String,
+            default: null, // required
+            env: 'COLLECTION_ACCOUNT_NO',
+        },
         REQUEST_TIMEOUT:{
             doc: 'Request Timeout',
             format: String,
             default: null, // required
             env: 'REQUEST_TIMEOUT',
-        },   
+        },
+        
     }
 });
 
