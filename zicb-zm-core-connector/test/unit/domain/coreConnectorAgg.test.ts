@@ -49,6 +49,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
     let zicbClient: IZicbClient;
     let sdkClient: ISDKClient;
 
+    // Example test
     beforeEach(() => {
         mockAxios.reset();
         const httpClient = AxiosClientFactory.createAxiosClientInstance();
