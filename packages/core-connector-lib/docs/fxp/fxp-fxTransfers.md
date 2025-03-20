@@ -10,6 +10,7 @@ sequenceDiagram
     Alt if validation fails
     FXP Core Connector -->> ML Connector: Response 400
     End
-    FXP Core Connector ->> FXP Core Connector: Check fxTransfers Request and confirm
+    FXP Core Connector ->> FXP API: Check fxTransfers Request and confirm
+    FXP API -->> FXP Core Connector: Response 200 {Confirmation}
     FXP Core Connector ->> ML Connector:  Response 200 {Confirm}
 ```

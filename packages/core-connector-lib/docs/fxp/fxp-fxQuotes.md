@@ -10,6 +10,7 @@ sequenceDiagram
     Alt if validation fails
     FXP Core Connector -->> ML Connector: Response 400
     End
-    FXP Core Connector ->> FXP Core Connector: Calculate quotation for currency conversion
+    FXP Core Connector ->> FXP API: Calculate quotation for currency conversion
+    FXP API -->> FXP Core Connector: Response 200 {Quote}
     FXP Core Connector -->> ML Connector: Response 200
 ```
