@@ -1,0 +1,11 @@
+{
+  "name": "abc-ug-core-connector",
+  "version": "1.0.0",
+  "description": "ABC Uganda Core Connector",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test:unit"
+  },
+  "author": "",
+  "license": "ISC"
+}
