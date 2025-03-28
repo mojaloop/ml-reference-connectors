@@ -1,6 +1,6 @@
 {
   "name": "ml-reference-connectors",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "description": "Collection of reference mojaloop connectors",
   "main": "index.js",
   "scripts": {
