@@ -334,7 +334,7 @@ export class CoreConnectorAggregate {
 
     }
 
-    private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyResponse {
+    private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TMTNSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -347,14 +347,14 @@ export class CoreConnectorAggregate {
             "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency : "No send currency ",
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "targetFees": this.getQuoteCharges(transfer, amountType),
+            "targetFees": this.getQuoteCharges(transfer),
             "sourceFees": this.getFxQuoteResponseCharges(transfer),
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
             "homeTransactionId": homeTransactionId
         };
     }
 
-    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse, amountType: "SEND" | "RECEIVE"): string {
+    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse): string {
         return parseFloat(transferRes.quoteResponse?.body.payeeFspFee?.amount ?? "0").toString();
     }
 
@@ -573,7 +573,7 @@ export class CoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId, "SEND");
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
@@ -602,7 +602,7 @@ export class CoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId, "RECEIVE");
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
