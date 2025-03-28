@@ -281,7 +281,7 @@ components:
         - homeTransactionId
         - payeeId
         - payeeIdType
-        - sendAmount
+        - receiveAmount
         - sendCurrency
         - receiveCurrency
         - transactionType
