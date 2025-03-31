@@ -148,7 +148,13 @@ const config = Convict<IConfigSchema>({
             format: String,
             default: null, // required
             env: 'LEI',
-        }
+        },
+        REQUEST_TIMEOUT:{
+            doc: 'Request Timeout',
+            format: String,
+            default: null, // required
+            env: 'REQUEST_TIMEOUT',
+        },   
     }
 });
 

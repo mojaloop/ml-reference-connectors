@@ -166,7 +166,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Spying on Initiate transfer
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
-            const sendMoneyReqPayload = sendMoneyDTO(idValue, "103", "SEND");
+            const sendMoneyReqPayload = sendMoneyDTO(idValue, "103");
             //Act 
             const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "SEND");
             //Assert
@@ -185,7 +185,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
             expect(res.payeeDetails.idValue).toEqual(idValue);
@@ -246,7 +246,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
            const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
 
-            const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103", "RECEIVE");
+            const sendMoneyReqPayload = sendMoneyMerchantPaymentDTO(idValue,"103");
             //Act 
             const res = await ccAggregate.sendMoney(sendMoneyReqPayload, "RECEIVE");
             //Assert
@@ -263,7 +263,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
             expect(res.payeeDetails.idValue).toEqual(idValue);
