@@ -174,28 +174,37 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         ]
     }
 
+
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Received transfer request for ${transfer.to.idValue}`);
+
         if (transfer.to.idType != this.IdType) {
             throw ValidationError.unsupportedIdTypeError();
         }
+
         if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
+        
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
             this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
         }
+
         const validateQuoteRes = this.validateQuote(transfer);
+
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidQuoteError(validateQuoteRes.message.toString());
         }
+
         await this.checkAccountBarred(transfer.to.idValue);
+        
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
             transferState: 'RESERVED',
         };
     }
+
 
     private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);

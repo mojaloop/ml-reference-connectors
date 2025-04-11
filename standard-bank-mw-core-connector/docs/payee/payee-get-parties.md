@@ -9,8 +9,8 @@ sequenceDiagram
   Alt If Checks fail
   CC-->>ML Connector: Response 400
   End
-  CC->>CBS Api:GET /replace/with/api/call/for/getting/customer 
-  CBS Api-->>CC: Response
+  CC->>Standard Bank API:GET [/endpoint-for-getting-customer]  
+  Standard Bank API-->>CC: Response
   CC->>CC:Response Check
   Alt If Response is Not Successful
   CC-->>ML Connector: Response 500

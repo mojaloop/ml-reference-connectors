@@ -1,0 +1,814 @@
+openapi: 3.0.1
+info:
+  title: Standard Bank Funds Transfer API
+  description: |
+    Secure API for funds transfer operations compliant with banking regulations.
+    
+    This API enables:
+    - Account information retrieval
+    - Funds transfer initiation and management
+    - Transaction status tracking
+    - Compliance with financial regulations
+    
+    **Security & Compliance Features:**
+    - PCI-DSS compliant data handling
+    - PSD2/Open Banking standards
+    - AML/KYC verification endpoints
+    - Strong authentication requirements
+    - Comprehensive audit logging
+    
+    **Versioning Policy:**
+    - Major versions maintained for 24 months after deprecation
+    - Minor versions maintain backward compatibility
+  version: 1.0.0
+  contact:
+    name: Standard Bank API Team
+    email: api-support@standardbank.com
+    url: https://developer.standardbank.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://api.standardbank.com/v1
+    description: Production environment
+  - url: https://api-sandbox.standardbank.com/v1
+    description: Sandbox environment
+
+security:
+  - bearerAuth: []
+  - oAuth2:
+      - transfers.read
+      - transfers.write
+      - accounts.read
+
+paths:
+  /health:
+    get:
+      summary: System Health Check
+      description: Verify API service availability and operational status
+      tags: [System]
+      responses:
+        "200":
+          description: Service operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [UP, DOWN, MAINTENANCE]
+                  version:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+        "503":
+          description: Service unavailable
+          
+  /accounts/{partyIdType}/{partyIdentifier}:
+    get:
+      summary: Retrieve Account Details
+      description: Get account information with KYC verification status
+      tags: [Accounts]
+      operationId: getAccountDetails
+      parameters:
+        - $ref: "#/components/parameters/partyIdType"
+        - $ref: "#/components/parameters/partyIdentifier"
+        # - $ref: "#/components/parameters/X-Correlation-ID"
+      responses:
+        "200":
+          description: Account details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountDetails"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "504":
+          $ref: "#/components/responses/Timeout"
+
+  /transfers/{transferId}:
+    get:
+      summary: Retrieve Transfer Details
+      description: Get comprehensive transfer status and audit trail
+      tags: [Transfers]
+      operationId: getTransferDetails
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+        # - $ref: "#/components/parameters/X-Correlation-ID"
+      responses:
+        "200":
+          description: Transfer details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferDetails"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /quotes:
+    post:
+      summary: Generate Transfer Quote
+      description: Calculate transfer amount with fees and FX rates
+      tags: [Transfers]
+      operationId: createQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteRequest"
+      responses:
+        "200":
+          description: Quote generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /agreements/due-diligence:
+      post:
+        summary: Enhanced Due Diligence Verification
+        description: |
+          Comprehensive verification of:
+          - Payer identity and DFSP details
+          - Payee identity and DFSP details  
+          - Transaction purpose and amount
+          - Sanctions/PEP screening
+        tags: [Compliance]
+        operationId: performEnhancedDueDiligence
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueDiligenceRequest"
+              examples:
+                standardTransfer:
+                  value:
+                    payer:
+                      partyIdType: "ACCOUNT_NUMBER"
+                      partyIdentifier: "0086784563219"
+                      dfspId: "STANBANK_ZA"
+                      dfspLei: "5493001KJTIIGC8Y1R12"
+                      accountType: "SAVINGS"
+                    payee:
+                      partyIdType: "IBAN"  
+                      partyIdentifier: "GB29NWBK60161331926819"
+                      dfspId: "BARCLAYS_UK"
+                      dfspLei: "B4J6Q8PWMJQ5ALZ5U17"
+                      accountType: "CURRENT"
+                    transferAmount:
+                      amount: 15000.00
+                      currency: "USD"
+                    purposeCode: "SALA"
+                    reference: "Salary Payment May 2024"
+        responses:
+          "200":
+            description: Due diligence verification results
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/DueDiligenceResponse"
+                examples:
+                  approved:
+                    value:
+                      canTransferProceed: true
+                      riskLevel: "LOW"
+                      complianceCheckId: "dd-789e4a20-2025"
+                      timestamp: "2024-05-15T14:30:00Z"
+                  rejected:
+                    value:
+                      canTransferProceed: false
+                      reason: "PAYER_SANCTIONS_MATCH"
+                      restrictionDetails: 
+                        - "Payer matched OFAC SDN list"
+                        - "Enhanced verification required"
+                      complianceCheckId: "dd-789e4a20-2025"
+                      riskLevel: "HIGH"
+                      timestamp: "2024-05-15T14:30:00Z"
+
+  /funds/reserve:
+    post:
+      summary: Reserve Funds
+      description: Temporarily hold funds for a pending transfer
+      tags: [Transfers]
+      operationId: reserveFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReserveFundsRequest"
+      responses:
+        "200":
+          description: Funds reserved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReserveFundsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /funds/commit:
+    post:
+      summary: Commit Reserved Funds
+      description: Finalize a previously reserved transfer
+      tags: [Transfers]
+      operationId: commitFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommitFundsRequest"
+      responses:
+        "200":
+          description: Funds committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitFundsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /funds/unreserve:
+    post:
+      summary: Release Reserved Funds
+      description: Cancel a reservation and release funds
+      tags: [Transfers]
+      operationId: unreserveFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnreserveFundsRequest"
+      responses:
+        "200":
+          description: Funds released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreserveFundsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /funds/refund:
+    post:
+      summary: Initiate Refund
+      description: Process refund for a completed transfer
+      tags: [Transfers]
+      operationId: refundTransfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefundRequest"
+      responses:
+        "200":
+          description: Refund initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.standardbank.com/oauth2/authorize
+          tokenUrl: https://auth.standardbank.com/oauth2/token
+          scopes:
+            transfers.read: Read transfer information
+            transfers.write: Initiate transfers
+            accounts.read: View account details
+
+  parameters:
+    partyIdType:
+      name: partyIdType
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [MSISDN, ACCOUNT_NUMBER, IBAN, WALLET_ID]
+      description: Type of party identifier
+    partyIdentifier:
+      name: partyIdentifier
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier for the party
+    transferId:
+      name: transferId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-Z0-9]{8,20}$'
+      description: Unique transfer identifier
+    X-Correlation-ID:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique request identifier for tracing
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Timeout:
+      description: Request timeout
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+          format: uuid
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+
+    AccountDetails:
+      type: object
+      properties:
+        partyIdType:
+          $ref: "#/components/schemas/PartyIdType"
+        partyIdentifier:
+          type: string
+        accountType:
+          type: string
+          enum: [SAVINGS, CURRENT, LOAN, WALLET]
+        name:
+          type: string
+        accountDiscoveryStatus:
+          type: string
+          enum: [VERIFIED, PENDING, REJECTED, EXPIRED]
+        balance:
+          $ref: "#/components/schemas/Money"
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        isActive:
+          type: boolean
+        lastUpdated:
+          type: string
+          format: date-time
+
+    PartyIdType:
+      type: string
+      enum: [MSISDN, ACCOUNT_NUMBER, IBAN, WALLET_ID]
+      description: Type of party identifier
+
+    Money:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          example: 100.50
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: "MWK"
+
+    TransferDetails:
+      type: object
+      properties:
+        transferId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, RESERVED, COMMITTED, FAILED, REFUNDED]
+        receiveAmount:
+          $ref: "#/components/schemas/Money"
+        fees:
+          $ref: "#/components/schemas/Money"
+        payer:
+          $ref: "#/components/schemas/PartyDetails"
+        payee:
+          $ref: "#/components/schemas/PartyDetails"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        expiry:
+          type: string
+          format: date-time
+        auditTrail:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntry"
+
+    PartyDetails:
+      type: object
+      properties:
+        partyIdType:
+          $ref: "#/components/schemas/PartyIdType"
+        partyIdentifier:
+          type: string
+        name:
+          type: string
+        accountType:
+          type: string
+
+    AuditEntry:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        action:
+          type: string
+        actor:
+          type: string
+        details:
+          type: string
+
+    QuoteRequest:
+      type: object
+      required: [payee, amount]
+      properties:
+        payee:
+          $ref: "#/components/schemas/PartyReference"
+        amount:
+          $ref: "#/components/schemas/Money"
+        note:
+          type: string
+          maxLength: 1000
+
+    PartyReference:
+      type: object
+      required: [partyIdType, partyIdentifier]
+      properties:
+        partyIdType:
+          $ref: "#/components/schemas/PartyIdType"
+        partyIdentifier:
+          type: string
+        accountType:
+          type: string
+          enum: [SAVINGS, CURRENT, LOAN, WALLET]
+
+    QuoteResponse:
+      type: object
+      properties:
+        quoteId:
+          type: string
+        transferId:
+          type: string
+        payee:
+          $ref: "#/components/schemas/PartyDetails"
+        sendAmount:
+          $ref: "#/components/schemas/Money"
+        receiveAmount:
+          $ref: "#/components/schemas/Money"
+        fees:
+          $ref: "#/components/schemas/Money"
+        fxRate:
+          type: number
+        expiry:
+          type: string
+          format: date-time
+        terms:
+          type: string
+
+    ComplianceStatus:
+      type: string
+      enum: [CLEAR, WATCHLIST, BLOCKED, PENDING_REVIEW]
+      description: AML/KYC compliance status
+
+    ReserveFundsRequest:
+      type: object
+      required: [quoteId, payerApproval]
+      properties:
+        transferId:
+          type: string
+        payee:
+          $ref: "#/components/schemas/PartyDetails"
+        amount:
+          $ref: "#/components/schemas/Money"
+
+    ReserveFundsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+        transferId:
+          type: string
+        status:
+          type: string
+          enum: [RESERVED, FAILED]
+        expiry:
+          type: string
+          format: date-time
+        amountReserved:
+          $ref: "#/components/schemas/Money"
+
+    CommitFundsRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+
+
+    CommitFundsResponse:
+      type: object
+      properties:
+        transferId:
+          type: string
+        status:
+          type: string
+          enum: [COMMITTED, FAILED]
+        timestamp:
+          type: string
+          format: date-time
+        settlementReference:
+          type: string
+
+    UnreserveFundsRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+        reason:
+          type: string
+
+    UnreserveFundsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+        status:
+          type: string
+          enum: [RELEASED, FAILED]
+        amountReleased:
+          $ref: "#/components/schemas/Money"
+        timestamp:
+          type: string
+          format: date-time
+
+    RefundRequest:
+      type: object
+      required: [homeTransactionId, reason]
+      properties:
+        homeTransactionId:
+          type: string
+        reason:
+          type: string
+          enum: [CUSTOMER_REQUEST, ERROR, DISPUTE]
+
+    RefundResponse:
+      type: object
+      properties:
+        refundId:
+          type: string
+        homeTransactionId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED]
+        amount:
+          $ref: "#/components/schemas/Money"
+        timestamp:
+          type: string
+          format: date-time
+
+    DueDiligenceRequest:
+      type: object
+      required: [payer, payee, transferAmount, purposeCode]
+      properties:
+        payer:
+          type: object
+          required: [partyIdType, partyIdentifier, dfspId, dfspLei]
+          properties:
+            partyIdType:
+              $ref: "#/components/schemas/PartyIdType"
+            partyIdentifier:
+              type: string
+            dfspId:
+              type: string
+              description: DFSP identifier (e.g., STANBANK_ZA)
+            dfspLei:
+              type: string
+              pattern: '^[A-Z0-9]{20}$'
+              description: Legal Entity Identifier
+            accountType:
+              type: string
+              enum: [SAVINGS, CURRENT, LOAN, WALLET]
+            citizenshipCountry:
+              type: string
+              pattern: '^[A-Z]{2}$'
+              description: ISO 3166-1 alpha-2 country code
+        payee:
+          type: object
+          required: [partyIdType, partyIdentifier, dfspId, dfspLei]
+          properties:
+            partyIdType:
+              $ref: "#/components/schemas/PartyIdType"
+            partyIdentifier:
+              type: string
+            dfspId:
+              type: string
+            dfspLei:
+              $ref: "#/components/schemas/LEI"
+            accountType:
+              type: string
+              enum: [SAVINGS, CURRENT, LOAN, WALLET]
+            residencyCountry:
+              type: string
+              pattern: '^[A-Z]{2}$'
+        transferAmount:
+          $ref: "#/components/schemas/Money"
+        purposeCode:
+          type: string
+          enum: [SALA, PENS, TAXS, INVS, GDSV, SVCS]
+          description: ISO 20022 purpose code
+        reference:
+          type: string
+          maxLength: 140
+        additionalScreeningFields:
+          type: object
+          description: Optional enhanced verification fields
+          properties:
+            payerOccupation:
+              type: string
+            payeeIndustry:
+              type: string
+            sourceOfFunds:
+              type: string
+              enum: [SALARY, INVESTMENT, LOAN, SAVINGS]
+
+    DueDiligenceResponse:
+      type: object
+      properties:
+        canTransferProceed:
+          type: boolean
+          description: Final decision on transfer eligibility
+        reason:
+          type: string
+          description: Present when canTransferProceed=false
+          enum: [PAYER_SANCTIONS_MATCH, PAYEE_SANCTIONS_MATCH, HIGH_RISK_COUNTRY, AMOUNT_THRESHOLD_EXCEEDED, PURPOSE_RESTRICTED]
+        restrictionDetails:
+          type: array
+          items:
+            type: string
+          description: Detailed restriction reasons
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, SEVERE]
+        complianceCheckId:
+          type: string
+          format: uuid
+          description: Unique reference for audit
+        screeningTimestamp:
+          type: string
+          format: date-time
+        nextSteps:
+          type: string
+          description: Required actions when rejected
+          enum: [CONTACT_COMPLIANCE, SUBMIT_DOCUMENTATION, REQUEST_MANUAL_REVIEW]
+        expiry:
+          type: string
+          format: date-time
+          description: When screening result expires
+        payerVerificationStatus:
+          $ref: "#/components/schemas/VerificationStatus"
+        payeeVerificationStatus:
+          $ref: "#/components/schemas/VerificationStatus"
+
+    VerificationStatus:
+      type: object
+      properties:
+        identityVerified:
+          type: boolean
+        accountVerified:
+          type: boolean
+        sanctionsCheck:
+          type: string
+          enum: [CLEAR, WATCHLIST, HIT]
+        pepStatus:
+          type: string
+          enum: [NONE, POTENTIAL, CONFIRMED]
+        amlRiskScore:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    LEI:
+      type: string
+      pattern: '^[A-Z0-9]{20}$'
+      description: >
+        Legal Entity Identifier (ISO 17442 standard) - 
+        20-character alphanumeric code identifying legal entities
+        participating in financial transactions.
+      example: "5493001KJTIIGC8Y1R12"
+      x-reference:
+        - "https://www.gleif.org/en/about-lei/introducing-the-lei-code"
+        - "ISO 17442:2012"
+
+
+
+
+
+

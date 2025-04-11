@@ -42,6 +42,7 @@
     Core Connector-->>Core Connector: Throw InvalidReturnedQuoteError
   End 
 
+ML Connector->>Core Connector: Normal Quote
 
 Core Connector->>Standard Bank Customer App: Quote response
 
