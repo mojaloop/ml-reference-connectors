@@ -27,10 +27,10 @@ sequenceDiagram
   ML Connector-->>CC: Response: ConversionRate
   CC->>CC: Check Conversion Terms
   Alt if Conversion Terms are invalid
-  CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: false]
+  CC->>ML Connector: PUT /transfers/{id}[acceptConversion: false]
   CC-->>USSD Service: Response 500
   End
-  CC->>ML Connector: PUT /transfers/{id}[aceeptConversion: true]
+  CC->>ML Connector: PUT /transfers/{id}[acceptConversion: true]
   End
   ML Connector-->>CC:Response, Normal Quote
   Alt if response not successful

@@ -1,5 +1,5 @@
 import { TSDKOutboundTransferResponse, TUpdateTransferDeps } from '../src/domain/SDKClient';
-import {TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest } from '../src/domain/CBSClient';
+import {TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest} from '../src/domain/CBSClient';
 import * as crypto from 'node:crypto';
 import { TtransferPatchNotificationRequest, TQuoteRequest, TtransferRequest, THttpResponse} from 'src/domain/interfaces/types';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
@@ -416,9 +416,8 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -439,9 +438,9 @@ export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND"
 });
 
 
-export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
+// Send Money DTO
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -450,10 +449,10 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amou
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": {
-    "name": "Elijah Okello",
+    "name": "Niza Tembo",
     payerId: idValue,
     DateAndPlaceOfBirth: {
-      BirthDt: "1985-04-12",
+      BirthDt: "19975-04-27",
       PrvcOfBirth: "Lusaka",
       CityOfBirth: "Lusaka",
       CtryOfBirth: "Lusaka",
@@ -462,6 +461,27 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amou
 });
 
 
+
+export const merchantPaymentRequestDTO = (idValue: string, amount: string, receive: string): TMTNMerchantPaymentRequest => ({
+  "homeTransactionId": crypto.randomUUID(),
+  "payeeId": "56733123450",
+  "payeeIdType": "MSISDN",
+  "receiveAmount": amount,
+  "sendCurrency": "UGX",
+  "receiveCurrency": "UGX",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "Niza Tembo",
+    "payerId": idValue,
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "1997-04-27",
+      "PrvcOfBirth": "Copperbelt",
+      "CityOfBirth": "Lusaka",
+      "CtryOfBirth": "Zambia",
+    },
+  },
+});
 
 
 

@@ -172,14 +172,13 @@ export type TMTNUpdateSendMoneyRequest = {
     "payeeNote": string;
 }
 
-
 export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
 
 export type TMTNSendMoneyRequest = {
     "homeTransactionId": string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string; "amountType": "RECEIVE" | "SEND",
+    "sendAmount": string;
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": components['schemas']['Currency'];
     "transactionDescription": string;
@@ -196,8 +195,26 @@ export type TMTNSendMoneyRequest = {
     };
 }
 
-
-export type TMTNMerchantPaymentRequest = TMTNSendMoneyRequest
+export type TMTNMerchantPaymentRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveAmount": string;
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        }
+    }
+}
 
 export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
 
@@ -222,10 +239,12 @@ export type TMTNSendMoneyResponse = {
         "fspId": string;
         "name": string;
     };
-    "receiveAmount": string;
-    "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
+    "sendAmount": string,
+    "sendCurrency": string,
+    "receiveAmount": string,
+    "receiveCurrency": string,
+    "targetFees": string,
+    "sourceFees": string,
     "transactionId": string;
     "homeTransactionId": string;
 }
