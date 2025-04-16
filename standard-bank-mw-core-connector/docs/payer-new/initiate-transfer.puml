@@ -15,7 +15,7 @@ participant "ML Connector" as ML
 Customer ->> App: Customer transfer details.
 
 
-note over App, Core
+note over App
 {
     "homeTransactionId": "HTX123456789",
   "payeeId": "16135551212",
@@ -69,18 +69,28 @@ alt if WAITING_FOR_QUOTE_ACCEPTANCE
     end
 end
 
-alt if Neither WAITING_FOR_CONVERSION_ACCEPTANCE nor WAITING_FOR_QUOTE_ACCEPTANCE
+alt else
     Core -->> Core: Throw InvalidReturnedQuoteError
 end
 
 ML ->> Core: Normal Quote
 
-note over App, Core
+note over Core
 {
-  "completedTimestamp": "2400-02-29T09:11:16.112Z",
-  "fulfilment": "WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8",
-  "homeTransactionId": "string",
-  "transferState": "RECEIVED"
+    "payeeDetails": {
+        "idType": "MSISDN",
+        "idValue": "990454454",
+        "fspId": "airtelzambia",
+        "name": "Niza"
+    },
+    "sendAmount": "150.00",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "targetFees": "10.00",
+    "sourceFees": "10.00",
+    "transactionId": "0GJGH201JGJ1J12324H",
+    "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
 }
 end note
 Core ->> App: Quote response

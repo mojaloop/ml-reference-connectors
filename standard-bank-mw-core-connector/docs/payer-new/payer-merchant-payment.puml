@@ -7,26 +7,26 @@ participant "Standard Bank Customer App" as App
 participant "Core Connector" as CC
 participant "ML Connector" as ML
 
-note over App, CC
+note over App
 {
-  "homeTransactionId": "HTX123456789",
-  "payeeId": "16135551212",
-  "payeeIdType": "MSISDN",
-  "sendAmount": "150.00",
-  "sendCurrency": "UGX",
-  "receiveCurrency": "KES",
-  "transactionDescription": "Payment for services",
-  "transactionType": "TRANSFER",
-  "payer": {
-    "name": "John Doe",
-    "payerId": "9876543210",
-    "DateAndPlaceOfBirth": {
-      "BirthDt": "20-09-2001",
-      "PrvcOfBirth": "ProvinceOfBirth",
-      "CityOfBirth": "Kampala",
-      "CtryOfBirth": "Uganda"
+    "homeTransactionId": "HTX123456789",
+    "payeeId": "12123143524",
+    "payeeIdType": "MSISDN",
+    "sendCurrency": "MWK",
+    "receiveAmount": "150.00",
+    "receiveCurrency": "ZMW",
+    "transactionDescription": "Payment for services",
+    "transactionType": "TRANSFER",
+    "payer": {
+        "name": "John Doe",
+        "payerId": "99984747232",
+        "DateAndPlaceOfBirth": {
+            "BirthDt": "20-09-1990",
+            "PrvcOfBirth": "ProvinceOfBirth",
+            "CityOfBirth": "Blantyre",
+            CtryOfBirth: "Malawi"
+        }
     }
-  }
 }
 end note
 App ->> CC: POST /merchant-payment/
@@ -76,6 +76,25 @@ alt If Conversion invalid
     CC -->> App: Response 500
 end
 
+
+note over CC
+{
+    "payeeDetails": {
+        "idType": "MSISDN",
+        "idValue": "12123143524",
+        "fspId": "airtelzambia",
+        "name": "John Doe",
+    },
+    "sendAmount": "150.00",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "targetFees": "10.00",
+    "sourceFees": "10.00",
+    "transactionId": "GHGIFEIE11828",
+    "homeTransactionId": "1213ads-fsfa11-efgg131-3sdfs4", 
+}
+end note
 CC -->> App: Response 200
 
 App ->> App: Show terms of transfer to customer
