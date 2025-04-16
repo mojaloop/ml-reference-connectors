@@ -1,0 +1,90 @@
+@startuml name="initiate-transfer"
+
+skinparam defaultFontSize 10
+skinparam NoteFontSize 9
+skinparam NoteFontName "Courier New"  ' Monospace font
+skinparam wrapWidth 50                ' Set the width of the note
+
+autonumber
+
+actor "Standard Bank Customer" as Customer
+participant "Standard Bank Customer App" as App
+participant "Core Connector" as Core
+participant "ML Connector" as ML
+
+Customer ->> App: Customer transfer details.
+
+
+note over App, Core
+{
+    "homeTransactionId": "HTX123456789",
+  "payeeId": "16135551212",
+  "payeeIdType": "MSISDN",
+  "sendAmount": "150.00",
+  "sendCurrency": "UGX",
+  "receiveCurrency": "KES",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "John Doe",
+    "payerId": "9876543210",
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "20-09-2001",
+      "PrvcOfBirth": "ProvinceOfBirth",
+      "CityOfBirth": "Kampala",
+      "CtryOfBirth": "Uganda"
+    }
+  }
+}
+end note
+App ->> Core: POST /send-money/ 
+
+
+Core ->> Core: Check Request
+
+alt if Checks fail
+    Core -->> App: Response 400
+end
+
+
+
+Core ->> ML: POST /transfers /{amountType: SEND} 
+ML -->> Core: Response
+
+alt if WAITING_FOR_CONVERSION_ACCEPTANCE
+    alt if Conversion terms are valid
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
+    else Conversion terms are invalid
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
+        Core -->> Core: Throw InvalidConversionQuoteError
+    end
+end
+
+alt if WAITING_FOR_QUOTE_ACCEPTANCE
+    alt if Quote terms are valid
+        Core ->> ML: PUT /transfers/{id}[acceptQuote: true]
+    else Quote terms are invalid
+        Core ->> ML: PUT /transfers/{id}[acceptQuote: false]
+        Core -->> Core: Throw InvalidReturnedQuoteError
+    end
+end
+
+alt if Neither WAITING_FOR_CONVERSION_ACCEPTANCE nor WAITING_FOR_QUOTE_ACCEPTANCE
+    Core -->> Core: Throw InvalidReturnedQuoteError
+end
+
+ML ->> Core: Normal Quote
+
+note over App, Core
+{
+  "completedTimestamp": "2400-02-29T09:11:16.112Z",
+  "fulfilment": "WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8",
+  "homeTransactionId": "string",
+  "transferState": "RECEIVED"
+}
+end note
+Core ->> App: Quote response
+
+App ->> Customer: Terms of transfer
+
+@enduml

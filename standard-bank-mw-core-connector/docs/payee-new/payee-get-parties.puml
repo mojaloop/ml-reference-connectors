@@ -1,0 +1,51 @@
+@startuml name="payee-get-parties"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "Standard Bank API" as SBAPI
+
+ML ->> CC: GET /parties/{idType}/{idValue}
+
+CC ->> CC: Validation Checks, Check idType
+
+alt If Checks fail
+    CC -->> ML: Response 400
+end
+
+CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
+
+note over CC, SBAPI
+{
+    "partyIdType": "MSISDN",
+    "partyIdentifier": "string",
+    "accountType": "SAVINGS",
+    "name": "string",
+    "accountDiscoveryStatus": "VERIFIED",
+    "balance": {
+        "amount": 100.5,
+        "currency": "MWK"
+    },
+    "currency": "str",
+    "isActive": true,
+    "lastUpdated": "2025-04-15T14:14:39.360Z"
+}
+end note
+SBAPI -->> CC: Response
+
+CC ->> CC: Response Check
+
+alt If Response is Not Successful
+    CC -->> ML: Response 500
+end
+
+alt If No Party found
+    CC -->> ML: Response 404
+end
+
+CC ->> CC: Prepare Response
+CC -->> ML: Response 200 {}
+
+@enduml

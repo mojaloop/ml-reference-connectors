@@ -1,0 +1,144 @@
+@startuml name="ml-transfer-reservation-commit"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "Standard Bank API" as SBAPI
+
+ML ->> CC: POST /transfers/ {}
+
+CC ->> CC: Validation Checks, Expiration Check,\nQuote Expiration Validation,\nCurrency Conversion Checks
+
+alt if Checks Fail
+    CC -->> ML: Response 500
+end
+
+CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
+
+note over SBAPI
+{
+    "partyIdType": "MSISDN",
+    "partyIdentifier": "string",
+    "accountType": "SAVINGS",
+    "name": "string",
+    "accountDiscoveryStatus": "VERIFIED",
+    "balance": {
+        "amount": 100.5,
+        "currency": "MWK"
+    },
+    "currency": "str",
+    "isActive": true,
+    "lastUpdated": "2025-04-15T14:14:39.360Z"
+}
+end note
+SBAPI -->> CC: Response
+
+CC ->> CC: Check response and customer account status
+
+alt if Customer account has issues
+    CC -->> ML: Response 500, mlCode: 5400
+end
+
+note over CC
+{
+    "transferId": "string",
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "string",
+        "name": "string",
+        "accountType": "string"
+    },
+    "amount": {
+        "amount": 100.5,
+        "currency": "MWK"
+    }
+}
+end note
+CC ->> SBAPI: POST /funds/reserve
+
+note over SBAPI
+{
+    "reserveId": "string",
+    "transferId": "string",
+    "status": "RESERVED",
+    "expiry": "2025-04-15T14:28:26.758Z",
+    "amountReserved": {
+        "amount": 100.5,
+        "currency": "MWK"
+    }
+}
+end note
+SBAPI -->> CC: Response
+
+alt if Reservation Not Successful
+    CC -->> ML: Response 500, mlCode: 5400
+end
+
+CC -->> ML: Response 200 [RESERVED]
+
+ML ->> CC: PUT /transfers/{id}
+
+alt if Current State !== COMPLETED
+    note over CC
+    {
+        "reserveId": "string",
+        "reason": "string"
+    }
+    end note
+    CC ->> SBAPI: POST /funds/unreserve
+
+    note over SBAPI
+    {
+        "reserveId": "string",
+        "status": "RELEASED",
+        "amountReleased": {
+            "amount": 100.5,
+            "currency": "MWK"
+        },
+        "timestamp": "2025-04-15T14:33:33.598Z"
+    }
+    end note
+    SBAPI -->> CC: Response 200
+    CC -->> ML: Response 500
+end
+
+note over CC
+{
+    "reserveId": "string"
+}
+end note
+CC ->> SBAPI: POST /funds/commit
+
+note over SBAPI
+{
+    "transferId": "string",
+    "status": "COMMITTED",
+    "timestamp": "2025-04-15T14:36:00.047Z",
+    "settlementReference": "string"
+}
+end note
+SBAPI -->> CC: Response
+
+alt if Response not Successful
+    note over CC
+    {
+        "reserveId": "string"
+    }
+    end note
+    CC ->> SBAPI: POST /funds/log-failed-commit
+
+    note over SBAPI
+    {
+      "reserveId": "string"
+    } 
+    end note
+    SBAPI -->> CC: Response 200
+
+    CC -->> ML: Response 500
+end
+
+CC -->> ML: Response 200
+
+@enduml

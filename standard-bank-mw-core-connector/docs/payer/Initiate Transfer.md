@@ -5,6 +5,7 @@
 
   Standard Bank Customer->>Standard Bank Customer App: Customer transfer details.
 
+
   Standard Bank Customer App->>Core Connector:POST /send-money/ {}
 
   Core Connector->>Core Connector: Check Request

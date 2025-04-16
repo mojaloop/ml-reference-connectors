@@ -1,0 +1,65 @@
+@startuml name="handle-quote-acceptance"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "Standard Bank Customer App" as App
+participant "Core Connector" as Core
+participant "ML Connector" as ML
+participant "Standard Bank API" as BankAPI
+
+App ->> App: Seek customer consent and debit funds from customer wallet if customer consents
+
+note right of App
+{
+    "acceptQuote": true,
+    "msisdn": "777503758",
+    "amount": "500"
+}
+end note
+App ->> Core: PUT /send-money/{id}/acceptQuote=true | false
+
+Core ->> Core: Check acceptQuote
+
+alt If Quote not Accepted
+    Core ->> ML: PUT /transfers/{id} {acceptQuote = false}
+    ML -->> Core: Response
+    Core -->> App: Response 500 OK
+end
+
+Core ->> ML: PUT /transfers/{id} {acceptQuote = true}
+ML -->> Core: Response
+
+Core ->> Core: Check response
+
+alt if HTTP error code 500, 400, 504 or currentState = ERROR_OCCURED
+    note right of Core
+    {
+        "homeTransactionId": "string",
+        "reason": "CUSTOMER_REQUEST"
+    }
+    end note
+    Core ->> BankAPI: POST /funds/refund
+
+    note left of BankAPI
+    {
+        "refundId": "string",
+        "homeTransactionId": "string",
+        "status": "PENDING",
+        "amount": {
+            "amount": 100.5,
+            "currency": "MWK"
+      },
+        "timestamp": "2025-04-15T13:51:51.461Z"
+    }
+    end note
+    BankAPI -->> Core: Check Response
+
+    alt if Response not Successful
+        Core ->> Core: Initiate manual refund
+    end
+end
+
+Core -->> App: Response 200
+
+@enduml

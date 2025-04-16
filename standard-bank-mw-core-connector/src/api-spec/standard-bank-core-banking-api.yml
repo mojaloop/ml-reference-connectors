@@ -312,6 +312,27 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  /funds/log-failed-commit:
+    post:
+      summary: Endpoint for logging faild commits
+      description: Standard Bank logs failed commits
+      tags: [Transfers]
+      operationId: logFailedCommit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogFailedCommitRequest"
+      responses:
+        "200":
+          description: Refund initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogFailedCommitResponse"
+        
+
 components:
   securitySchemes:
     bearerAuth:
@@ -738,6 +759,24 @@ components:
             sourceOfFunds:
               type: string
               enum: [SALARY, INVESTMENT, LOAN, SAVINGS]
+
+
+    LogFailedCommitRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+
+
+    LogFailedCommitResponse: 
+      type: object
+      properties:
+        reserveId: 
+          type: string
+
+      
+
 
     DueDiligenceResponse:
       type: object
