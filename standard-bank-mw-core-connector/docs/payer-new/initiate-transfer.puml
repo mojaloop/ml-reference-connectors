@@ -21,8 +21,8 @@ note over App
   "payeeId": "16135551212",
   "payeeIdType": "MSISDN",
   "sendAmount": "150.00",
-  "sendCurrency": "UGX",
-  "receiveCurrency": "KES",
+  "sendCurrency": "MWK",
+  "receiveCurrency": "ZMW",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": {
@@ -31,8 +31,8 @@ note over App
     "DateAndPlaceOfBirth": {
       "BirthDt": "20-09-2001",
       "PrvcOfBirth": "ProvinceOfBirth",
-      "CityOfBirth": "Kampala",
-      "CtryOfBirth": "Uganda"
+      "CityOfBirth": "Blantyre",
+      "CtryOfBirth": "Malawi"
     }
   }
 }
