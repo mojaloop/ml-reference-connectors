@@ -1,0 +1,96 @@
+@startuml name="payee-quote-request"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "Standard Bank API" as SBAPI
+
+ML ->> CC: POST /quote-requests/{}
+
+alt if required fields missing
+    CC -->> ML: Response 400 Bad Request
+end
+
+CC ->> CC: Validation Check,\nQuote Validation,\nExpiration Check
+
+alt if Id Type invalid
+    CC -->> ML: Response 400 Bad Request
+end
+
+alt if Currency Not Supported
+    CC -->> ML: Response 500
+end
+
+CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
+
+note over SBAPI
+{
+    "partyIdType": "MSISDN",
+    "partyIdentifier": "string",
+    "accountType": "SAVINGS",
+    "name": "string",
+    "accountDiscoveryStatus": "VERIFIED",
+    "balance": {
+        "amount": 100.5,
+        "currency": "MWK"
+    },
+    "currency": "str",
+    "isActive": true,
+    "lastUpdated": "2025-04-15T14:14:39.360Z"
+}
+end note
+SBAPI -->> CC: Response
+
+CC ->> CC: Response Check
+
+alt If Response is Not Successful
+    CC -->> ML: Response 500
+end
+
+alt If No Party found
+    CC -->> ML: Response 404
+end
+
+note over CC
+{
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "1110202939338",
+        "accountType": "SAVINGS"
+    },
+    "amount": {
+        "amount": 100.5,
+        "currency": "MWK"
+    },
+    "note": "string"
+}
+end note
+CC ->> SBAPI: /quotes
+
+note over SBAPI
+{
+    "quoteId": "adss2-adsa-2232-fafa",
+    "transferId": "THRHEIE24323FF",
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "11110203420498",
+        "accountType": "SAVINGS",
+        "name": "John Doe"
+    },
+    "currency": "MWK",
+    "sendAmount": 150,
+    "receiveAmount": 140,
+    "fees": 10,
+    "fxRate": 0.03,
+    "expiry": "2025-04-16T12:37:12.328Z",
+    "terms": "string"
+}
+end note
+SBAPI ->> CC: Response 200 [Qoute]
+
+CC ->> CC: Calculate Charge
+CC ->> CC: Prepare Response
+CC -->> ML: Response 200
+@enduml

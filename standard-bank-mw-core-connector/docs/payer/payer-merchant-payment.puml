@@ -18,23 +18,23 @@ Customer ->> App: Customer transfer details.
 note over App
 {
     "homeTransactionId": "HTX123456789",
-  "payeeId": "16135551212",
-  "payeeIdType": "MSISDN",
-  "sendAmount": "150.00",
-  "sendCurrency": "MWK",
-  "receiveCurrency": "ZMW",
-  "transactionDescription": "Payment for services",
-  "transactionType": "TRANSFER",
-  "payer": {
-    "name": "John Doe",
-    "payerId": "9876543210",
-    "DateAndPlaceOfBirth": {
-      "BirthDt": "20-09-2001",
-      "PrvcOfBirth": "ProvinceOfBirth",
-      "CityOfBirth": "Blantyre",
-      "CtryOfBirth": "Malawi"
+    "payeeId": "16135551212",
+    "payeeIdType": "MSISDN",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "transactionDescription": "Payment for services",
+    "transactionType": "TRANSFER",
+    "payer": {
+        "name": "John Doe",
+        "payerId": "9876543210",
+        "DateAndPlaceOfBirth": {
+        "BirthDt": "20-09-2001",
+        "PrvcOfBirth": "ProvinceOfBirth",
+        "CityOfBirth": "Blantyre",
+        "CtryOfBirth": "Malawi"
+        }
     }
-  }
 }
 end note
 App ->> Core: POST /send-money/ 
@@ -48,32 +48,34 @@ end
 
 
 
-Core ->> ML: POST /transfers /{amountType: SEND} 
-ML -->> Core: Response
+Core ->> ML: POST /transfers /{amountType: RECEIVE} 
+ML -->> Core: Response 200 [Quote]
+Core ->> Core: Check response
+
+alt if WAITING_FOR_QUOTE_ACCEPTANCE
+    Core ->> Core: Validate Quote
+
+    alt if Invalid Quote Terms
+        Core -->> App: Response 500
+    end
+end
+
 
 alt if WAITING_FOR_CONVERSION_ACCEPTANCE
-    alt if Conversion terms are valid
+    Core ->> Core: Validate Conversion Terms
+
+    alt if Valid Conversion Terms
         Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
     else Conversion terms are invalid
         Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
-        Core -->> Core: Throw InvalidConversionQuoteError
+        Core -->> App: Response 500
     end
 end
 
-alt if WAITING_FOR_QUOTE_ACCEPTANCE
-    alt if Quote terms are valid
-        Core ->> ML: PUT /transfers/{id}[acceptQuote: true]
-    else Quote terms are invalid
-        Core ->> ML: PUT /transfers/{id}[acceptQuote: false]
-        Core -->> Core: Throw InvalidReturnedQuoteError
-    end
-end
+ML -->> Core: Response 200 [FXP Quote]
+Core ->> Core: Prepare Quote Details
 
-alt else
-    Core -->> Core: Throw InvalidReturnedQuoteError
-end
 
-ML ->> Core: Normal Quote
 
 note over Core
 {
@@ -93,7 +95,7 @@ note over Core
     "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
 }
 end note
-Core ->> App: Quote response
+Core ->> App: Response 200 [Quote]
 
 App ->> Customer: Terms of transfer
 

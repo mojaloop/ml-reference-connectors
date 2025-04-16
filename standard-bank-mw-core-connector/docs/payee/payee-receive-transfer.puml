@@ -80,6 +80,33 @@ CC -->> ML: Response 200 [RESERVED]
 
 ML ->> CC: PUT /transfers/{id}
 
+CC -> SBAPI: GET /transfers/{transferId}
+
+note over SBAPI
+{
+    "transferId": "string",
+    "reserveId": "eite2-fe232-gnjtu-3232f"
+    "status": "PENDING",
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "string",
+        "name": "string",
+        "accountType": "string"
+    },
+    "currency": "MWK",
+    "receiveAmount": 140,
+    "transferFee": 10,
+    "createdAt": "2025-04-16T11:52:29.826Z"
+}
+end note
+SBAPI -->> CC: Response 200
+
+CC ->> CC: Check for reserveId
+
+alt if reserveId is NULL
+    CC -->> ML: Response 500
+end
+
 alt if Current State !== COMPLETED
     note over CC
     {
@@ -131,7 +158,7 @@ alt if Response not Successful
 
     note over SBAPI
     {
-      "reserveId": "string"
+    "reserveId": "string"
     } 
     end note
     SBAPI -->> CC: Response 200
@@ -140,5 +167,4 @@ alt if Response not Successful
 end
 
 CC -->> ML: Response 200
-
 @enduml

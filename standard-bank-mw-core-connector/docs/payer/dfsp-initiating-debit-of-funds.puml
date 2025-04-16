@@ -12,9 +12,7 @@ App ->> App: Seek customer consent and debit funds from customer wallet if custo
 
 note right of App
 {
-    "acceptQuote": true,
-    "msisdn": "777503758",
-    "amount": "500"
+    "transferId": "HTHXRJERWR758"
 }
 end note
 App ->> Core: PUT /send-money/{id}/acceptQuote=true | false
@@ -22,12 +20,12 @@ App ->> Core: PUT /send-money/{id}/acceptQuote=true | false
 Core ->> Core: Check acceptQuote
 
 alt If Quote not Accepted
-    Core ->> ML: PUT /transfers/{id} {acceptQuote = false}
+    Core ->> ML: PUT /transfers/{id} {acceptQuoteOrConversion = false}
     ML -->> Core: Response
     Core -->> App: Response 500 OK
 end
 
-Core ->> ML: PUT /transfers/{id} {acceptQuote = true}
+Core ->> ML: PUT /transfers/{id} {acceptQuoteOrConversion = true}
 ML -->> Core: Response
 
 Core ->> Core: Check response
@@ -35,7 +33,7 @@ Core ->> Core: Check response
 alt if HTTP error code 500, 400, 504 or currentState = ERROR_OCCURED
     note right of Core
     {
-        "homeTransactionId": "string",
+        "tranferId": "string",
         "reason": "CUSTOMER_REQUEST"
     }
     end note
@@ -43,14 +41,14 @@ alt if HTTP error code 500, 400, 504 or currentState = ERROR_OCCURED
 
     note left of BankAPI
     {
-        "refundId": "string",
-        "homeTransactionId": "string",
+        "refundId": "HTHTH6768HDJX",
+        "transferId": "FNEWPWPKD3904L",
+        "reserveId": "ffjksf-fjskf-eww323-424"
         "status": "PENDING",
         "amount": {
             "amount": 100.5,
             "currency": "MWK"
-      },
-        "timestamp": "2025-04-15T13:51:51.461Z"
+        }
     }
     end note
     BankAPI -->> Core: Check Response

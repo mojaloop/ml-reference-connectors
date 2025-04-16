@@ -495,30 +495,31 @@ components:
       properties:
         transferId:
           type: string
+        reserveId: 
+          type: string
+          nullable: true
+          example: "adss2-adsa-2232-fafa"
         status:
           type: string
           enum: [PENDING, RESERVED, COMMITTED, FAILED, REFUNDED]
-        receiveAmount:
-          $ref: "#/components/schemas/Money"
-        fees:
-          $ref: "#/components/schemas/Money"
-        payer:
-          $ref: "#/components/schemas/PartyDetails"
         payee:
           $ref: "#/components/schemas/PartyDetails"
+        currency:
+          type: string
+          example: "MWK"
+        receiveAmount:
+          type: number
+          format: decimal
+          example: 140.00
+        transferFee:
+          type: number
+          format: decimal
+          example: 10.00
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        expiry:
-          type: string
-          format: date-time
-        auditTrail:
-          type: array
-          items:
-            $ref: "#/components/schemas/AuditEntry"
+
+        
 
     PartyDetails:
       type: object
@@ -527,10 +528,13 @@ components:
           $ref: "#/components/schemas/PartyIdType"
         partyIdentifier:
           type: string
-        name:
-          type: string
+          example: "11110203420498"
         accountType:
           type: string
+          example: "SAVINGS"
+        name:
+          type: string
+          example: "John Doe"
 
     AuditEntry:
       type: object
@@ -556,6 +560,7 @@ components:
         note:
           type: string
           maxLength: 1000
+          nullable: true
 
     PartyReference:
       type: object
@@ -565,6 +570,7 @@ components:
           $ref: "#/components/schemas/PartyIdType"
         partyIdentifier:
           type: string
+          example: 1110202939338
         accountType:
           type: string
           enum: [SAVINGS, CURRENT, LOAN, WALLET]
@@ -574,18 +580,31 @@ components:
       properties:
         quoteId:
           type: string
+          example: "adss2-adsa-2232-fafa"
         transferId:
           type: string
+          example: "THRHEIE24323FF"
         payee:
           $ref: "#/components/schemas/PartyDetails"
+        currency: 
+          type: string
+          example: "MWK"
         sendAmount:
-          $ref: "#/components/schemas/Money"
+          type: number
+          format: decimal
+          example: 150.00
         receiveAmount:
-          $ref: "#/components/schemas/Money"
+          type: number
+          format: decimal
+          example: 140.00
         fees:
-          $ref: "#/components/schemas/Money"
+          type: number
+          format: decimal
+          example: 10.00
         fxRate:
           type: number
+          format: decimal
+          example: 0.03
         expiry:
           type: string
           format: date-time

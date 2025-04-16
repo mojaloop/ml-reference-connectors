@@ -17,7 +17,7 @@ end
 
 CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
 
-note over CC, SBAPI
+note over SBAPI
 {
     "partyIdType": "MSISDN",
     "partyIdentifier": "string",

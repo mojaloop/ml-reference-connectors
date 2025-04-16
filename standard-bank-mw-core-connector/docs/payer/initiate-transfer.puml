@@ -1,0 +1,100 @@
+@startuml name="initiate-transfer"
+
+skinparam defaultFontSize 10
+skinparam NoteFontSize 9
+skinparam NoteFontName "Courier New"  ' Monospace font
+skinparam wrapWidth 50                ' Set the width of the note
+
+autonumber
+
+actor "Standard Bank Customer" as Customer
+participant "Standard Bank Customer App" as App
+participant "Core Connector" as Core
+participant "ML Connector" as ML
+
+Customer ->> App: Customer transfer details.
+
+
+note over App
+{
+    "homeTransactionId": "HTX123456789",
+  "payeeId": "16135551212",
+  "payeeIdType": "MSISDN",
+  "sendAmount": "150.00",
+  "sendCurrency": "MWK",
+  "receiveCurrency": "ZMW",
+  "transactionDescription": "Payment for services",
+  "transactionType": "TRANSFER",
+  "payer": {
+    "name": "John Doe",
+    "payerId": "9876543210",
+    "DateAndPlaceOfBirth": {
+      "BirthDt": "20-09-2001",
+      "PrvcOfBirth": "ProvinceOfBirth",
+      "CityOfBirth": "Blantyre",
+      "CtryOfBirth": "Malawi"
+    }
+  }
+}
+end note
+App ->> Core: POST /send-money/ 
+
+
+Core ->> Core: Check Request
+
+alt if Checks fail
+    Core -->> App: Response 400
+end
+
+
+
+Core ->> ML: POST /transfers /{amountType: SEND} 
+ML -->> Core: Response 200 [FXP Quote]
+Core ->> Core: Check response
+
+alt if WAITING_FOR_CONVERSION_ACCEPTANCE
+    Core ->> Core: Validate FXP Quote
+
+    alt if Valid Conversion Terms
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
+    else Conversion terms are invalid
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
+        Core -->> App: Response 500
+    end
+end
+
+ML -->> Core: Response 200 [Normal Quote]
+Core ->> Core: Check Response
+
+alt if WAITING_FOR_QUOTE_ACCEPTANCE
+    Core ->> Core: Validate Normal Quote
+
+    alt if Invalid Quote Terms
+        Core -->> App: Response 500
+    end
+end
+
+
+note over Core
+{
+    "payeeDetails": {
+        "idType": "MSISDN",
+        "idValue": "990454454",
+        "fspId": "airtelzambia",
+        "name": "Niza"
+    },
+    "sendAmount": "150.00",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "targetFees": "10.00",
+    "sourceFees": "10.00",
+    "transactionId": "0GJGH201JGJ1J12324H",
+    "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
+}
+end note
+Core ->> App: Response 200 [Quote]
+
+App ->> Customer: Terms of transfer
+
+@enduml

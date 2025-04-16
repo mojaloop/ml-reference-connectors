@@ -219,15 +219,15 @@ components:
         payeeIdType:
           type: string
           example: "MSISDN"
-        sendAmount:
-          type: string
-          example: "150.00"
         sendCurrency:
           type: string
-          example: "UGX"
+          example: "MWK"
+        receiveAmount:
+          type: string
+          example: "140.00"
         receiveCurrency:
           type: string
-          example: "KES"
+          example: "ZMW"
         transactionDescription:
           type: string
           example: "Payment for services"
@@ -294,21 +294,31 @@ components:
             name:
               type: string
               example: "Niza"
+        sendAmount:
+          type: string
+          example: "140.00"
+        sendCurrency:
+          type: string
+          example: "MWK"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "EUR"
-        fees:
+          example: "ZMW"
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
           example: "USD"
         transactionId:
           type: string
+          example: "FHFEPWPFJI7385"
+        homeTransactionId:
+          type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
+
     sendMoneyResponse:
       type: object
       properties:
@@ -328,19 +338,28 @@ components:
               type: string
               example: "Niza"
 
+        sendAmount:
+          type: string
+          example: "150.00"
+        sendCurrency:
+          type: string
+          example: "MWK"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
           example: "EUR"
-        fees:
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
+          type: string
+          example: "HTX123456789"
+        homeTransactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyRequest:
