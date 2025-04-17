@@ -412,11 +412,11 @@ export type TAirtelDisbursementResponse = {
 // Request coming from Airtel
 export type TAirtelSendMoneyRequest = {
     "homeTransactionId": string;
-    "amountType": "RECEIVE" | "SEND",
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
     "sendCurrency": components['schemas']['Currency'];
+    "sendAmount": string;
+    "receiveAmount": string;
     "receiveCurrency": components['schemas']['Currency'];
     "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
@@ -441,10 +441,12 @@ export type TAirtelSendMoneyResponse = {
         "fspId": string;
         "name":string;
       };
-    "receiveAmount": string;
-    "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
+    "sendAmount": string,
+    "sendCurrency": string,
+    "receiveAmount": string,
+    "receiveCurrency": string,
+    "targetFees": string,
+    "sourceFees": string,
     "transactionId": string;
 }
 
