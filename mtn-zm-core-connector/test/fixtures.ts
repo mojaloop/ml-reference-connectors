@@ -462,13 +462,13 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string): TM
 
 
 
-export const merchantPaymentRequestDTO = (idValue: string, amount: string, receive: string): TMTNMerchantPaymentRequest => ({
+export const merchantPaymentRequestDTO = (idValue: string, amount: string): TMTNMerchantPaymentRequest => ({
   "homeTransactionId": crypto.randomUUID(),
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "receiveAmount": amount,
-  "sendCurrency": "UGX",
-  "receiveCurrency": "UGX",
+  "sendCurrency": "ZMW",
+  "receiveCurrency": "MWK",
   "transactionDescription": "Payment for services",
   "transactionType": "TRANSFER",
   "payer": {

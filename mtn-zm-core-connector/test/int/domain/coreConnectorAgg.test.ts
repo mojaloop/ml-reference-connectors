@@ -161,7 +161,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
 
         test('Test POST/ merchant-payment: response should be payee details ', async () => {
-            const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20","RECEIVE");
+            const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20");
             const url = `${DFSP_URL}/merchant-payment`;
             const res = await axios.post(url, JSON.stringify(merchantyRequest), {
                 headers: {
