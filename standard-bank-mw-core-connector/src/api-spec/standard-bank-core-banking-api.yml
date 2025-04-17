@@ -168,20 +168,20 @@ paths:
                   value:
                     payer:
                       partyIdType: "ACCOUNT_NUMBER"
-                      partyIdentifier: "0086784563219"
-                      dfspId: "STANBANK_ZA"
-                      dfspLei: "5493001KJTIIGC8Y1R12"
+                      partyIdentifier: "10086784563219"
+                      dfspId: "STANBANK_MW"
+                      dfspLei: "standardbankmw"
                       accountType: "SAVINGS"
                     payee:
-                      partyIdType: "IBAN"  
-                      partyIdentifier: "GB29NWBK60161331926819"
-                      dfspId: "BARCLAYS_UK"
-                      dfspLei: "B4J6Q8PWMJQ5ALZ5U17"
-                      accountType: "CURRENT"
+                      partyIdType: "MSISDN"  
+                      partyIdentifier: "9993472288"
+                      dfspId: "AIRTEL_ZM"
+                      dfspLei: "airtelzambia"
+                      accountType: "WALLET"
                     transferAmount:
-                      amount: 15000.00
-                      currency: "USD"
-                    purposeCode: "SALA"
+                      amount: 150.00
+                      currency: "MWK"
+                    purposeCode: "SALARY"
                     reference: "Salary Payment May 2024"
         responses:
           "200":

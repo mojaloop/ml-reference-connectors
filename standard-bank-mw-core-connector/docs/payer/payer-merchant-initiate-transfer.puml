@@ -37,7 +37,7 @@ note over App
     }
 }
 end note
-App ->> Core: POST /send-money/ 
+App ->> Core: POST /merchant-payment
 
 
 Core ->> Core: Check Request
@@ -50,32 +50,36 @@ end
 
 Core ->> ML: POST /transfers /{amountType: RECEIVE} 
 ML -->> Core: Response 200 [Quote]
-Core ->> Core: Check response
+Core ->> Core: Validate Quote
 
 alt if WAITING_FOR_QUOTE_ACCEPTANCE
-    Core ->> Core: Validate Quote
 
     alt if Invalid Quote Terms
+        Core ->> ML: PUT /transfers/{transferId} acceptQuote: false
+        ML -->> Core: Response 
         Core -->> App: Response 500
     end
+
+    Core ->> ML: PUT /transfers/{transferId} acceptQuote: true
 end
+
+
+ML -->> Core: Response 200 [FXP Quote]
+Core ->> Core: Validate Conversion Terms
 
 
 alt if WAITING_FOR_CONVERSION_ACCEPTANCE
-    Core ->> Core: Validate Conversion Terms
-
-    alt if Valid Conversion Terms
-        Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
-    else Conversion terms are invalid
+    alt if Invalid Conversion Terms
         Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
+        ML -->> Core: Response 
         Core -->> App: Response 500
     end
+
+    Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
 end
 
-ML -->> Core: Response 200 [FXP Quote]
+ML -->> Core: Response 200
 Core ->> Core: Prepare Quote Details
-
-
 
 note over Core
 {
@@ -95,8 +99,8 @@ note over Core
     "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
 }
 end note
-Core ->> App: Response 200 [Quote]
+Core -->> App: Response 200 [Quote]
 
-App ->> Customer: Terms of transfer
+App -->> Customer: Terms of transfer
 
 @enduml

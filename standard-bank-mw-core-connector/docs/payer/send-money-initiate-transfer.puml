@@ -55,15 +55,16 @@ Core ->> Core: Check response
 alt if WAITING_FOR_CONVERSION_ACCEPTANCE
     Core ->> Core: Validate FXP Quote
 
-    alt if Valid Conversion Terms
-        Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
-    else Conversion terms are invalid
+    alt Conversion terms are invalid
         Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
         Core -->> App: Response 500
     end
+
+    Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
+    
 end
 
-ML -->> Core: Response 200 [Normal Quote]
+ML -->> Core: Response 200
 Core ->> Core: Check Response
 
 alt if WAITING_FOR_QUOTE_ACCEPTANCE
@@ -93,8 +94,8 @@ note over Core
     "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
 }
 end note
-Core ->> App: Response 200 [Quote]
+Core -->> App: Response 200 [Quote]
 
-App ->> Customer: Terms of transfer
+App -->> Customer: Terms of transfer
 
 @enduml

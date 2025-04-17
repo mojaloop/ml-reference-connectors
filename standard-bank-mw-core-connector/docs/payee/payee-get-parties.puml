@@ -15,7 +15,7 @@ alt If Checks fail
     CC -->> ML: Response 400
 end
 
-CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
+CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
 
 note over SBAPI
 {

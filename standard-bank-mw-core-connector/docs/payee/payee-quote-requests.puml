@@ -23,7 +23,7 @@ alt if Currency Not Supported
     CC -->> ML: Response 500
 end
 
-CC ->> SBAPI: POST /accounts/{partyIdType}/{partyIdentifier}
+CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
 
 note over SBAPI
 {
@@ -67,7 +67,7 @@ note over CC
     "note": "string"
 }
 end note
-CC ->> SBAPI: /quotes
+CC ->> SBAPI: POST /quotes
 
 note over SBAPI
 {
@@ -88,9 +88,51 @@ note over SBAPI
     "terms": "string"
 }
 end note
-SBAPI ->> CC: Response 200 [Qoute]
+SBAPI -->> CC: Response 200 [Qoute]
 
 CC ->> CC: Calculate Charge
+
+note over CC
+{
+    "payer": {
+            "partyIdType": "MSISDN",
+            "partyIdentifier": "9993472288",
+            "dfspId": "AIRTEL_ZM",
+            "dfspLei": "airtelzambia",
+            "accountType": "WALLET"
+    },
+    "payee": {
+            "partyIdType": "ACCOUNT_NUMBER",
+            "partyIdentifier": "10086784563219",
+            "dfspId": "STANBANK_MW",
+            "dfspLei": "standardbankmw",
+            "accountType": "SAVINGS"
+    },
+    "transferAmount": {
+            "amount": 150,
+            "currency": "MWK"
+    },
+    "purposeCode": "SALARY",
+    "reference": "Salary Payment May 2024"
+}
+end note
+CC ->> SBAPI: POST /agreements/due-diligence
+
+note over SBAPI
+{
+    "canTransferProceed": true,
+    "riskLevel": "LOW",
+    "complianceCheckId": "dd-789e4a20-2025",
+    "timestamp": "2024-05-15T14:30:00Z"
+}
+end note
+
+SBAPI -->> CC: Response 200 [Due Diligence]
+CC ->> CC: Due Diligence Check
+alt if Due Diligence Check Failed
+    CC -->> ML: Response 500
+end
+
 CC ->> CC: Prepare Response
 CC -->> ML: Response 200
 @enduml
