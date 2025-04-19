@@ -7,7 +7,7 @@ This sequence diagram shows the requests involved in a typical discovery call fr
 At every request step there are some checks performed by the core connector to ensure the transaction is successful.
 
 # Description
-The process starts when the Mojaloop Connector sends an account lookup request to the core connector at stage `1`. The core connector checks the request parameters to see if they are valid and are consistent with allowed values and data types. If the checks fail, at stage `3`, an error response is sent back to the Mojaloop Connector. The core connector at stage `4` then makes a request to the MTN Momo Api to make an account discovery call to make sure find out KYC data about the owner of the received account identifier value. The MTN Momo Api returns a response, some checks are performed and the party information is returned at stage `10` back to the Mojaloop Connnector 
+The process starts when the Mojaloop Connector sends an account lookup request to the core connector at stage `1`. The core connector checks the request parameters to see if they are valid and are consistent with allowed values and data types. If the checks fail, at stage `3`, an error response is sent back to the Mojaloop Connector. The core connector at stage `4` then makes a request to the MTN Momo Api to make an account discovery call to make sure find out KYC data about the owner of the received account identifier value. The MTN Momo Api returns a response, some checks are performed and the party information is returned at stage `10` back to the Mojaloop Connnector
 
 ```mermaid
 sequenceDiagram

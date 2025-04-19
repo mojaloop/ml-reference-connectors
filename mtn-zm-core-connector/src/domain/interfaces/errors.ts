@@ -53,18 +53,27 @@
  }
  
  export class ValidationError extends BasicError {
+ 
+     static invalidExtensionListsError(message: string, mlCode: string, httpCode: number) {
+         return new ValidationError(message, {
+             mlCode: mlCode,
+             httpCode: httpCode
+         });
+     }
      static invalidAccountNumberError() {
          return new ValidationError('Account number length is too short', {
              mlCode: '3101',
              httpCode: 400,
          });
      }
+ 
      static invalidReturnedQuoteError(message: string ){
-        return new ValidationError(message, {
-            mlCode: '5101',
-            httpCode: 500,
-        });
-    }
+         return new ValidationError(message, {
+             mlCode: '5101',
+             httpCode: 500,
+         });
+     }
+ 
      static invalidConversionQuoteError(message: string, mlCode: string, httpCode: number){
          return new ValidationError(message, {
              mlCode: mlCode,
@@ -102,17 +111,16 @@
      static accountBarredError(){
          return new ValidationError("Account is Barred", {
              mlCode: '5400',
-             httpCode: 400,
+             httpCode: 500,
          });
      }
  
      static invalidQuoteError(message: string){
-        return new ValidationError(message, {
-            mlCode: '5101',
-            httpCode: 400,
-        });
-    }
-
+         return new ValidationError(message, {
+             mlCode: '5101',
+             httpCode: 400,
+         });
+     }
  
      static transferNotCompletedError(){
          return new ValidationError("Transfer Not Completed Error", {
@@ -141,14 +149,6 @@
              httpCode: 500,
          });
      }
-
-
-     static invalidExtensionListsError(message: string, mlCode: string, httpCode: number){
-        return new ValidationError(message, {
-            mlCode: mlCode,
-            httpCode: httpCode,
-        });
-    }
  }
  
  export class MTNError extends BasicError{
@@ -199,4 +199,3 @@
      }
  
  } 
- 

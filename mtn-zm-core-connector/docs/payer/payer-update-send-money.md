@@ -18,13 +18,13 @@ sequenceDiagram
   Alt If Quote not Accepted
   CC-->>USSD Service: Response 500 OK
   End
-  CC->>Airtel:POST /merchant/v2/payments
+  CC->>MTN:POST /merchant/v2/payments
   Airtel-->>CC:Response
   CC-->CC: Check Response
   Alt If Couldnt make reservation
   CC-->>USSD Service: Response 500
   End
-  Airtel->>CC: PUT /callback
+  MTN->>CC: PUT /callback
   CC ->> CC: Check if transaction is successful
   Alt if transaction success
   CC ->> ML Connector: PUT /transfers/{id} acceptQuote=true
