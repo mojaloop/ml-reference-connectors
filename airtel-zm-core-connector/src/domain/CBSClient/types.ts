@@ -196,12 +196,29 @@ export type TAirtelSendMoneyResponse = {
     "targetFees": string,
     "sourceFees": string,
     "transactionId": string;
+    "homeTransactionId": string;
 }
 
-
-// Merchant Types (Same types as Payer Send Money Request
-
-export type TAirtelMerchantPaymentRequest = TAirtelSendMoneyRequest
+export type TAirtelMerchantPaymentRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveAmount": string;
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        }
+    }
+}
 
 export type TAirtelMerchantPaymentResponse = TAirtelSendMoneyResponse
 

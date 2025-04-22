@@ -369,9 +369,9 @@ export class CoreConnectorAggregate {
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return this.handleSendTransferRes(res.data);
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
         } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-            return this.handleReceiveTransferRes(res.data);
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
@@ -381,7 +381,7 @@ export class CoreConnectorAggregate {
         return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
     }
 
-    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TAirtelSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TAirtelSendMoneyResponse> {
         /*
             check fxQuote
             respond to conversion terms
@@ -407,10 +407,10 @@ export class CoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTAirtelSendMoneyResponse(acceptRes.data);
+        return this.getTAirtelSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TAirtelSendMoneyResponse> {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TAirtelSendMoneyResponse> {
         /*
             check returned normalQuote
             respond to quote 
@@ -436,7 +436,7 @@ export class CoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTAirtelSendMoneyResponse(acceptRes.data);
+        return this.getTAirtelSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     // Get TSDKOutbound Transfer Request DTO --(5.1) 
@@ -463,7 +463,7 @@ export class CoreConnectorAggregate {
             },
             'amountType': amountType,
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
-            'amount': amountType === "SEND" ? transfer.sendAmount : transfer.receiveAmount,
+            'amount': 'sendAmount' in transfer ? transfer.sendAmount : transfer.receiveAmount,
             'transactionType': transfer.transactionType,
             'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
             'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType)
@@ -504,7 +504,7 @@ export class CoreConnectorAggregate {
 
 
     //  Airtel Send Money Response DTO  --(5.1)
-    private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
+    private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TAirtelSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -521,6 +521,7 @@ export class CoreConnectorAggregate {
             "sourceFees": this.getFxQuoteResponseCharges(transfer),
             
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+            "homeTransactionId": homeTransactionId
         };
     }
 
