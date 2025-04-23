@@ -75,6 +75,7 @@ paths:
         "504":
           description: >-
             Response for a timed out transfer
+            
   /send-money/{transferId}:
     put:
       summary: Confirm send money
@@ -228,12 +229,12 @@ components:
         receiveCurrency:
           type: string
           example: "ZMW"
-        transactionDescription:
+        purposeCode:
           type: string
-          example: "Payment for services"
+          example: "MP2P"
         transactionType:
           type: string
-          example: "TRANSFER"
+          example: "PAYMENT"
         payer:
           type: object
           properties:
@@ -243,25 +244,6 @@ components:
             payerId:
               type: string
               example: "9876543210"
-            DateAndPlaceOfBirth:
-              type: object
-              properties:
-                BirthDt:
-                  type: string
-                  example: "20-09-2001"
-                PrvcOfBirth:
-                  type: string
-                  example: "ProvinceOfBirth"
-                CityOfBirth:
-                  type: string
-                  example: "Kampala"
-                CtryOfBirth:
-                  type: string
-                  example: "Uganda"
-              required:
-                - BirthDt
-                - CityOfBirth
-                - CtryOfBirth
           required:
             - name
             - payerId
@@ -272,6 +254,7 @@ components:
         - sendAmount
         - sendCurrency
         - receiveCurrency
+        - purposeCode
         - transactionType
         - payer
       
@@ -291,12 +274,15 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
+            fspLEI:
+              type: string
+              example: "MP2P"
             name:
               type: string
               example: "Niza"
         sendAmount:
           type: string
-          example: "140.00"
+          example: "150.00"
         sendCurrency:
           type: string
           example: "MWK"
@@ -311,7 +297,7 @@ components:
           example: "10.00"
         sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
           type: string
           example: "FHFEPWPFJI7385"
@@ -334,6 +320,9 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
+            fspLEI:
+              type: string
+              example: "984500BA13DAVB8B6C61"
             name:
               type: string
               example: "Niza"
@@ -379,13 +368,13 @@ components:
           example: "150.00"
         sendCurrency:
           type: string
-          example: "UGX"
+          example: "MWK"
         receiveCurrency:
           type: string
-          example: "KES"
-        transactionDescription:
+          example: "ZMW"
+        purposeCode:
           type: string
-          example: "Payment for services"
+          example: "MP2P"
         transactionType:
           type: string
           example: "TRANSFER"
@@ -398,25 +387,6 @@ components:
             payerId:
               type: string
               example: "9876543210"
-            DateAndPlaceOfBirth:
-              type: object
-              properties:
-                BirthDt:
-                  type: string
-                  example: "20-09-2001"
-                PrvcOfBirth:
-                  type: string
-                  example: "ProvinceOfBirth"
-                CityOfBirth:
-                  type: string
-                  example: "Kampala"
-                CtryOfBirth:
-                  type: string
-                  example: "Uganda"
-              required:
-                - BirthDt
-                - CityOfBirth
-                - CtryOfBirth
           required:
             - name
             - payerId
@@ -427,6 +397,7 @@ components:
         - sendAmount
         - sendCurrency
         - receiveCurrency
+        - purposeCode
         - transactionType
         - payer
 
@@ -435,9 +406,4 @@ components:
       properties:
         acceptQuote:
           type: boolean
-        msisdn:
-          type: string
-          example: "777503758"
-        amount:
-          type: string
-          example: "500"
+          example: true

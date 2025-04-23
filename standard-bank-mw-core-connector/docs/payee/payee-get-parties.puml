@@ -17,23 +17,16 @@ end
 
 CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
 
-note over SBAPI
+SBAPI -->> CC: Response
+note right
 {
     "partyIdType": "MSISDN",
     "partyIdentifier": "string",
-    "accountType": "SAVINGS",
     "name": "string",
-    "accountDiscoveryStatus": "VERIFIED",
-    "balance": {
-        "amount": 100.5,
-        "currency": "MWK"
-    },
-    "currency": "str",
-    "isActive": true,
-    "lastUpdated": "2025-04-15T14:14:39.360Z"
+    "currency": "MWK",
+    "isActive": true
 }
 end note
-SBAPI -->> CC: Response
 
 CC ->> CC: Response Check
 

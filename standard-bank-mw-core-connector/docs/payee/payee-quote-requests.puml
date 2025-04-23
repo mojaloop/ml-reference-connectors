@@ -25,23 +25,16 @@ end
 
 CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
 
-note over SBAPI
+SBAPI -->> CC: Response
+note right
 {
-    "partyIdType": "MSISDN",
-    "partyIdentifier": "string",
-    "accountType": "SAVINGS",
-    "name": "string",
-    "accountDiscoveryStatus": "VERIFIED",
-    "balance": {
-        "amount": 100.5,
-        "currency": "MWK"
-    },
-    "currency": "str",
-    "isActive": true,
-    "lastUpdated": "2025-04-15T14:14:39.360Z"
+  "partyIdType": "MSISDN",
+  "partyIdentifier": "string",
+  "name": "string",
+  "currency": "MWK",
+  "isActive": true
 }
 end note
-SBAPI -->> CC: Response
 
 CC ->> CC: Response Check
 
@@ -53,7 +46,8 @@ alt If No Party found
     CC -->> ML: Response 404
 end
 
-note over CC
+CC ->> SBAPI: POST /quotes
+note left
 {
     "payee": {
         "partyIdType": "MSISDN",
@@ -63,13 +57,13 @@ note over CC
     "amount": {
         "amount": 100.5,
         "currency": "MWK"
-    },
-    "note": "string"
+    }
 }
 end note
-CC ->> SBAPI: POST /quotes
 
-note over SBAPI
+
+SBAPI -->> CC: Response 200 [Qoute]
+note right
 {
     "quoteId": "adss2-adsa-2232-fafa",
     "transferId": "THRHEIE24323FF",
@@ -83,53 +77,46 @@ note over SBAPI
     "sendAmount": 150,
     "receiveAmount": 140,
     "fees": 10,
-    "fxRate": 0.03,
-    "expiry": "2025-04-16T12:37:12.328Z",
-    "terms": "string"
+    "expiry": "2025-04-16T12:37:12.328Z"
 }
 end note
-SBAPI -->> CC: Response 200 [Qoute]
 
 CC ->> CC: Calculate Charge
 
-note over CC
+CC ->> SBAPI: POST /agreements/due-diligence
+note left
 {
     "payer": {
-            "partyIdType": "MSISDN",
-            "partyIdentifier": "9993472288",
-            "dfspId": "AIRTEL_ZM",
-            "dfspLei": "airtelzambia",
-            "accountType": "WALLET"
-    },
-    "payee": {
             "partyIdType": "ACCOUNT_NUMBER",
             "partyIdentifier": "10086784563219",
             "dfspId": "STANBANK_MW",
             "dfspLei": "standardbankmw",
             "accountType": "SAVINGS"
     },
+    "payee": {
+            "partyIdType": "MSISDN",
+            "partyIdentifier": "9993472288",
+            "dfspId": "AIRTEL_ZM",
+            "dfspLei": "airtelzambia",
+            "accountType": "WALLET"
+    },
     "transferAmount": {
             "amount": 150,
             "currency": "MWK"
     },
-    "purposeCode": "SALARY",
-    "reference": "Salary Payment May 2024"
-}
-end note
-CC ->> SBAPI: POST /agreements/due-diligence
-
-note over SBAPI
-{
-    "canTransferProceed": true,
-    "riskLevel": "LOW",
-    "complianceCheckId": "dd-789e4a20-2025",
-    "timestamp": "2024-05-15T14:30:00Z"
+    "purposeCode": "MP2P",
 }
 end note
 
 SBAPI -->> CC: Response 200 [Due Diligence]
+note right
+{
+    "canTransferProceed": true,
+}
+end note
+
 CC ->> CC: Due Diligence Check
-alt if Due Diligence Check Failed
+alt if canTransferProceed == false
     CC -->> ML: Response 500
 end
 

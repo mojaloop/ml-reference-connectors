@@ -76,7 +76,6 @@ paths:
       parameters:
         - $ref: "#/components/parameters/partyIdType"
         - $ref: "#/components/parameters/partyIdentifier"
-        # - $ref: "#/components/parameters/X-Correlation-ID"
       responses:
         "200":
           description: Account details retrieved
@@ -86,39 +85,12 @@ paths:
                 $ref: "#/components/schemas/AccountDetails"
         "400":
           $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/ServerError"
         "504":
           $ref: "#/components/responses/Timeout"
-
-  /transfers/{transferId}:
-    get:
-      summary: Retrieve Transfer Details
-      description: Get comprehensive transfer status and audit trail
-      tags: [Transfers]
-      operationId: getTransferDetails
-      parameters:
-        - $ref: "#/components/parameters/transferId"
-        # - $ref: "#/components/parameters/X-Correlation-ID"
-      responses:
-        "200":
-          description: Transfer details retrieved
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TransferDetails"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/ServerError"
 
   /quotes:
     post:
@@ -181,8 +153,7 @@ paths:
                     transferAmount:
                       amount: 150.00
                       currency: "MWK"
-                    purposeCode: "SALARY"
-                    reference: "Salary Payment May 2024"
+                    purposeCode: "MP2P"
         responses:
           "200":
             description: Due diligence verification results
@@ -194,9 +165,6 @@ paths:
                   approved:
                     value:
                       canTransferProceed: true
-                      riskLevel: "LOW"
-                      complianceCheckId: "dd-789e4a20-2025"
-                      timestamp: "2024-05-15T14:30:00Z"
                   rejected:
                     value:
                       canTransferProceed: false
@@ -204,9 +172,6 @@ paths:
                       restrictionDetails: 
                         - "Payer matched OFAC SDN list"
                         - "Enhanced verification required"
-                      complianceCheckId: "dd-789e4a20-2025"
-                      riskLevel: "HIGH"
-                      timestamp: "2024-05-15T14:30:00Z"
 
   /funds/reserve:
     post:
@@ -227,10 +192,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReserveFundsResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -253,10 +214,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CommitFundsResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -279,10 +236,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnreserveFundsResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -305,33 +258,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RefundResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/ServerError"
-
-  /funds/log-failed-commit:
-    post:
-      summary: Endpoint for logging faild commits
-      description: Standard Bank logs failed commits
-      tags: [Transfers]
-      operationId: logFailedCommit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LogFailedCommitRequest"
-      responses:
-        "200":
-          description: Refund initiated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LogFailedCommitResponse"
-        
 
 components:
   securitySchemes:
@@ -429,21 +357,6 @@ components:
           type: string
         message:
           type: string
-        timestamp:
-          type: string
-          format: date-time
-        correlationId:
-          type: string
-          format: uuid
-        details:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              issue:
-                type: string
 
     AccountDetails:
       type: object
@@ -452,25 +365,18 @@ components:
           $ref: "#/components/schemas/PartyIdType"
         partyIdentifier:
           type: string
-        accountType:
-          type: string
-          enum: [SAVINGS, CURRENT, LOAN, WALLET]
+          example: "MSISDN"
         name:
           type: string
-        accountDiscoveryStatus:
-          type: string
-          enum: [VERIFIED, PENDING, REJECTED, EXPIRED]
-        balance:
-          $ref: "#/components/schemas/Money"
+          example: "John Doe"
         currency:
           type: string
           minLength: 3
           maxLength: 3
+          example: "MWK"
         isActive:
           type: boolean
-        lastUpdated:
-          type: string
-          format: date-time
+
 
     PartyIdType:
       type: string
@@ -489,38 +395,7 @@ components:
           type: string
           pattern: '^[A-Z]{3}$'
           example: "MWK"
-
-    TransferDetails:
-      type: object
-      properties:
-        transferId:
-          type: string
-        reserveId: 
-          type: string
-          nullable: true
-          example: "adss2-adsa-2232-fafa"
-        status:
-          type: string
-          enum: [PENDING, RESERVED, COMMITTED, FAILED, REFUNDED]
-        payee:
-          $ref: "#/components/schemas/PartyDetails"
-        currency:
-          type: string
-          example: "MWK"
-        receiveAmount:
-          type: number
-          format: decimal
-          example: 140.00
-        transferFee:
-          type: number
-          format: decimal
-          example: 10.00
-        createdAt:
-          type: string
-          format: date-time
-
         
-
     PartyDetails:
       type: object
       properties:
@@ -557,10 +432,6 @@ components:
           $ref: "#/components/schemas/PartyReference"
         amount:
           $ref: "#/components/schemas/Money"
-        note:
-          type: string
-          maxLength: 1000
-          nullable: true
 
     PartyReference:
       type: object
@@ -601,15 +472,9 @@ components:
           type: number
           format: decimal
           example: 10.00
-        fxRate:
-          type: number
-          format: decimal
-          example: 0.03
         expiry:
           type: string
           format: date-time
-        terms:
-          type: string
 
     ComplianceStatus:
       type: string
@@ -637,11 +502,6 @@ components:
         status:
           type: string
           enum: [RESERVED, FAILED]
-        expiry:
-          type: string
-          format: date-time
-        amountReserved:
-          $ref: "#/components/schemas/Money"
 
     CommitFundsRequest:
       type: object
@@ -659,11 +519,7 @@ components:
         status:
           type: string
           enum: [COMMITTED, FAILED]
-        timestamp:
-          type: string
-          format: date-time
-        settlementReference:
-          type: string
+
 
     UnreserveFundsRequest:
       type: object
@@ -682,11 +538,6 @@ components:
         status:
           type: string
           enum: [RELEASED, FAILED]
-        amountReleased:
-          $ref: "#/components/schemas/Money"
-        timestamp:
-          type: string
-          format: date-time
 
     RefundRequest:
       type: object
@@ -701,18 +552,11 @@ components:
     RefundResponse:
       type: object
       properties:
-        refundId:
-          type: string
         homeTransactionId:
           type: string
-        status:
-          type: string
-          enum: [PENDING, COMPLETED, FAILED]
-        amount:
-          $ref: "#/components/schemas/Money"
-        timestamp:
-          type: string
-          format: date-time
+        refundCompleted:
+          type: boolean
+          example: true
 
     DueDiligenceRequest:
       type: object
@@ -762,11 +606,8 @@ components:
           $ref: "#/components/schemas/Money"
         purposeCode:
           type: string
-          enum: [SALA, PENS, TAXS, INVS, GDSV, SVCS]
+          example: "MP2P"
           description: ISO 20022 purpose code
-        reference:
-          type: string
-          maxLength: 140
         additionalScreeningFields:
           type: object
           description: Optional enhanced verification fields
@@ -778,21 +619,6 @@ components:
             sourceOfFunds:
               type: string
               enum: [SALARY, INVESTMENT, LOAN, SAVINGS]
-
-
-    LogFailedCommitRequest:
-      type: object
-      required: [reserveId]
-      properties:
-        reserveId:
-          type: string
-
-
-    LogFailedCommitResponse: 
-      type: object
-      properties:
-        reserveId: 
-          type: string
 
       
 

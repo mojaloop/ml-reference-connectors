@@ -21,16 +21,9 @@ note over SBAPI
 {
     "partyIdType": "MSISDN",
     "partyIdentifier": "string",
-    "accountType": "SAVINGS",
     "name": "string",
-    "accountDiscoveryStatus": "VERIFIED",
-    "balance": {
-        "amount": 100.5,
-        "currency": "MWK"
-    },
-    "currency": "str",
-    "isActive": true,
-    "lastUpdated": "2025-04-15T14:14:39.360Z"
+    "currency": "MWK",
+    "isActive": true
 }
 end note
 SBAPI -->> CC: Response
@@ -41,7 +34,9 @@ alt if Customer account has issues
     CC -->> ML: Response 500, mlCode: 5400
 end
 
-note over CC
+
+CC ->> SBAPI: POST /funds/reserve
+note left
 {
     "transferId": "string",
     "payee": {
@@ -56,21 +51,16 @@ note over CC
     }
 }
 end note
-CC ->> SBAPI: POST /funds/reserve
 
-note over SBAPI
+
+SBAPI -->> CC: Response
+note right
 {
     "reserveId": "string",
     "transferId": "string",
-    "status": "RESERVED",
-    "expiry": "2025-04-15T14:28:26.758Z",
-    "amountReserved": {
-        "amount": 100.5,
-        "currency": "MWK"
-    }
+    "status": "RESERVED"
 }
 end note
-SBAPI -->> CC: Response
 
 alt if Reservation Not Successful
     CC -->> ML: Response 500, mlCode: 5400
@@ -80,89 +70,47 @@ CC -->> ML: Response 200 [RESERVED]
 
 ML ->> CC: PUT /transfers/{id}
 
-CC -> SBAPI: GET /transfers/{transferId}
-
-note over SBAPI
-{
-    "transferId": "string",
-    "reserveId": "eite2-fe232-gnjtu-3232f"
-    "status": "PENDING",
-    "payee": {
-        "partyIdType": "MSISDN",
-        "partyIdentifier": "string",
-        "name": "string",
-        "accountType": "string"
-    },
-    "currency": "MWK",
-    "receiveAmount": 140,
-    "transferFee": 10,
-    "createdAt": "2025-04-16T11:52:29.826Z"
-}
-end note
-SBAPI -->> CC: Response 200
-
-CC ->> CC: Check for reserveId
-
-alt if reserveId is NULL
-    CC -->> ML: Response 500
-end
 
 alt if Current State !== COMPLETED
-    note over CC
+   
+    CC ->> SBAPI: POST /funds/unreserve
+    note left
     {
         "reserveId": "string",
         "reason": "string"
     }
     end note
-    CC ->> SBAPI: POST /funds/unreserve
 
-    note over SBAPI
+    
+    SBAPI -->> CC: Response 200
+    note right
     {
         "reserveId": "string",
-        "status": "RELEASED",
-        "amountReleased": {
-            "amount": 100.5,
-            "currency": "MWK"
-        },
-        "timestamp": "2025-04-15T14:33:33.598Z"
+        "status": "RELEASED"
     }
     end note
-    SBAPI -->> CC: Response 200
     CC -->> ML: Response 500
 end
 
-note over CC
+
+CC ->> SBAPI: POST /funds/commit
+note left
 {
     "reserveId": "string"
 }
 end note
-CC ->> SBAPI: POST /funds/commit
 
-note over SBAPI
+SBAPI -->> CC: Response
+note right
 {
     "transferId": "string",
-    "status": "COMMITTED",
-    "timestamp": "2025-04-15T14:36:00.047Z",
-    "settlementReference": "string"
+    "status": "COMMITTED"
 }
 end note
-SBAPI -->> CC: Response
 
-alt if Response not Successful
-    note over CC
-    {
-        "reserveId": "string"
-    }
-    end note
-    CC ->> SBAPI: POST /funds/log-failed-commit
+CC ->> CC: Check response
 
-    note over SBAPI
-    {
-    "reserveId": "string"
-    } 
-    end note
-    SBAPI -->> CC: Response 200
-
+alt if status != COMMITTED
     CC -->> ML: Response 500
 end
 

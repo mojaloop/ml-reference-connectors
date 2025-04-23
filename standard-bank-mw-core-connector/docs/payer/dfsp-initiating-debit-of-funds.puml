@@ -10,12 +10,12 @@ participant "Standard Bank API" as BankAPI
 
 App ->> App: Seek customer consent and debit funds from customer wallet if customer consents
 
-note right of App
+App ->> Core: PUT /send-money/{id}
+note left
 {
-    "transferId": "HTHXRJERWR758"
+    "acceptQuote": true
 }
 end note
-App ->> Core: PUT /send-money/{id}/acceptQuote=true | false
 
 Core ->> Core: Check acceptQuote
 
@@ -31,27 +31,21 @@ ML -->> Core: Response
 Core ->> Core: Check response
 
 alt if HTTP error code 500, 400, 504 or currentState = ERROR_OCCURED
-    note right of Core
+    Core ->> BankAPI: POST /funds/refund
+    note left
     {
-        "tranferId": "string",
+        "homeTransactionId": "FNEWPWPKD3904L",
         "reason": "CUSTOMER_REQUEST"
     }
     end note
-    Core ->> BankAPI: POST /funds/refund
 
-    note left of BankAPI
+    BankAPI -->> Core: Check Response
+    note right
     {
-        "refundId": "HTHTH6768HDJX",
-        "transferId": "FNEWPWPKD3904L",
-        "reserveId": "ffjksf-fjskf-eww323-424"
-        "status": "PENDING",
-        "amount": {
-            "amount": 100.5,
-            "currency": "MWK"
-        }
+        "homeTransactionId": "FNEWPWPKD3904L",
+        "refundCompleted": true
     }
     end note
-    BankAPI -->> Core: Check Response
 
     alt if Response not Successful
         Core ->> Core: Initiate manual refund

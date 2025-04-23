@@ -14,8 +14,8 @@ participant "ML Connector" as ML
 
 Customer ->> App: Customer transfer details.
 
-
-note over App
+App ->> Core: POST /merchant-payment
+note left
 {
     "homeTransactionId": "HTX123456789",
     "payeeId": "16135551212",
@@ -23,22 +23,13 @@ note over App
     "sendCurrency": "MWK",
     "receiveAmount": "140.00",
     "receiveCurrency": "ZMW",
-    "transactionDescription": "Payment for services",
-    "transactionType": "TRANSFER",
+    "transactionType": "PAYMENT",
     "payer": {
         "name": "John Doe",
-        "payerId": "9876543210",
-        "DateAndPlaceOfBirth": {
-        "BirthDt": "20-09-2001",
-        "PrvcOfBirth": "ProvinceOfBirth",
-        "CityOfBirth": "Blantyre",
-        "CtryOfBirth": "Malawi"
-        }
+        "payerId": "9876543210"
     }
 }
 end note
-App ->> Core: POST /merchant-payment
-
 
 Core ->> Core: Check Request
 
@@ -81,12 +72,14 @@ end
 ML -->> Core: Response 200
 Core ->> Core: Prepare Quote Details
 
-note over Core
+Core -->> App: Response 200 [Quote]
+note right
 {
     "payeeDetails": {
         "idType": "MSISDN",
         "idValue": "990454454",
         "fspId": "airtelzambia",
+        "fspLEI": "984500BA13DAVB8B6C61"
         "name": "Niza"
     },
     "sendAmount": "150.00",
@@ -99,7 +92,6 @@ note over Core
     "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
 }
 end note
-Core -->> App: Response 200 [Quote]
 
 App -->> Customer: Terms of transfer
 
