@@ -199,7 +199,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
@@ -266,7 +266,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer Request  being sent to Initiate Transfer", transferRequest);
 
