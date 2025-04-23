@@ -60,7 +60,6 @@ import {
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
 } from './SDKClient';
-import { homedir } from 'os';
 
 
 export class CoreConnectorAggregate implements ICoreConnectorAggregate {
