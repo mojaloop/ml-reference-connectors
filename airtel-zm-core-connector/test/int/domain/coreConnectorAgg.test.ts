@@ -181,7 +181,7 @@
          //  Send Money - Payer
  
          test('Test POST/ send-money: response should be payee details ', async ()=>{
-             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyMerchantPaymentDTO(MSISDN, "500", "SEND");
+             const sendMoneyRequest: TAirtelSendMoneyRequest= sendMoneyMerchantPaymentDTO(MSISDN, "500");
              const url = `${DFSP_URL}/send-money`;
 
              const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
@@ -199,7 +199,7 @@
          //  Merchant Payment
  
          test('Test POST /merchant-payment: response should be merchant details', async()=>{
-             const merchantPaymentRequest : TAirtelMerchantPaymentRequest =  sendMoneyMerchantPaymentDTO(MSISDN, "500", "RECEIVE");
+             const merchantPaymentRequest : TAirtelMerchantPaymentRequest =  sendMoneyMerchantPaymentDTO(MSISDN, "500");
              const url = `${DFSP_URL}/merchant-payment`;
 
              const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {

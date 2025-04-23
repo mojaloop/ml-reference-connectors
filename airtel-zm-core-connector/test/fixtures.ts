@@ -338,9 +338,8 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amountType: "RECEIVE" | "SEND"): TAirtelSendMoneyRequest => ({
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string): TAirtelSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
-  "amountType": amountType,
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -358,7 +357,7 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amo
       CtryOfBirth: "Lusaka",
     },
   },
-
+  receiveAmount: ''
 });
 
 

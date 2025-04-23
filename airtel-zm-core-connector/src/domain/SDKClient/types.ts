@@ -33,11 +33,6 @@ export type TSDKSchemeAdapterConfig = {
     SDK_BASE_URL: string;
 };
 
-export type TFineractTransferParty = {
-    fineractAccountId: number;
-    payer: components['schemas']['transferParty'];
-};
-
 
 export type TSDKOutboundTransferRequest = {
     /** @description Transaction ID from the DFSP backend, used to reconcile transactions between the Switch and DFSP backend systems. */
@@ -106,41 +101,11 @@ export type TSDKOutboundTransferResponse = {
     skipPartyLookup?: boolean;
 };
 
-export type TFineractOutboundTransferResponse = {
-    totalAmountFromFineract: number;
-    transferResponse: SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
-};
-
-export type TFineractTransferContinuationRequest = {
-    transferContinuationAccept:
-    | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
-    | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote;
-    fineractTransaction: {
-        fineractAccountId: number;
-        totalAmount: number;
-        routingCode: string;
-        receiptNumber: string;
-        bankNumber: string;
-    };
-};
-
 export type TSDKTransferContinuationRequest =
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
     | components['schemas']['transferContinuationAcceptConversion']
     | components['schemas']['transferContinuationAcceptQuoteOrConversion'];
-
-
-export type TUpdateTransferDeps = {
-    fineractTransaction: {
-        fineractAccountId: number;
-        totalAmount: number;
-        routingCode: string;
-        receiptNumber: string;
-        bankNumber: string;
-    };
-    sdkTransferId: number | string;
-};
 
 export type TtransferContinuationResponse = {
     transferId?: components["schemas"]["CorrelationId"];
