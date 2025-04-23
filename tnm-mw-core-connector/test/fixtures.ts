@@ -233,7 +233,7 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string): TNMSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
@@ -253,6 +253,7 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNMSendMoneyRequ
 
     }
   },
+  receiveAmount: ''
 });
 
 
