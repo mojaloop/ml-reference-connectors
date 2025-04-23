@@ -37,7 +37,7 @@ export type TNBMConfig = {
     COUNTRY: string;
     RECEIVING_SERVICE_CHARGE: number;
     EXPIRATION_DURATION: string;
-    FSP_ID:string;
+    FSP_ID: string;
     LEI: string
 }
 
@@ -63,6 +63,26 @@ export type TNBMSendMoneyRequest = {
     };
 }
 
+export type TNBMMerchantPaymentRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveAmount": string;
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        }
+    }
+}
 
 
 export type TNBMSendMoneyResponse = {
@@ -70,31 +90,30 @@ export type TNBMSendMoneyResponse = {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "firstName": string;
-        "lastName": string;
-        "dateOfBirth": string;
-    },
-    "receiveAmount": string;
-    "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
+        "name": string;
+    };
+    "sendAmount": string,
+    "sendCurrency": string,
+    "receiveAmount": string,
+    "receiveCurrency": string,
+    "targetFees": string,
+    "sourceFees": string,
     "transactionId": string;
+    "homeTransactionId": string;
 }
 
+export type TNBMMerchantPaymentResponse = TNBMSendMoneyResponse;
 
 export type TNBMUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
     "account": string;
     "amount": string;
-    
+
 }
 
 export type TNBMInvoiceRequest = {
     invoice_number: string;
 };
-
-
-
 
 export type TGetKycArgs = {
     account_number: string;
@@ -123,7 +142,7 @@ export type TGetTokenResponse = {
     "expires_in": string;
 }
 
-export type TNBMTransferMoneyRequest = { 
+export type TNBMTransferMoneyRequest = {
     "amount": string,
     "description": string,
     "reference": string,
@@ -135,11 +154,8 @@ export type TNBMTransferMoneyResponse = {
     "message": string,
     "data": {
         "reference": string,
+    }
 }
-}
-
-
-
 
 
 export type TNBMTransactionResponse = {
@@ -151,7 +167,7 @@ export type TNBMTransactionResponse = {
     amount: number;
     status: "debited" | "credited";
     timestamp: string;
-  };
+};
 
 
 export interface INBMClient {

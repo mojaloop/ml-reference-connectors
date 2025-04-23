@@ -60,7 +60,17 @@ export type TSDKOutboundTransferResponse = {
     currentState?: components["schemas"]["transferStatus"];
     quoteId?: components["schemas"]["CorrelationId"];
     getPartiesResponse?: {
-        body: Record<string, never>;
+        body: {
+            party: {
+                partyIdInfo: {
+                    partyIdType: string,
+                    partyIdentifier: string,
+                    fspId: string
+                },
+                name: string,
+                supportedCurrencies: string[],
+            }
+        };
         headers?: Record<string, never>;
     };
     quoteResponse?: {
@@ -85,7 +95,6 @@ export type TSDKOutboundTransferResponse = {
     skipPartyLookup?: boolean;
 };
 
-
 export type TSDKTransferContinuationRequest =
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
@@ -93,7 +102,7 @@ export type TSDKTransferContinuationRequest =
     | components['schemas']['transferContinuationAcceptQuoteOrConversion']
 
 
-export type TtransferContinuationResponse = SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
+export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
 
 export type TSDKClientDeps = {
     logger: ILogger;
