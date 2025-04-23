@@ -415,9 +415,8 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 // Send Money DTO
 
-export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND" | "RECEIVE"): TMTNSendMoneyRequest => ({
+export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -439,9 +438,8 @@ export const sendMoneyDTO = (idValue: string, amount: string, amountType: "SEND"
 
 
 // Send Money DTO
-export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amountType: "RECEIVE" | "SEND"): TMTNSendMoneyRequest => ({
+export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string): TMTNSendMoneyRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
@@ -461,12 +459,11 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string,amou
   },
 });
 
-export const merchantPaymentRequestDTO = (idValue: string, amount: string,amountType: "SEND" | "RECEIVE"): TMTNMerchantPaymentRequest => ({
+export const merchantPaymentRequestDTO = (idValue: string, amount: string): TMTNMerchantPaymentRequest => ({
   "homeTransactionId": crypto.randomUUID(),
-  "amountType": amountType,
   "payeeId": "56733123450",
   "payeeIdType": "MSISDN",
-  "sendAmount": amount,
+  "receiveAmount": amount,
   "sendCurrency": "UGX",
   "receiveCurrency": "UGX",
   "transactionDescription": "Payment for services",

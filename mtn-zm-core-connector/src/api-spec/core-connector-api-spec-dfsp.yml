@@ -231,12 +231,12 @@ components:
         payeeIdType:
           type: string
           example: "MSISDN"
-        sendAmount:
-          type: string
-          example: "150.00"
         sendCurrency:
           type: string
           example: "UGX"
+        receiveAmount:
+          type: string
+          example: "150.00"
         receiveCurrency:
           type: string
           example: "KES"
@@ -281,12 +281,12 @@ components:
         - homeTransactionId
         - payeeId
         - payeeIdType
-        - sendAmount
+        - receiveAmount
         - sendCurrency
         - receiveCurrency
         - transactionType
         - payer
-      
+
 
     merchantPaymentResponse:
       type: object
@@ -303,28 +303,28 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            name:
               type: string
               example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
 
+        sendAmount:
+          type: string
+          example: "140.00"
+        sendCurrency:
+          type: string
+          example: "ZMW"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "EUR"
-        fees:
+          example: "MWK"
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
@@ -343,28 +343,28 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            name:
               type: string
               example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
 
+        sendAmount:
+          type: string
+          example: "140.00"
+        sendCurrency:
+          type: string
+          example: "ZMW"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "EUR"
-        fees:
+          example: "MWK"
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
           type: string
           example: "01JKB0F2WV7YVSA6CXGP977XT9"

@@ -40,6 +40,7 @@ import {
     TCallbackRequest,
     TAirtelCollectMoneyResponse,
     TAirtelKycResponse,
+    TAirtelMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -362,15 +363,15 @@ export class CoreConnectorAggregate {
     //  Payer (These are used in the DFSP Core Connector Routes)
     // Send Transfer  -- (5)
 
-    async sendMoney(transfer: TAirtelSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TAirtelSendMoneyResponse> {
+    async sendMoney(transfer: TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payer.payerId}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return this.handleSendTransferRes(res.data);
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
         } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-            return this.handleReceiveTransferRes(res.data);
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
@@ -380,7 +381,7 @@ export class CoreConnectorAggregate {
         return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
     }
 
-    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TAirtelSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TAirtelSendMoneyResponse> {
         /*
             check fxQuote
             respond to conversion terms
@@ -406,10 +407,10 @@ export class CoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTAirtelSendMoneyResponse(acceptRes.data);
+        return this.getTAirtelSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TAirtelSendMoneyResponse> {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TAirtelSendMoneyResponse> {
         /*
             check returned normalQuote
             respond to quote 
@@ -435,11 +436,11 @@ export class CoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTAirtelSendMoneyResponse(acceptRes.data);
+        return this.getTAirtelSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
     // Get TSDKOutbound Transfer Request DTO --(5.1) 
-    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.airtelClient.getKyc({
             msisdn: transfer.payer.payerId
         });
@@ -462,7 +463,7 @@ export class CoreConnectorAggregate {
             },
             'amountType': amountType,
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
-            'amount': transfer.sendAmount,
+            'amount': 'sendAmount' in transfer ? transfer.sendAmount : transfer.receiveAmount,
             'transactionType': transfer.transactionType,
             'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
             'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType)
@@ -470,28 +471,32 @@ export class CoreConnectorAggregate {
     }
 
     // Get OutBound Transfer Extension List DTO used in getTSDKOutboundTransferRequest DTO --(5.1.1)
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TAirtelSendMoneyRequest, amountType: "SEND"| "RECEIVE"): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TAirtelSendMoneyRequest | TAirtelMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                   "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth : "Not defined"
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CityOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
                 },
                 {
-                    "key":"CdtTrfTxInf.Purp.Cd",
-                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
+                   "key": "CdtTrfTxInf.Dbtr.Nm",
+                    "value": sendMoneyRequestPayload.payer.name
+                },
+                {
+                    "key": "CdtTrfTxInf.Purp.Cd",
+                    "value": amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }
@@ -499,21 +504,38 @@ export class CoreConnectorAggregate {
 
 
     //  Airtel Send Money Response DTO  --(5.1)
-    private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TAirtelSendMoneyResponse {
+    private getTAirtelSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TAirtelSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name: ""
-            },
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : ""
+                },
+            "sendAmount": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.amount : "No send amount ",
+            "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency : "No send currency ",
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "targetFees": this.getQuoteCharges(transfer),
+            "sourceFees": this.getFxQuoteResponseCharges(transfer),
+            
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+            "homeTransactionId": homeTransactionId
         };
+    }
+
+    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse): string {
+        return parseFloat(transferRes.quoteResponse?.body.payeeFspFee?.amount ?? "0").toString();
+    }
+
+    private getFxQuoteResponseCharges(data: TSDKOutboundTransferResponse): string {
+        if (data.fxQuoteResponse && data.fxQuoteResponse.body.conversionTerms.charges) {
+            return data.fxQuoteResponse.body.conversionTerms.charges.reduce((total, charge) => {
+                return total + parseFloat(charge.sourceAmount !== undefined ? charge.sourceAmount.amount : "0");
+            }, 0).toString();
+        }
+        return "0";
     }
 
     // Validation of Conversion Terms --(5.1)

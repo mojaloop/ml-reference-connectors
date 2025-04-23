@@ -46,8 +46,6 @@ const SDK_URL = 'http://localhost:4010';
 const idType = "MSISDN";
 const MSISDN_NO = "971938765";
 
-
-
 describe('CoreConnectorAggregate Tests -->', () => {
     let ccAggregate: CoreConnectorAggregate;
     let airtelClient: IAirtelClient;
@@ -255,7 +253,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Spying on Initiate transfer
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
 
-            const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "SEND");
+            const sendMoneyRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000");
             const res = await ccAggregate.sendMoney(sendMoneyRequestBody, "SEND");
 
             logger.info("Response from send money", res);
@@ -272,7 +270,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
 
@@ -340,7 +338,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             jest.spyOn(sdkClient, "updateTransfer");
 
             const initiateTransferSpy = jest.spyOn(sdkClient, "initiateTransfer");
-            const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000", "RECEIVE");
+            const merchantPaymentRequestBody = sendMoneyMerchantPaymentDTO(MSISDN_NO, "1000");
             const res = await ccAggregate.sendMoney(merchantPaymentRequestBody, "RECEIVE");
 
             logger.info("Response from merchant payment", res);
@@ -359,7 +357,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
             // Check the Extension List is not 0
             expect(transferRequest.quoteRequestExtensions).not.toHaveLength(0);
             if (transferRequest.quoteRequestExtensions) {
-                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt");
+                expect(transferRequest.quoteRequestExtensions[0]["key"]).toEqual("CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt");
             }
             logger.info("Trasnfer REquest  being sent to Initiate Transfer", transferRequest);
         });
