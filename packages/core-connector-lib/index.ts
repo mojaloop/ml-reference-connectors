@@ -26,37 +26,4 @@
 
 'use strict';
 
-import { BasicError, ErrorOptions } from '../interfaces';
-
-export class SDKClientError extends BasicError {
-    // think, if it's better to have a separate class
-    static continueTransferError(message: string, options?: ErrorOptions) {
-        const { httpCode = 500, mlCode = httpCode === 504 ? '2004' : '2001' } = options || {};
-        return new SDKClientError(message, { mlCode, httpCode });
-    }
-
-    static initiateTransferError(message = 'InitiateTransferError') {
-        return new SDKClientError(message, {
-            httpCode: 500,
-            mlCode: '2000',
-        });
-    }
-
-    static noQuoteReturnedError() {
-        return new SDKClientError('Quote response is not defined', {
-            httpCode: 500,
-            mlCode: '3200',
-        });
-    }
-
-    static genericQuoteValidationError(message: string, options?: ErrorOptions) {
-        return new SDKClientError(message, options);
-    }
-
-    static returnedCurrentStateUnsupported(message: string, options: ErrorOptions ){
-        return new SDKClientError(
-            message,
-            options
-        );
-    }
-}
+export * from "./src";

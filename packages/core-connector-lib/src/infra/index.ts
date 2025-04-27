@@ -23,3 +23,5 @@
 
  --------------
  ******/
+export * from "./axiosHttpClient";
+export * from "./logger";

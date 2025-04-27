@@ -28,12 +28,6 @@
 import { BasicError } from '../interfaces';
 
 export class CBSError extends BasicError {
-    static getTokenFailedError() {
-        return new CBSError("Get Token Failed From Airtel", {
-            httpCode: 500,
-            mlCode: '5000',
-        });
-    }
 
     static getKycError() {
         return new CBSError("Get Kyc Failed", {
@@ -48,18 +42,7 @@ export class CBSError extends BasicError {
             mlCode: '5000',
         });
     }
-    static collectMoneyError() {
-        return new CBSError("Collect Money from Airtel Failed", {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
-    static refundMoneyError() {
-        return new CBSError("Refund Money to Airtel Customer Failed", {
-            httpCode: 500,
-            mlCode: '4000',
-        });
-    }
+    
     static payeeBlockedError(message: string, httpCode:number, mlCode:string) {
         return new CBSError(message, {
             httpCode: httpCode,

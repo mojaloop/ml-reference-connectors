@@ -30,7 +30,9 @@ import { ResponseToolkit } from '@hapi/hapi';
 import { ResponseValue } from 'hapi';
 import { BasicError, TJson } from '../domain';
 import { AxiosError } from 'axios';
-import { logger } from './Service';
+import { loggerFactory } from '../../src/infra';
+
+const logger = loggerFactory({context: "Routes"});
 
 type ErrorResponseDetails = {
     message: string;

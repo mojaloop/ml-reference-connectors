@@ -25,7 +25,8 @@ module.exports = {
     "ignorePatterns": [
     "**/*.d.ts",
     "**/*.js",
-    "**/*.js.map"
+    "**/*.js.map",
+    "examples/"
 ],
     "overrides": [
     {

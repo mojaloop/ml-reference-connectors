@@ -27,25 +27,26 @@ optionally within square brackets <email>.
 
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
-import { IDFSPCoreConnectorAggregate, ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
+import { ILogger} from '../domain';
 import { BaseRoutes } from './BaseRoutes';
+import { IFxpCoreConnectorAgg, TConfirmFxTransferRequest, TFxQuoteRequest, TNotifyFxTransferStateRequest } from 'src/domain/FXPClient';
 
-export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
-    private readonly aggregate: IDFSPCoreConnectorAggregate<D>;
+
+export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
+    private readonly aggregate: IFxpCoreConnectorAgg<F>;
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
     private readonly apiSpecFile: string;
 
     private readonly handlers = {
-        BackendPartiesGetByTypeAndID: this.getParties.bind(this),
-        BackendQuoteRequest: this.quoteRequests.bind(this),
-        BackendTransfersPost: this.transfers.bind(this),
-        BackendTransfersPut: this.transferNotification.bind(this),
+        FxQuotesPost: this.fxQuote.bind(this),
+        FxTransfersPost: this.confirmFxTransfer.bind(this),
+        FxTransfersById: this.notifyFxTransferState.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(400),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
 
-    constructor(aggregate: IDFSPCoreConnectorAggregate<D>, logger: ILogger , apiSpecFile: string) {
+    constructor(aggregate: IFxpCoreConnectorAgg<F>, logger: ILogger , apiSpecFile: string) {
         super();
         this.aggregate = aggregate;
         this.logger = logger.child({ context: 'MCC Routes' });
@@ -96,52 +97,36 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         return this.handlers;
     }
 
-    private async getParties(context: Context, request: Request, h: ResponseToolkit) {
-        try {
-            const { params } = context.request;
-            const Id = params['idValue'] as string;
-            const IdType = params['idType'] as string;
-            this.logger.info(`Get party for ${IdType} ${Id}`);
-            const result = await this.aggregate.getParties(Id,IdType);
-            return this.handleResponse(result, h);
-        } catch (error) {
-            return this.handleError(error, h);
-        }
-    }
-
-    private async quoteRequests(context: Context, request: Request, h: ResponseToolkit) {
-        try {
-            const quoteRequest = request.payload as TQuoteRequest;
-            this.logger.info(`Quote request ${quoteRequest}`);
-            const quote = await this.aggregate.quoteRequest(quoteRequest);
-            return this.handleResponse(quote, h);
-        } catch (error: unknown) {
-            return this.handleError(error, h);
-        }
-    }
-
-    private async transfers(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TtransferRequest;
-        try {
-            this.logger.info(`Transfer Payload ${transfer}`);
-            const result = await this.aggregate.receiveAndReserveTransfer(transfer);
-            return this.handleResponse(result, h, 201);
-        } catch (error: unknown) {
-            return this.handleError(error, h);
-        }
-    }
-
-    private async transferNotification(context: Context, request: Request, h: ResponseToolkit){
-        const transferNotificatioPayload = request.payload as TtransferPatchNotificationRequest;
-        const { params } = context.request;
-        const transferId = params['transferId'] as string;
+    private async fxQuote(context: Context, request: Request, h: ResponseToolkit){
+        const fxQuoteReq = request.payload as TFxQuoteRequest;
         try{
-            this.logger.info(`Transfers ${transferNotificatioPayload}`);
-            this.logger.info(`Transfer Id ${transferId}`);
-            const result = await this.aggregate.updateAndCommitTransferOnPatchNotification(transferNotificatioPayload, transferId);
-            return this.handleResponse(result,h);
+            this.logger.info(`fxQuote request ${fxQuoteReq}`);
+            const result = this.aggregate.getFxQuote(fxQuoteReq);
+            return this.handleResponse(result,h,200);
         }catch(error: unknown){
-            return this.handleError(error,h);
+            return this.handleError(error, h);
+        }
+    }
+
+    private async confirmFxTransfer(context: Context, request: Request, h: ResponseToolkit){
+        const fxTransferConfirmReq = request.payload as TConfirmFxTransferRequest;
+        try{
+            this.logger.info(`fxTransfer request ${fxTransferConfirmReq}`);
+            const result = this.aggregate.confirmFxTransfer(fxTransferConfirmReq);
+            return this.handleResponse(result,h,200);
+        }catch(error: unknown){
+            return this.handleError(error, h);
+        }
+    }
+
+    private async notifyFxTransferState(context: Context, request: Request, h: ResponseToolkit){
+        const fxNotifyTransferStateReq = request.payload as TNotifyFxTransferStateRequest;
+        try{
+            this.logger.info(`fxTransfer Notification request ${fxNotifyTransferStateReq}`);
+            const result = this.aggregate.notifyFxTransferState(fxNotifyTransferStateReq);
+            return this.handleResponse(result,h,200);
+        }catch(error: unknown){
+            return this.handleError(error, h);
         }
     }
 }

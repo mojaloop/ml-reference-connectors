@@ -26,19 +26,17 @@
 
 'use strict';
 
-import { CoreConnectorAggregate, ILogger } from '../domain';
+import { IDFSPCoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TCallbackRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
-import config from '../config';
+import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 
-const API_SPEC_FILE = config.get("server.DFSP_API_SPEC_FILE");
-
-export class DFSPCoreConnectorRoutes extends BaseRoutes {
-    private readonly aggregate: CoreConnectorAggregate;
+export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
+    private readonly aggregate: IDFSPCoreConnectorAggregate<D>;
     private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
+    private readonly apiSpecFile: string;
 
     // Register openapi spec operationIds and route handler functions here
     private readonly handlers = {
@@ -46,20 +44,20 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
         initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
         updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
-        callback: this.callbackHandler.bind(this),
-        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(412),
+        validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(400),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
 
-    constructor(aggregate: CoreConnectorAggregate, logger: ILogger) {
+    constructor(aggregate: IDFSPCoreConnectorAggregate<D>, logger: ILogger, apiSpecFile: string) {
         super();
         this.aggregate = aggregate;
         this.logger = logger.child({ context: 'MCC Routes' });
+        this.apiSpecFile = apiSpecFile;
     }
 
     async init() {
         const api = new OpenAPIBackend({
-            definition: API_SPEC_FILE,
+            definition: this.apiSpecFile,
             handlers: this.getHandlers(),
         });
 
@@ -151,16 +149,5 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
             return this.handleError(error, h);
         }
     }
-
-    private async callbackHandler(context: Context, request: Request, h: ResponseToolkit){
-        const callbackRequestBody: TCallbackRequest = request.payload as TCallbackRequest;
-        this.logger.info(`Transfer Callback ${callbackRequestBody}`);
-        try{
-            const callbackHandledRes = await this.aggregate.handleCallback(callbackRequestBody);
-            return this.handleResponse(callbackHandledRes,h);
-        }catch (error: unknown){
-            return this.handleError(error, h);
-        }
-    }
 }
-7
+7;

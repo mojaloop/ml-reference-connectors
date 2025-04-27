@@ -26,77 +26,171 @@ optionally within square brackets <email>.
 'use strict';
 
 import { Server } from '@hapi/hapi';
-import { IHTTPClient } from '../domain';
-import { CoreConnectorAggregate } from '../domain';
+import { ICbsClient, IDFSPCoreConnectorAggregate, IHTTPClient, ILogger, IService} from '../domain';
+import { DFSPCoreConnectorAggregate } from '../domain';
 import { AxiosClientFactory } from '../infra/axiosHttpClient';
-import config from '../config';
-import { CoreConnectorRoutes } from './sdkCoreConnectorRoutes';
+import { SDKCoreConnectorRoutes } from './sdkCoreConnectorRoutes';
 import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
-import { CBSClientFactory } from '../domain/CBSClient';
-import { SDKClientFactory } from '../domain/SDKClient';
+import { ISDKClient, SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
+import { IConnectorConfigSchema } from '../config';
+import { IFXPClient } from '../domain/FXPClient';
+import { IFxpCoreConnectorAgg } from '../domain/FXPClient';
+import { ServiceError } from './errors';
+import { FXPCoreConnectorAggregate } from '../domain/fxpCoreConnectorAgg';
+import { FXPCoreConnectorRoutes } from './fxpCoreConnectorRoutes';
 
-export const logger = loggerFactory({ context: config.get("cbs.CBS_NAME") });
+export type TServiceDeps<D,F> = {
+    httpClient?: IHTTPClient,
+    dfspServer?: Server ,
+    fxpServer?: Server ,
+    config: IConnectorConfigSchema<D,F>;
+    coreConnectorAggregate?: IDFSPCoreConnectorAggregate<D> ,
+    sdkServer?: Server,
+    sdkClient?: ISDKClient,
+    logger?: ILogger,
+    cbsClient?: ICbsClient<D>,
+    fxpCoreConnectorAggregate?: IFxpCoreConnectorAgg<F> ;
+    fxpClient?: IFXPClient<F> ;
+}
 
-export class Service {
-    static coreConnectorAggregate: CoreConnectorAggregate;
-    static httpClient: IHTTPClient;
-    static sdkServer: Server;
-    static dfspServer: Server;
+export const serviceFactory = <D,F>(deps: TServiceDeps<D,F>) => {
+    return new Service(deps);
+};
 
-    static async start(httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance()) {
-        this.httpClient = httpClient;
-        const cbsConfig = config.get("cbs");
-        const cbsClient = CBSClientFactory.createClient({
-            cbsConfig,
-            httpClient,
-            logger
-        });
+export class Service<D,F> implements IService<D,F> {
+    httpClient: IHTTPClient | undefined;
+    dfspServer: Server | undefined;
+    config: IConnectorConfigSchema<D,F>;
+    dfspCoreConnectorAggregate: IDFSPCoreConnectorAggregate<D> | undefined;
+    sdkServer: Server | undefined;
+    fxpServer: Server | undefined;
+    logger: ILogger | undefined;
+    cbsClient: ICbsClient<D> | undefined;
+    fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
+    fxpClient: IFXPClient<F> | undefined;
+    sdkClient: ISDKClient | undefined;
 
-        const sdkClient = SDKClientFactory.getSDKClientInstance(
-            logger,
-            httpClient,
-            config.get('sdkSchemeAdapter.SDK_BASE_URL'),
-        );
-        this.coreConnectorAggregate = new CoreConnectorAggregate(sdkClient,cbsClient,cbsConfig, logger);
-
-        await this.setupAndStartUpServer();
-        logger.info('Core Connector Server started');
+    constructor(deps: TServiceDeps<D,F>) {
+        this.httpClient = deps.httpClient;
+        this.dfspServer = deps.dfspServer;
+        this.config = deps.config;
+        this.dfspCoreConnectorAggregate = deps.coreConnectorAggregate;
+        this.fxpCoreConnectorAggregate = deps.fxpCoreConnectorAggregate;
+        this.sdkServer = deps.sdkServer;
+        this.logger = deps.logger;
+        this.cbsClient = deps.cbsClient;
+        this.fxpClient = deps.fxpClient;
+        this.fxpServer = deps.fxpServer;
+        this.sdkClient = deps.sdkClient;
     }
 
-    static async setupAndStartUpServer() {
-        this.sdkServer = new Server({
-            host: config.get('server.SDK_SERVER_HOST'),
-            port: config.get('server.SDK_SERVER_PORT'),
-        });
-
-        this.dfspServer = new Server({
-            host: config.get('server.DFSP_SERVER_HOST'),
-            port: config.get('server.DFSP_SERVER_PORT'),
-        });
-        await this.sdkServer.register(createPlugins({ logger }));
-
-        await this.dfspServer.register(createPlugins({ logger }));
-
-        const coreConnectorRoutes = new CoreConnectorRoutes(this.coreConnectorAggregate, logger);
-        await coreConnectorRoutes.init();
-
-        const dfspCoreConnectorRoutes = new DFSPCoreConnectorRoutes(this.coreConnectorAggregate, logger);
-        await dfspCoreConnectorRoutes.init();
-
-        this.sdkServer.route(coreConnectorRoutes.getRoutes());
-        this.dfspServer.route(dfspCoreConnectorRoutes.getRoutes());
-
-        await this.sdkServer.start();
-        logger.info(`SDK Core Connector Server running at ${this.sdkServer.info.uri}`);
-        await this.dfspServer.start();
-        logger.info(`DFSP Core Connector Server running at ${this.dfspServer.info.uri}`);
+    async start() {
+        if (!this.httpClient) {
+            this.httpClient = AxiosClientFactory.createAxiosClientInstance();
+        }
+        if(!this.logger){
+            this.logger = loggerFactory({ context: this.config.server.CBS_NAME });
+        }
+        if(this.checkAndValidateMode() === "dfsp"){
+            if(!this.cbsClient){
+                throw ServiceError.invalidConfigurationError("CBS Client is undefined in DFSP Mode","0",0);
+            }
+            await this.startInDFSPMode(this.logger,this.httpClient, this.cbsClient);
+        }else{
+            if(!this.fxpClient){
+                throw ServiceError.invalidConfigurationError("FXP Client is undefined in FXP Mode","0",0);
+            }
+            await this.startInFXPMode(this.fxpClient,this.logger);
+        }
+        this.logger.info('Core Connector Server started');
     }
 
-    static async stop() {
-        await this.sdkServer.stop({ timeout: 60 });
-        await this.dfspServer.stop({ timeout: 60 });
-        logger.info('Service Stopped');
+    async startInFXPMode(fxpClient: IFXPClient<F>, logger: ILogger){
+        if(!this.fxpCoreConnectorAggregate && this.config.fxpConfig !== undefined){
+            this.fxpCoreConnectorAggregate = new FXPCoreConnectorAggregate(fxpClient,logger,this.config.fxpConfig);
+        }
+
+        await this.setupAndStartUpServer(logger,undefined,this.fxpCoreConnectorAggregate);
+    }
+
+    async startInDFSPMode(logger: ILogger,httpClient: IHTTPClient, cbsClient: ICbsClient<D>, sdkClient?: ISDKClient){
+        if(!sdkClient){
+            sdkClient = SDKClientFactory.getSDKClientInstance(
+                logger,
+                httpClient,
+                this.config.sdkSchemeAdapter.SDK_BASE_URL,
+            );
+            this.sdkClient = sdkClient;
+        }
+
+        if(!this.dfspCoreConnectorAggregate && this.config.cbs !== undefined){
+            this.dfspCoreConnectorAggregate = new DFSPCoreConnectorAggregate(sdkClient, cbsClient, this.config.cbs, logger);
+        }
+
+        await this.setupAndStartUpServer(logger,this.dfspCoreConnectorAggregate, undefined);
+    }
+
+    async setupAndStartUpServer(logger: ILogger, dfspAggregate: IDFSPCoreConnectorAggregate<D> | undefined, fxpAggregate: IFxpCoreConnectorAgg<F> | undefined ) {
+        if(dfspAggregate !== undefined){
+            this.sdkServer = new Server({
+                host: this.config.server.SDK_SERVER_HOST,
+                port: this.config.server.SDK_SERVER_PORT,
+            });
+    
+            this.dfspServer = new Server({
+                host: this.config.server.DFSP_SERVER_HOST,
+                port: this.config.server.DFSP_SERVER_PORT,
+            });
+            await this.sdkServer.register(createPlugins({logger}));
+    
+            await this.dfspServer.register(createPlugins({ logger }));
+            const sdkCoreConnectorRoutes = new SDKCoreConnectorRoutes<D>(dfspAggregate, logger,this.config.server.SDK_API_SPEC_FILE);
+            await sdkCoreConnectorRoutes.init();
+    
+            const dfspCoreConnectorRoutes = new DFSPCoreConnectorRoutes<D>(dfspAggregate, logger,this.config.server.DFSP_API_SPEC_FILE);
+            await dfspCoreConnectorRoutes.init();
+    
+            this.sdkServer.route(sdkCoreConnectorRoutes.getRoutes());
+            this.dfspServer.route(dfspCoreConnectorRoutes.getRoutes());
+    
+            await this.sdkServer.start();
+            logger.info(`SDK Core Connector Server running at ${this.sdkServer.info.uri}`);
+            await this.dfspServer.start();
+            logger.info(`DFSP Core Connector Server running at ${this.dfspServer.info.uri}`);
+        }else if(fxpAggregate !== undefined){
+            this.fxpServer = new Server({
+                host: this.config.server.SDK_SERVER_HOST,
+                port: this.config.server.SDK_SERVER_PORT
+            });
+            await this.fxpServer.register(createPlugins({logger}));
+            const fxpCoreConnectorRoutes = new FXPCoreConnectorRoutes(fxpAggregate,logger,this.config.server.SDK_API_SPEC_FILE);
+            await fxpCoreConnectorRoutes.init();
+
+            this.fxpServer.route(fxpCoreConnectorRoutes.getRoutes());
+
+            await this.fxpServer.start();
+            logger.info(`FXP Core Connector Server running at ${this.fxpServer.info.uri}`);
+        }
+    }
+
+    checkAndValidateMode(): 'fxp' | 'dfsp' {
+        if(this.config.server.MODE === "fxp" && this.config.fxpConfig !== undefined){
+            return 'fxp';
+        }else if(this.config.server.MODE === 'dfsp' && this.config.cbs !== undefined){
+            return 'dfsp';
+        }
+        throw ServiceError.invalidConfigurationError("Failed to determine connector mode. FXP or DFSP","0",0);
+    }
+
+    async stop() {
+        if (this.sdkServer && this.dfspServer) {
+            await this.sdkServer.stop({ timeout: 60 });
+            await this.dfspServer.stop({ timeout: 60 });
+        }
+        if(this.logger){
+            this.logger.info('Service Stopped');
+        }
     }
 }

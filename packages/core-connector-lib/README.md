@@ -1,39 +1,7 @@
-# Core Connector Library
+# Core Connector Lib 
+The core connector library contains all shared functionality for all core connectors. It significantly decreases the amount of effort needed to develop a core connector and it improves the developer experience.
 
-A library of shared functionality for development of core connectors for the mojaloop connector.
+The goal for connector development is that a developer will only need to implement an interface and provide configuration for connecting to a DFSP or an FXP.
 
-## Pre-requisites
-To build a core connector using this library, you need to be practically farmiliar with the following concepts.
-- Docker Knowledge
-- Open API knowledge
-- Typescript
+# Usage
 
-## Installation
-
-Environment requirements
-- Node and npm
-- Typescript
-
-Install the package
-```bash
-npm install @mojaloop/core-connector-lib --save-dev
-```
-
-## Usage
-To build a core connector, all you have to do is the following
-- Implement a CBS Client 
-- Setup configuration env vars in `config.ts` and in the `.env.example` file
-- Customize the `send-money-api.yaml` if neccessary
-- (Optional) If you need to, you can override the implementation of the business logic under `aggregate.override.ts`
-
-For a complete example connector implementation refer to the core connector at `examples/abc-ug-core-connector`
-
-```typescript
-// index.ts
-import { getCBSClientInstance } from "./src/CBSClient/CBSClientFactory";
-import {Connector} from "@mojaloop/core-connector-lib";
-
-Connector.CBSClient = getCBSClientInstance();
-
-Connector.start();
-```

@@ -25,7 +25,5 @@
  ******/
 'use strict';
 
-export * from './CBSClientFactory';
-export * from './CBSClient';
 export * from './errors';
 export * from './types';

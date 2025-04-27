@@ -28,12 +28,15 @@
 
 import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
-import { ILogger } from './infrastructure';
+import { IHTTPClient, ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
-import { ICbsClient, TCbsCollectMoneyResponse, TCBSConfig, TCbsKycResponse, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest } from '../CBSClient';
+import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest, TCBSUpdateSendMoneyResponse } from '../CBSClient';
 import { ISDKClient } from '../SDKClient';
+import { Server } from '@hapi/hapi';
+import { IConnectorConfigSchema } from 'src/config';
+import { IFXPClient, IFxpCoreConnectorAgg } from '../FXPClient';
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
 
@@ -83,7 +86,7 @@ export type TQuoteResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.quoteResponse
 
 export type TtransferResponse = SDKSchemeAdapter.V2_0_0.Backend.Types.transferResponse;
 
-export type  TPayeeExtensionListEntry = {
+export type TPayeeExtensionListEntry = {
     key?: string;
     value?: string;
 }
@@ -156,28 +159,46 @@ export type TtransferPatchNotificationRequest = {
     transferId?: components['schemas']['transferId'];
 };
 
-export type TGetQuotesDeps = {
-    res: TCbsKycResponse;
-    fees: number;
-    expiration: string;
-    quoteRequest: TQuoteRequest
-}
-
 export type TValidationResponse = {
     result: boolean;
     message: string[];
 }
 
-export interface ICoreConnectorAggregate {
+export interface IDFSPCoreConnectorAggregate<D> {
     sdkClient: ISDKClient;
-    cbsClient: ICbsClient;
-    cbsConfig: TCBSConfig;
+    cbsClient: ICbsClient<D>;
+    cbsConfig: TCBSConfig<D>;
     IdType: string;
     logger: ILogger;
     getParties(id: string, IdType: string): Promise<Party>;
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
-    receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
-    updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
+    receiveAndReserveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
+    updateAndCommitTransferOnPatchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse>
-    updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCbsCollectMoneyResponse>
+    updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCBSUpdateSendMoneyResponse>
+}
+
+export interface IService<D,F> {
+    dfspCoreConnectorAggregate: IDFSPCoreConnectorAggregate<D> | undefined;
+    fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
+    httpClient: IHTTPClient | undefined;
+    sdkServer: Server | undefined;
+    dfspServer: Server | undefined;
+    fxpServer: Server | undefined;
+    logger: ILogger | undefined;
+    cbsClient: ICbsClient<D> | undefined;
+    fxpClient: IFXPClient<F> | undefined;
+    config: IConnectorConfigSchema<D,F>;
+    sdkClient: ISDKClient | undefined;
+
+    start():Promise<void>;
+    setupAndStartUpServer(logger: ILogger, dfspAggregate: IDFSPCoreConnectorAggregate<D> | undefined, fxpAggregate: IFxpCoreConnectorAgg<F> | undefined):Promise<void>;
+    stop():Promise<void>;
+}
+
+export interface ICoreConnector<D,F> {
+    service: IService<D,F> | undefined;
+
+    start():Promise<void>;
+    stop(): Promise<void>;
 }

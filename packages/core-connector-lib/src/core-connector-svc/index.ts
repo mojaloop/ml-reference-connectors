@@ -26,3 +26,5 @@ optionally within square brackets <email>.
 'use strict';
 
 export * from './Service';
+export * from './dfspCoreConnectorRoutes';
+export * from './sdkCoreConnectorRoutes';

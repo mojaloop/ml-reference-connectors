@@ -24,5 +24,7 @@
  --------------
  ******/
 
-export * from './coreConnectorAgg';
+export * from './dfspCoreConnectorAgg';
 export * from './interfaces';
+export * from './CBSClient';
+export * from './SDKClient';

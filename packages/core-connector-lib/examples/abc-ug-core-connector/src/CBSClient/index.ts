@@ -1,1 +1,1 @@
-export * from "./CBSClient"
+export * from "./CBSClient";

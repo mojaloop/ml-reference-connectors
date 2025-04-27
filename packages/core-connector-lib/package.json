@@ -1,8 +1,9 @@
 {
-  "name": "@mojaloop/core-connector-template",
-  "version": "1.0.0",
+  "name": "@mojaloop/core-connector-lib",
+  "version": "1.0.4",
   "description": "A connector that facilitates payments between a Mojaloop Connector (SDK Scheme Adapter) and a Core Banking system",
   "main": "dist/index.js",
+  "types":"dist/index.d.ts",
   "scripts": {
     "test": "npm run test:unit",
     "test:functional": "jest --testMatch='**/func/**/*.test.ts' --coverage --collectCoverageFrom='**/src/**/*.ts' --detectOpenHandles",
@@ -16,14 +17,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
-    "build:docker": "docker build -t core-connector-template:local .",
-    "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp core-connector-template:local",
-    "watch": "tsc -w",
-    "start": "npm run start:no-build",
-    "start:no-build": "node dist/src/index.js",
-    "start:build": "npm run build && npm run start:no-build",
-    "start:dev": "ts-node -r tsconfig-paths/register -P ./tsconfig.json -r dotenv/config src/index.ts dotenv_config_path=.env.example",
-    "start:watch": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
     "dep:check": "npx --no-install ncu -e 2",
     "dep:update": "npx --no-install ncu -u",
     "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'ci(release): {{currentTag}} [skip ci]'",
@@ -31,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mojaloop/core-connector-template.git"
+    "url": "https://github.com/mojaloop/ml-reference-connectors.git"
   },
   "keywords": [
     "g2p"
@@ -39,14 +32,14 @@
   "author": "Elijah Okello",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/mojaloop/core-connector-template/issues"
+    "url": "https://github.com/mojaloop/ml-reference-connectors/issues"
   },
-  "homepage": "https://github.com/mojaloop/core-connector-template#readme",
+  "homepage": "https://github.com/mojaloop/ml-reference-connectors#readme",
   "devDependencies": {
     "@commitlint/cli": "^18.6.1",
     "@commitlint/config-conventional": "^18.6.3",
     "@jest/globals": "^29.7.0",
-    "@mojaloop/api-snippets": "^17.4.0",
+    "@mojaloop/api-snippets": "^17.8.0",
     "@types/convict": "^6.1.6",
     "@types/hapi": "^18.0.14",
     "@types/hapi__vision": "^5.5.8",
