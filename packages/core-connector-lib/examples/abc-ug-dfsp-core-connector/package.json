@@ -1,12 +1,13 @@
 {
-  "name": "@mojaloop/core-connector-lib",
-  "version": "1.0.4",
-  "description": "A connector that facilitates payments between a Mojaloop Connector (SDK Scheme Adapter) and a Core Banking system",
-  "main": "dist/index.js",
-  "types":"dist/index.d.ts",
+  "name": "abc-ug-dfsp-core-connector",
+  "version": "1.0.0",
+  "description": "ABC Uganda Core Connector",
+  "main": "index.js",
   "scripts": {
     "test": "npm run test:unit",
+    "test:functional": "jest --testMatch='**/func/**/*.test.ts' --coverage --collectCoverageFrom='**/src/**/*.ts' --detectOpenHandles",
     "test:unit": "jest --testMatch='**/unit/**/*.test.ts'",
+    "test:int": "jest --testMatch='**/int/**/*.test.ts'",
     "test:unit:cov": "npm run test:unit -- --coverage",
     "prepare": "husky || true",
     "clean": "npm run clean:npm; npm run clean:dist",
@@ -15,24 +16,19 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
+    "build:docker": "docker build -t mtn-ug-core-connector:local .",
+    "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp mtn-ug-core-connector:local",
+    "watch": "tsc -w",
+    "start": "npm run start:no-build",
+    "start:no-build": "node dist/src/index.js",
+    "start:build": "npm run build && npm run start:no-build",
+    "start:dev": "ts-node -r tsconfig-paths/register -P ./tsconfig.json -r dotenv/config src/index.ts dotenv_config_path=.env.example",
+    "start:watch": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
     "dep:check": "npx --no-install ncu -e 2",
-    "dep:update": "npx --no-install ncu -u",
-    "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'ci(release): {{currentTag}} [skip ci]'",
-    "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'ci(snapshot): {{currentTag}}'"
+    "dep:update": "npx --no-install ncu -u"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mojaloop/ml-reference-connectors.git"
-  },
-  "keywords": [
-    "g2p"
-  ],
-  "author": "Elijah Okello",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/mojaloop/ml-reference-connectors/issues"
-  },
-  "homepage": "https://github.com/mojaloop/ml-reference-connectors#readme",
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
     "@commitlint/cli": "^18.6.1",
     "@commitlint/config-conventional": "^18.6.3",
@@ -64,8 +60,9 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.12", 
+    "@hapi/hapi": "^21.3.12",
     "@mojaloop/central-services-logger": "^11.3.1",
+    "@mojaloop/core-connector-lib": "file:../../core-connector-lib",
     "axios": "^1.6.8",
     "convict": "^6.2.4",
     "dotenv": "^16.4.7",

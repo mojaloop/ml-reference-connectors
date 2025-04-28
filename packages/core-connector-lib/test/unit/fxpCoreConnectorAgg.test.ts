@@ -60,7 +60,7 @@ describe("FXP Core Connector Tests", () => {
 
     test("Test Get fxQuotes", async ()=>{
         // Arrange 
-        const fxQuotes = fxQuotesReqDTO()
+        const fxQuotes = fxQuotesReqDTO();
         // Act
         const res = await coreconnector.service?.fxpCoreConnectorAggregate?.getFxQuote(fxQuotes);
         // Assert
@@ -69,19 +69,19 @@ describe("FXP Core Connector Tests", () => {
 
     test("Test fxTransfer confirm terms", async ()=>{
         // Arrange
-        const fxTransfer = fxTransferDTO()
+        const fxTransfer = fxTransferDTO();
         //Act 
         const res = await coreconnector.service?.fxpCoreConnectorAggregate?.confirmFxTransfer(fxTransfer);
         //Assert
-        expect(res?.conversionState).toEqual("RESERVED")
+        expect(res?.conversionState).toEqual("RESERVED");
     });
 
     test("Test Notify fxTransfer State", async ()=> {
         // Arrange 
-        const fxTransferNotification = fxTransferNotificationDTO()
+        const fxTransferNotification = fxTransferNotificationDTO();
         // Act
         const res = coreconnector.service?.fxpCoreConnectorAggregate?.notifyFxTransferState(fxTransferNotification);
         // Assert
-        expect(await res).resolves
+        expect(await res).resolves;
     });
 });

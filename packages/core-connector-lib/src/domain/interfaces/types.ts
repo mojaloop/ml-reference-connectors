@@ -35,8 +35,25 @@ import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspio
 import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest, TCBSUpdateSendMoneyResponse } from '../CBSClient';
 import { ISDKClient } from '../SDKClient';
 import { Server } from '@hapi/hapi';
-import { IConnectorConfigSchema } from 'src/config';
-import { IFXPClient, IFxpCoreConnectorAgg } from '../FXPClient';
+import { IFXPClient, IFxpCoreConnectorAgg, TFxpConfig } from '../FXPClient';
+
+export interface IConnectorConfigSchema<D, F> {
+    server: {
+        SDK_SERVER_HOST: string;
+        CBS_NAME: string;
+        SDK_SERVER_PORT: number;
+        DFSP_SERVER_HOST: string;
+        DFSP_SERVER_PORT: number;
+        DFSP_API_SPEC_FILE: string;
+        SDK_API_SPEC_FILE: string;
+        MODE: "dfsp" | "fxp";
+    };
+    sdkSchemeAdapter: {
+        SDK_BASE_URL: string;
+    }
+    cbs?: TCBSConfig<D>;
+    fxpConfig?: TFxpConfig<F>
+}
 
 export type TJson = string | number | boolean | { [x: string]: TJson } | Array<TJson>;
 

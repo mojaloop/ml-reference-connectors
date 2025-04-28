@@ -1,4 +1,4 @@
-import { IConnectorConfigSchema } from "src/config";
+import { IConnectorConfigSchema } from "src/domain";
 import { TBlueBankConfig } from "./unit/dfspCoreConnectorAgg.test";
 import { TBlueBankFXPConfig } from "./unit/fxpCoreConnectorAgg.test";
 import { TCbsMerchantPaymentRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest, THttpResponse, TQuoteRequest, TSDKOutboundTransferResponse, TtransferPatchNotificationRequest, TtransferRequest } from "src/domain";

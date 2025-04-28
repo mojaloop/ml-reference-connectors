@@ -4,7 +4,10 @@
   "description": "ABC Uganda Core Connector",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:unit"
+    "test": "npm run test:unit",
+    "clean": "npm run clean:npm; npm run clean:dist",
+    "clean:dist": "rm -rf dist",
+    "clean:npm": "rm -rf node_modules"
   },
   "author": "",
   "license": "ISC"

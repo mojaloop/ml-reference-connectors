@@ -1,4 +1,4 @@
-import { IConnectorConfigSchema } from "./config";
+import { IConnectorConfigSchema } from "./domain";
 import { serviceFactory, TServiceDeps } from "./core-connector-svc";
 import { ServiceError } from "./core-connector-svc/errors";
 import { ICbsClient, ICoreConnector, ISDKClient, IService } from "./domain";

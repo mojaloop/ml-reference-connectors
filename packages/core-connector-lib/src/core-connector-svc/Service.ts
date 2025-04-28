@@ -34,7 +34,7 @@ import { loggerFactory } from '../infra/logger';
 import { createPlugins } from '../plugins';
 import { ISDKClient, SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
-import { IConnectorConfigSchema } from '../config';
+import { IConnectorConfigSchema } from '../domain';
 import { IFXPClient } from '../domain/FXPClient';
 import { IFxpCoreConnectorAgg } from '../domain/FXPClient';
 import { ServiceError } from './errors';

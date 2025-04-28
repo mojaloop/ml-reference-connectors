@@ -28,3 +28,4 @@ export * from './dfspCoreConnectorAgg';
 export * from './interfaces';
 export * from './CBSClient';
 export * from './SDKClient';
+export * from './FXPClient';

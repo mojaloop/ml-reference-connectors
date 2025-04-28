@@ -64,7 +64,7 @@ describe("DFSP Core Connector Tests", () => {
             const res = await coreConnector.service?.dfspCoreConnectorAggregate?.getParties(MSISDN,IDTYPE);
             // Assert
             expect(res?.extensionList).toBeDefined();
-            expect(res?.firstName).toEqual("John")
+            expect(res?.firstName).toEqual("John");
         });
     
         test("Test Quote Requests", async ()=> {
@@ -88,7 +88,7 @@ describe("DFSP Core Connector Tests", () => {
     
         test("Test Transfers Commit", async ()=>{
             // Arrange
-            const transferNotification = transferNotificationDTO()
+            const transferNotification = transferNotificationDTO();
             // Act
             const res = coreConnector.service?.dfspCoreConnectorAggregate?.updateAndCommitTransferOnPatchNotification(transferNotification,randomUUID());
             // Assert
@@ -99,7 +99,7 @@ describe("DFSP Core Connector Tests", () => {
     describe("Outgoing Payments Tests", ()=>{
         test("Test Send Money P2P", async ()=>{
             if(!coreConnector.service?.sdkClient){
-                throw Error("SDK Client undefined in core connector")
+                throw Error("SDK Client undefined in core connector");
             }
             // Arrange 
             const sendMoneyReq = sendMoneyReqDTO();
@@ -123,7 +123,7 @@ describe("DFSP Core Connector Tests", () => {
 
         test("Test Merchant Payment", async ()=>{
             if(!coreConnector.service?.sdkClient){
-                throw Error("SDK Client undefined in core connector")
+                throw Error("SDK Client undefined in core connector");
             }
             // Arrange 
             const sendMoneyReq = sendMoneyReqDTO();
@@ -147,7 +147,7 @@ describe("DFSP Core Connector Tests", () => {
 
         test("Test Confirm Send Money", async ()=>{
             if(!coreConnector.service?.sdkClient){
-                throw Error("SDK Client undefined in core connector")
+                throw Error("SDK Client undefined in core connector");
             }
             // Arrange
             const confirmSendMoneyReq = confirmSendMoneyDTO();
