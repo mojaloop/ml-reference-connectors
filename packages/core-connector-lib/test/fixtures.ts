@@ -453,7 +453,7 @@ export const confirmSendMoneyDTO = (): TCBSUpdateSendMoneyRequest => ({
 export const sdkInitiateTransferResponseDto = (idValue: string, currentState: components["schemas"]["transferStatus"]): THttpResponse<TSDKOutboundTransferResponse> => ({
   statusCode: 200,
   data: {
-    homeTransactionId: crypto.randomUUID(),
+    homeTransactionId: randomUUID(),
     from: {
       idType: "MSISDN",
       idValue: idValue,
@@ -509,7 +509,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       },
       "headers": {}
     },
-    transferId: crypto.randomUUID(),
+    transferId: randomUUID(),
     "fxQuoteResponse": {
       "body": {
         "homeTransactionId": "string",

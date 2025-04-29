@@ -1,9 +1,5 @@
 {
-  "include": [
-    "src",
-    "test",
-    "index.ts"
-  ],
+  "include": ["src"],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
@@ -14,18 +10,17 @@
   ],
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "./src",
     "outDir": "./dist",
-    "rootDir": ".",
+    "paths": {
+      "src/*": ["src/*"],
+    },
     // prevents this tsconfig from compiling any files
     "target": "ES2022",
     "module": "commonjs",
-    "types": [
-      "node",
-      "jest"
-    ],
-    "lib": [
-      "ES2022"
-    ],
+    "types": ["node"],
+    "lib": ["ES2022"],
     "importHelpers": true,
     "declaration": true,
     "sourceMap": true,
@@ -36,18 +31,6 @@
     // Needed for CommonJS modules
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "baseUrl": ".",
-    "paths": {
-      "src/*": [
-        "src/*"
-      ],
-      "test/*": [
-        "test/*"
-      ],
-      "docs/*": [
-        "docs/*"
-      ]
-    },
     "esModuleInterop": true
   }
 }

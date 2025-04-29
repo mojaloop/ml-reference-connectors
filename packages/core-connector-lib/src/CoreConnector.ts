@@ -19,7 +19,7 @@ export const coreConnectorFactory = <D,F>(deps: TConnectorDeps<D,F>): CoreConnec
 export const logger = loggerFactory({ context: "CC" });
 
 export class CoreConnector<D,F> implements ICoreConnector<D,F> {
-    service: IService<D,F> | undefined;
+    service: IService<D,F>;
 
     constructor(
         deps: TConnectorDeps<D,F>
@@ -28,8 +28,8 @@ export class CoreConnector<D,F> implements ICoreConnector<D,F> {
     }
 
     getServiceDeps(
-        config: IConnectorConfigSchema<D,F>, 
-        cbsClient: ICbsClient<D> | undefined, 
+        config: IConnectorConfigSchema<D,F>,
+        cbsClient: ICbsClient<D> | undefined,
         fxpClient: IFXPClient<F> | undefined,
         sdkClient: ISDKClient | undefined
     ): TServiceDeps<D,F>{

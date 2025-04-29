@@ -2,6 +2,14 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     clearMocks: true,
+    verbose: true,
+    moduleNameMapper: {
+        '^src/(.*)$': '<rootDir>/src/$1',
+        '^test/(.*)$': '<rootDir>/test/$1',
+    },
+    transform: {
+        '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
+    },
     coveragePathIgnorePatterns: ['dist'],
     coverageReporters: ['text', ['json', { file: 'integration-final.json' }]],
     coverageDirectory: './coverage/',
