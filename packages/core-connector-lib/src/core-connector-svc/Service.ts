@@ -98,8 +98,8 @@ export class Service<D,F> implements IService<D,F> {
         if(!this.logger){
             this.logger = loggerFactory({ context: this.config.server.CBS_NAME });
         }
-        this.sdkApiSpec = path.resolve(__dirname, "../../api-spec", "core-connector-api-spec-sdk.yml");
-        this.dfspApiSpec = path.resolve(__dirname, "../../api-spec", "core-connector-api-spec-dfsp.yml");
+        this.sdkApiSpec = path.resolve(__dirname, "../api-spec", "core-connector-api-spec-sdk.yml");
+        this.dfspApiSpec = path.resolve(__dirname, "../api-spec", "core-connector-api-spec-dfsp.yml");
         
         if(this.checkAndValidateMode() === "dfsp"){
             if(!this.cbsClient){

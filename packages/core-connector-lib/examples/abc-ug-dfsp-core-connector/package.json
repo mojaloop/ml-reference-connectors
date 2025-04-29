@@ -36,6 +36,6 @@
     ]
   },
   "dependencies": {
-    "@elijahokello/core-connector-lib": "^1.1.3"
+    "@elijahokello/core-connector-lib": "^1.1.7"
   }
 }

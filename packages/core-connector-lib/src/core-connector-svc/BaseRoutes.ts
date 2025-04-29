@@ -30,7 +30,7 @@ import { ResponseToolkit } from '@hapi/hapi';
 import { ResponseValue } from 'hapi';
 import { BasicError, TJson } from '../domain';
 import { AxiosError } from 'axios';
-import { loggerFactory } from '../../src/infra';
+import { loggerFactory } from '../infra';
 
 const logger = loggerFactory({context: "Routes"});
 
