@@ -1,9 +1,9 @@
 'use strict';
 
-import { IHTTPClient, ILogger, ICbsClient, coreConnectorFactory, AxiosClientFactory, loggerFactory, TCBSConfig, IConnectorConfigSchema } from "@mojaloop/core-connector-lib";
-import config from "./config";
-import { MockCBSClient } from "./src/CBSClient";
+import { IHTTPClient, ILogger, coreConnectorFactory, AxiosClientFactory, loggerFactory, TCBSConfig, IConnectorConfigSchema, IFXPClient } from "@elijahokello/core-connector-lib";
+import config, { fxpConfig } from "./config";
 import { ConnectorError } from "./src/errors";
+import { MockFXPClient } from "./src/FXPClient";
 
 export type TBlueBankConfig = {
     BLUE_BANK_URL : string;
@@ -14,21 +14,11 @@ export type TBlueBankConfig = {
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
 const logger: ILogger = loggerFactory({context: config.get("server.CBS_NAME")});
 
-const cbsConfig : TCBSConfig<TBlueBankConfig> | undefined = config.get("cbs");
-
-if(!cbsConfig){
-    throw ConnectorError.cbsConfigUndefined("CBS Config Not defined. Please fix the configuration in config.ts","0",0);
+if(!fxpConfig.fxpConfig){
+    throw ConnectorError.cbsConfigUndefined("FXP Config Not defined. Please fix the configuration in config.ts","0",0);
 }
 
-const getDFSPConfig = ():IConnectorConfigSchema<TBlueBankConfig,never> =>{
-    return{
-        server: config.get("server"),
-        sdkSchemeAdapter:config.get("sdkSchemeAdapter"),
-        cbs: config.get("cbs")
-    }
-}
+const fxpClient: IFXPClient<TBlueBankConfig> = new MockFXPClient<TBlueBankConfig>(httpClient,logger,fxpConfig.fxpConfig);
+const coreConnector = coreConnectorFactory<never, TBlueBankConfig>({config: fxpConfig,fxpClient: fxpClient});
 
-const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(cbsConfig,httpClient,logger);
-const coreConnector = coreConnectorFactory<TBlueBankConfig, never>({config: getDFSPConfig(),cbsClient: cbsClient});
-
-await coreConnector.start()
+coreConnector.start()

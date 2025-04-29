@@ -1,4 +1,4 @@
-import { ICbsClient, TCBSConfig, IHTTPClient, ILogger, TGetKycArgs, Party, TPayeeExtensionListEntry, TQuoteRequest, TQuoteResponse, TtransferRequest, TtransferResponse, TtransferPatchNotificationRequest, TCBSUpdateSendMoneyRequest } from "@mojaloop/core-connector-lib";
+import { ICbsClient, IHTTPClient, ILogger, Party, TCBSConfig, TCBSUpdateSendMoneyRequest, TGetKycArgs, TPayeeExtensionListEntry, TQuoteRequest, TQuoteResponse, TtransferPatchNotificationRequest, TtransferRequest, TtransferResponse } from "@elijahokello/core-connector-lib";
 
 export class MockCBSClient<D> implements ICbsClient<D> {
     cbsConfig: TCBSConfig<D>;

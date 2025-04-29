@@ -1,9 +1,9 @@
 {
-  "name": "@mojaloop/core-connector-lib",
-  "version": "1.0.4",
+  "name": "@elijahokello/core-connector-lib",
+  "version": "1.1.4",
   "description": "A connector that facilitates payments between a Mojaloop Connector (SDK Scheme Adapter) and a Core Banking system",
   "main": "dist/index.js",
-  "types":"dist/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "npm run test:unit",
     "test:unit": "jest --testMatch='**/unit/**/*.test.ts'",
@@ -14,7 +14,8 @@
     "clean:npm": "rm -rf node_modules",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "build": "tsc",
+    "build": "tsc && npm run postbuild",
+    "postbuild": "npx cpx 'src/api-spec/**/*' dist/api-spec",
     "dep:check": "npx --no-install ncu -e 2",
     "dep:update": "npx --no-install ncu -u",
     "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'ci(release): {{currentTag}} [skip ci]'",
@@ -47,6 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/typescript-estree": "^7.2.0",
     "axios-mock-adapter": "^1.22.0",
+    "cpx": "^1.5.0",
     "eslint": "^8.56.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-import": "^2.29.1",
@@ -64,7 +66,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.12", 
+    "@hapi/hapi": "^21.3.12",
     "@mojaloop/central-services-logger": "^11.3.1",
     "axios": "^1.6.8",
     "convict": "^6.2.4",

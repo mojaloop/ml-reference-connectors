@@ -44,8 +44,6 @@ export interface IConnectorConfigSchema<D, F> {
         SDK_SERVER_PORT: number;
         DFSP_SERVER_HOST: string;
         DFSP_SERVER_PORT: number;
-        DFSP_API_SPEC_FILE: string;
-        SDK_API_SPEC_FILE: string;
         MODE: "dfsp" | "fxp";
     };
     sdkSchemeAdapter: {
@@ -207,6 +205,8 @@ export interface IService<D,F> {
     fxpClient: IFXPClient<F> | undefined;
     config: IConnectorConfigSchema<D,F>;
     sdkClient: ISDKClient | undefined;
+    sdkApiSpec: string | undefined;
+    dfspApiSpec: string | undefined;
 
     start():Promise<void>;
     setupAndStartUpServer(logger: ILogger, dfspAggregate: IDFSPCoreConnectorAggregate<D> | undefined, fxpAggregate: IFxpCoreConnectorAgg<F> | undefined):Promise<void>;

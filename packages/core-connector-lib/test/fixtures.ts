@@ -13,8 +13,6 @@ export const dfspConfig: IConnectorConfigSchema<TBlueBankConfig, never> = {
     SDK_SERVER_PORT: 3003,
     DFSP_SERVER_HOST: "0.0.0.0",
     DFSP_SERVER_PORT: 3004,
-    DFSP_API_SPEC_FILE: "./src/api-spec/core-connector-api-spec-dfsp.yml",
-    SDK_API_SPEC_FILE: "./src/api-spec/core-connector-api-spec-sdk.yml",
     MODE: "dfsp"
   },
   sdkSchemeAdapter: {
@@ -40,8 +38,6 @@ export const fxpConfig: IConnectorConfigSchema<never, TBlueBankFXPConfig> = {
     SDK_SERVER_PORT: 3005,
     DFSP_SERVER_HOST: "0.0.0.0",
     DFSP_SERVER_PORT: 3004,
-    DFSP_API_SPEC_FILE: "./src/api-spec/core-connector-api-spec-dfsp.yml",
-    SDK_API_SPEC_FILE: "./src/api-spec/core-connector-api-spec-sdk.yml",
     MODE: "fxp"
   },
   sdkSchemeAdapter: {

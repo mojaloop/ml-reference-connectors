@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import Convict from 'convict';
-import { IConnectorConfigSchema } from "@mojaloop/core-connector-lib";
 import { TBlueBankConfig } from '.';
+import { IConnectorConfigSchema } from '@elijahokello/core-connector-lib';
 
 export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
     server: {
@@ -34,18 +34,6 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
             format: Number,
             default: null, // required
             env: 'DFSP_SERVER_PORT',
-        },
-        DFSP_API_SPEC_FILE: {
-            doc: 'Send Money API Spec',
-            format: String,
-            default: null, // required
-            env: 'DFSP_API_SPEC_FILE',
-        },
-        SDK_API_SPEC_FILE: {
-            doc: 'SDK Backend API',
-            format: String,
-            default: null, // required
-            env: 'SDK_API_SPEC_FILE',
         },
         MODE: {
             doc: 'Core Connector Mode. dfsp or fxp',
@@ -114,6 +102,10 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
 
 config.validate({ allowed: 'strict' });
 
-export type TConfig = Convict.Config<IConnectorConfigSchema<object, never>>;
+export type TConfig = Convict.Config<IConnectorConfigSchema<TBlueBankConfig, never>>;
 
-export default config;
+export const getDFSPConfig = ():IConnectorConfigSchema<TBlueBankConfig,never> =>{
+    return config.getProperties();
+}
+
+export const dfspConfig : IConnectorConfigSchema<TBlueBankConfig,never> = getDFSPConfig();

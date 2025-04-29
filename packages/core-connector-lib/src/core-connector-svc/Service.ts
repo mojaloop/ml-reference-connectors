@@ -40,6 +40,7 @@ import { IFxpCoreConnectorAgg } from '../domain/FXPClient';
 import { ServiceError } from './errors';
 import { FXPCoreConnectorAggregate } from '../domain/fxpCoreConnectorAgg';
 import { FXPCoreConnectorRoutes } from './fxpCoreConnectorRoutes';
+import path from 'path';
 
 export type TServiceDeps<D,F> = {
     httpClient?: IHTTPClient,
@@ -53,6 +54,8 @@ export type TServiceDeps<D,F> = {
     cbsClient?: ICbsClient<D>,
     fxpCoreConnectorAggregate?: IFxpCoreConnectorAgg<F> ;
     fxpClient?: IFXPClient<F> ;
+    sdkApiSpec?: string;
+    dfspApiSpec?: string;
 }
 
 export const serviceFactory = <D,F>(deps: TServiceDeps<D,F>) => {
@@ -71,6 +74,8 @@ export class Service<D,F> implements IService<D,F> {
     fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
     fxpClient: IFXPClient<F> | undefined;
     sdkClient: ISDKClient | undefined;
+    sdkApiSpec: string | undefined;
+    dfspApiSpec: string | undefined;
 
     constructor(deps: TServiceDeps<D,F>) {
         this.httpClient = deps.httpClient;
@@ -93,6 +98,9 @@ export class Service<D,F> implements IService<D,F> {
         if(!this.logger){
             this.logger = loggerFactory({ context: this.config.server.CBS_NAME });
         }
+        this.sdkApiSpec = path.resolve(__dirname, "../../api-spec", "core-connector-api-spec-sdk.yml");
+        this.dfspApiSpec = path.resolve(__dirname, "../../api-spec", "core-connector-api-spec-dfsp.yml");
+        
         if(this.checkAndValidateMode() === "dfsp"){
             if(!this.cbsClient){
                 throw ServiceError.invalidConfigurationError("CBS Client is undefined in DFSP Mode","0",0);
@@ -133,7 +141,7 @@ export class Service<D,F> implements IService<D,F> {
     }
 
     async setupAndStartUpServer(logger: ILogger, dfspAggregate: IDFSPCoreConnectorAggregate<D> | undefined, fxpAggregate: IFxpCoreConnectorAgg<F> | undefined ) {
-        if(dfspAggregate !== undefined){
+        if(dfspAggregate !== undefined && this.sdkApiSpec && this.dfspApiSpec){
             this.sdkServer = new Server({
                 host: this.config.server.SDK_SERVER_HOST,
                 port: this.config.server.SDK_SERVER_PORT,
@@ -146,10 +154,11 @@ export class Service<D,F> implements IService<D,F> {
             await this.sdkServer.register(createPlugins({logger}));
     
             await this.dfspServer.register(createPlugins({ logger }));
-            const sdkCoreConnectorRoutes = new SDKCoreConnectorRoutes<D>(dfspAggregate, logger,this.config.server.SDK_API_SPEC_FILE);
+            const sdkCoreConnectorRoutes = new SDKCoreConnectorRoutes<D>(dfspAggregate, logger,this.sdkApiSpec);
             await sdkCoreConnectorRoutes.init();
-    
-            const dfspCoreConnectorRoutes = new DFSPCoreConnectorRoutes<D>(dfspAggregate, logger,this.config.server.DFSP_API_SPEC_FILE);
+            
+
+            const dfspCoreConnectorRoutes = new DFSPCoreConnectorRoutes<D>(dfspAggregate, logger,this.dfspApiSpec);
             await dfspCoreConnectorRoutes.init();
     
             this.sdkServer.route(sdkCoreConnectorRoutes.getRoutes());
@@ -159,19 +168,22 @@ export class Service<D,F> implements IService<D,F> {
             logger.info(`SDK Core Connector Server running at ${this.sdkServer.info.uri}`);
             await this.dfspServer.start();
             logger.info(`DFSP Core Connector Server running at ${this.dfspServer.info.uri}`);
-        }else if(fxpAggregate !== undefined){
+
+        }else if(fxpAggregate !== undefined && this.sdkApiSpec){
             this.fxpServer = new Server({
                 host: this.config.server.SDK_SERVER_HOST,
                 port: this.config.server.SDK_SERVER_PORT
             });
             await this.fxpServer.register(createPlugins({logger}));
-            const fxpCoreConnectorRoutes = new FXPCoreConnectorRoutes(fxpAggregate,logger,this.config.server.SDK_API_SPEC_FILE);
+            const fxpCoreConnectorRoutes = new FXPCoreConnectorRoutes(fxpAggregate,logger,this.sdkApiSpec);
             await fxpCoreConnectorRoutes.init();
 
             this.fxpServer.route(fxpCoreConnectorRoutes.getRoutes());
 
             await this.fxpServer.start();
             logger.info(`FXP Core Connector Server running at ${this.fxpServer.info.uri}`);
+        }else{
+            throw ServiceError.invalidConfigurationError("Invalid Configuration. Check Mode. Library may not have API specifications","0",0);
         }
     }
 

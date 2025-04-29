@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import Convict from 'convict';
-import { IConnectorConfigSchema } from "@mojaloop/core-connector-lib";
 import { TBlueBankConfig } from '.';
+import { IConnectorConfigSchema, TFxpConfig } from '@elijahokello/core-connector-lib';
 
-export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
+export const config = Convict<IConnectorConfigSchema<never, TBlueBankConfig>>({
     server: {
         SDK_SERVER_HOST: {
             doc: 'SDK Server host',
@@ -12,99 +12,69 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
             env: 'SDK_SERVER_HOST',
         },
         CBS_NAME: {
-            doc: 'SDK Server host',
+            doc: 'Core Banking System Name',
             format: String,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'CBS_NAME',
         },
         SDK_SERVER_PORT: {
-            doc: 'SDK Server host',
+            doc: 'SDK Server port',
             format: Number,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'SDK_SERVER_PORT',
         },
         DFSP_SERVER_HOST: {
-            doc: 'SDK Server host',
+            doc: 'DFSP Server host',
             format: String,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'DFSP_SERVER_HOST',
         },
         DFSP_SERVER_PORT: {
-            doc: 'SDK Server host',
-            format: String,
+            doc: 'DFSP Server port',
+            format: Number,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
-        },
-        DFSP_API_SPEC_FILE: {
-            doc: 'SDK Server host',
-            format: String,
-            default: null, // required
-            env: 'SDK_SERVER_HOST',
-        },
-        SDK_API_SPEC_FILE: {
-            doc: 'SDK Server host',
-            format: String,
-            default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'DFSP_SERVER_PORT',
         },
         MODE: {
-            doc: 'SDK Server host',
+            doc: 'Core Connector Mode. dfsp or fxp',
             format: String,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'MODE',
         },
     },
     sdkSchemeAdapter: {
         SDK_BASE_URL: {
-            doc: 'SDK Server host',
+            doc: 'SDK Outbound Server Host',
             format: String,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'SDK_BASE_URL',
         },
     },
-    cbs: {
-        FSP_ID: {
-            doc: 'SDK Server host',
+    fxpConfig: {
+        FXP_BASE_URL: {
+            doc: 'FXP Base URL',
             format: String,
             default: null, // required
-            env: 'SDK_SERVER_HOST',
-        },
-        LEI: {
-            doc: 'SDK Server host',
-            format: String,
-            default: null, // required
-            env: 'SDK_SERVER_HOST',
-        },
-        CURRENCY: {
-            doc: 'SDK Server host',
-            format: String,
-            default: null, // required
-            env: 'SDK_SERVER_HOST',
-        },
-        SUPPORTED_ID_TYPE: {
-            doc: 'SDK Server host',
-            format: String,
-            default: null, // required
-            env: 'SDK_SERVER_HOST',
+            env: 'FXP_BASE_URL',
         },
         config: {
             BLUE_BANK_URL: {
-                doc: 'SDK Server host',
+                doc: 'Bank API Base URL',
                 format: String,
                 default: null, // required
-                env: 'SDK_SERVER_HOST',
+                env: 'BLUE_BANK_URL',
             },
             BLUE_BANK_CLIENT_ID: {
-                doc: 'SDK Server host',
+                doc: 'Bank API Client ID',
                 format: String,
                 default: null, // required
-                env: 'SDK_SERVER_HOST',
+                env: 'BLUE_BANK_CLIENT_ID',
             },
             BLUE_BANK_CLIENT_SECRET: {
-                doc: 'SDK Server host',
+                doc: 'Bank API Client Secret ',
                 format: String,
                 default: null, // required
-                env: 'SDK_SERVER_HOST',
+                env: 'BLUE_BANK_CLIENT_SECRET',
             },
         },
     }
@@ -113,6 +83,8 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
 
 config.validate({ allowed: 'strict' });
 
-export type TConfig = Convict.Config<IConnectorConfigSchema<object, never>>;
+export type TConfig = Convict.Config<IConnectorConfigSchema<never, TBlueBankConfig>>;
+
+export const fxpConfig: IConnectorConfigSchema<never,TBlueBankConfig> = config.getProperties();
 
 export default config;

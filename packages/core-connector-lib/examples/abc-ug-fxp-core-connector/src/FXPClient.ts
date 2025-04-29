@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { IHTTPClient, ILogger, IFXPClient, TFxpConfig, TFxQuoteRequest, TFxQuoteResponse, TConfirmFxTransferRequest, TConfirmFxTransferResponse, TNotifyFxTransferStateRequest, TNotifyFxTransferStateResponse} from "@mojaloop/core-connector-lib";
+import { IHTTPClient, ILogger, IFXPClient, TFxpConfig, TFxQuoteRequest, TFxQuoteResponse, TConfirmFxTransferRequest, TConfirmFxTransferResponse, TNotifyFxTransferStateRequest, TNotifyFxTransferStateResponse} from "@elijahokello/core-connector-lib";
 
 
 export class MockFXPClient<F> implements IFXPClient<F> {

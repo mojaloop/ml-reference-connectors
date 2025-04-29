@@ -1,7 +1,7 @@
 'use strict';
 
-import { IHTTPClient, ILogger, ICbsClient, coreConnectorFactory, AxiosClientFactory, loggerFactory, TCBSConfig, IConnectorConfigSchema } from "@mojaloop/core-connector-lib";
-import config from "./config";
+import { IHTTPClient, AxiosClientFactory, ILogger, loggerFactory, ICbsClient, coreConnectorFactory } from "@elijahokello/core-connector-lib";
+import { dfspConfig, getDFSPConfig } from "./config";
 import { MockCBSClient } from "./src/CBSClient";
 import { ConnectorError } from "./src/errors";
 
@@ -12,23 +12,44 @@ export type TBlueBankConfig = {
 }
 
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
-const logger: ILogger = loggerFactory({context: config.get("server.CBS_NAME")});
+const logger: ILogger = loggerFactory({context: dfspConfig.server.CBS_NAME});
 
-const cbsConfig : TCBSConfig<TBlueBankConfig> | undefined = config.get("cbs");
 
-if(!cbsConfig){
+if(!dfspConfig.cbs){
     throw ConnectorError.cbsConfigUndefined("CBS Config Not defined. Please fix the configuration in config.ts","0",0);
 }
 
-const getDFSPConfig = ():IConnectorConfigSchema<TBlueBankConfig,never> =>{
-    return{
-        server: config.get("server"),
-        sdkSchemeAdapter:config.get("sdkSchemeAdapter"),
-        cbs: config.get("cbs")
-    }
-}
-
-const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(cbsConfig,httpClient,logger);
+const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
 const coreConnector = coreConnectorFactory<TBlueBankConfig, never>({config: getDFSPConfig(),cbsClient: cbsClient});
 
-await coreConnector.start()
+// Start Core Connector
+coreConnector.start()
+
+async function _handle_int_and_term_signals(signal: NodeJS.Signals): Promise<void> {
+    logger.warn(`Service - ${signal} received - cleaning up...`);
+    let clean_exit = false;
+    setTimeout(() => {
+        clean_exit || process.abort();
+    }, 5000);
+
+    // call graceful stop routine
+    await coreConnector.stop();
+
+    clean_exit = true;
+    process.exit();
+}
+
+//catches ctrl+c event
+process.on('SIGINT', _handle_int_and_term_signals.bind(this));
+//catches program termination event
+process.on('SIGTERM', _handle_int_and_term_signals.bind(this));
+
+//do something when app is closing
+process.on('exit', async () => {
+    logger.info('Service - exiting...');
+});
+
+process.on('uncaughtException', (err: Error) => {
+    logger.error(`UncaughtException: ${err?.message}`, err);
+    process.exit(999);
+});
