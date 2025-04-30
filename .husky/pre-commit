@@ -1,12 +1,4 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-for dir in */; do
-    case "$dir" in
-        *-core-connector/)
-            cd "$dir" || exit 1
-            npx lint-staged
-            npm run lint:fix
-            cd - > /dev/null || exit 1
-            ;;
-    esac
-done
+npx lint-staged
