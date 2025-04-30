@@ -80,8 +80,8 @@ export class ValidationError extends BasicError {
             httpCode: 400,
         });
     }
-    static invalidReturnedQuoteError(message: string) {
-        return new ValidationError(message, {
+    static invalidReturnedQuoteError() {
+        return new ValidationError("Invalid Quote Error", {
             mlCode: '5101',
             httpCode: 500,
         });

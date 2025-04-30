@@ -258,16 +258,12 @@ export const sendMoneyDTO = (idValue: string, amount: string,): TNBMSendMoneyReq
 
 export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean): TNBMUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "account": "100003434",
-  "amount": "10"
 });
 
 
 
 export const updateSendMoneyDTO = ( acceptQuote: boolean,): TNBMUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "account": "100003434",
-  "amount": "10"
 });
 
 
@@ -284,7 +280,7 @@ export const sdkInitiateTransferResponseDto = (idValue: string, currentState: co
       idValue: idValue,
       supportedCurrencies: ["MWK"]
     },
-    fxQuoteResponse: {
+    fxQuotesResponse: {
       body:{
           homeTransactionId: "",
           conversionTerms: {
