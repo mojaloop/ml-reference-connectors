@@ -60,7 +60,17 @@ export type TSDKOutboundTransferResponse = {
     currentState?: components["schemas"]["transferStatus"];
     quoteId?: components["schemas"]["CorrelationId"];
     getPartiesResponse?: {
-        body: Record<string, never>;
+        body: {
+            party: {
+                partyIdInfo: {
+                    partyIdType: string,
+                    partyIdentifier: string,
+                    fspId: string
+                },
+                name: string,
+                supportedCurrencies: string[],
+            }
+        };
         headers?: Record<string, never>;
     };
     quoteResponse?: {
@@ -70,12 +80,12 @@ export type TSDKOutboundTransferResponse = {
     /** @description FSPID of the entity that supplied the quote response. This may not be the same as the FSPID of the entity which owns the end user account in the case of a FOREX transfer. i.e. it may be a FOREX gateway. */
     quoteResponseSource?: string;
     conversionRequestId?: components["schemas"]["CorrelationId"];
-    fxQuotesResponse?: {
+    fxQuoteResponse?: {
         body: components["schemas"]["FxQuotesPostOutboundResponse"];
         headers?: Record<string, never>;
     };
     /** @description FXPID of the entity that supplied the fxQuotes response. */
-    fxQuotesResponseSource?: string;
+    fxQuoteResponseSource?: string;
     fulfil?: {
         body: components["schemas"]["TransfersIDPutResponse"];
         headers?: Record<string, never>;
@@ -85,7 +95,6 @@ export type TSDKOutboundTransferResponse = {
     skipPartyLookup?: boolean;
 };
 
-
 export type TSDKTransferContinuationRequest =
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
@@ -93,7 +102,7 @@ export type TSDKTransferContinuationRequest =
     | components['schemas']['transferContinuationAcceptQuoteOrConversion']
 
 
-export type TtransferContinuationResponse = SDKSchemeAdapter.V2_0_0.Outbound.Types.transferResponse;
+export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
 
 export type TSDKClientDeps = {
     logger: ILogger;

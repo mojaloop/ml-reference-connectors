@@ -29,12 +29,13 @@ import { randomUUID } from 'crypto';
 import config from '../config';
 import {
     INBMClient,
+    TNBMTransferMoneyRequest,
     TNBMConfig,
-    TNBMDisbursementRequestBody,
     TNBMKycResponse,
     TNBMSendMoneyRequest,
     TNBMSendMoneyResponse,
     TNBMUpdateSendMoneyRequest,
+    TNBMMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -50,6 +51,7 @@ import {
     TGetQuotesDeps,
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
+    TValidationResponse,
 } from './interfaces';
 import {
     ISDKClient,
@@ -98,6 +100,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             extensionList: this.getPartiesExtensionList(),
             type: "CONSUMER",
             kycInformation: JSON.stringify(res.data),
+            supportedCurrencies: config.get("nbm.CURRENCY")
         };
     }
 
@@ -109,12 +112,12 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             },
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("nbm.X_COUNTRY")
+                "value": config.get("nbm.COUNTRY")
             },
 
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("nbm.X_COUNTRY")
+                "value": config.get("nbm.COUNTRY")
             }
         ];
     }
@@ -126,13 +129,9 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedIdTypeError();
         }
         if (!this.checkQuoteExtensionLists(quoteRequest)) {
-            throw ValidationError.invalidExtensionListsError(
-                "Some extensionLists are undefined",
-                '3100',
-                500
-            );
+            this.logger.warn("Some extensionLists are undefined. Checks Failed", quoteRequest);
         }
-        if (quoteRequest.currency !== this.cbsConfig.X_CURRENCY) {
+        if (quoteRequest.currency !== this.cbsConfig.CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
         const res = await this.nbmClient.getKyc({ account_number: quoteRequest.to.idValue });
@@ -151,18 +150,18 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
     }
 
     private getQuoteResponse(deps: TGetQuotesDeps): TQuoteResponse {
         return {
             "expiration": deps.expiration,
             "payeeFspCommissionAmount": "0",
-            "payeeFspCommissionAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeFspCommissionAmountCurrency": this.cbsConfig.CURRENCY,
             "payeeFspFeeAmount": deps.fees.toString(),
-            "payeeFspFeeAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeFspFeeAmountCurrency": this.cbsConfig.CURRENCY,
             "payeeReceiveAmount": deps.quoteRequest.amount,
-            "payeeReceiveAmountCurrency": this.cbsConfig.X_CURRENCY,
+            "payeeReceiveAmountCurrency": this.cbsConfig.CURRENCY,
             "quoteId": deps.quoteRequest.quoteId,
             "transferAmount": (deps.fees + Number(deps.quoteRequest.amount)).toString(),
             "transferAmountCurrency": deps.quoteRequest.currency,
@@ -172,17 +171,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
+        this.logger.info(`QuoteRequest ${quoteRequest}`);
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("nbm.COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("nbm.LEI")
+            }
+        ];
     }
 
     async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
@@ -191,19 +190,14 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             throw ValidationError.unsupportedIdTypeError();
         }
         if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            throw ValidationError.invalidExtensionListsError(
-                "ExtensionList check Failed in Payee Transfers",
-                '3100',
-                500
-            );
+            this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
         }
-        if (transfer.currency !== this.cbsConfig.X_CURRENCY) {
+        if (transfer.currency !== this.cbsConfig.CURRENCY) {
             throw ValidationError.unsupportedCurrencyError();
         }
         if (!this.validateQuote(transfer)) {
             throw ValidationError.invalidQuoteError();
         }
-        // this.checkAccountBarred(transfer.to.idValue);
         return {
             completedTimestamp: new Date().toJSON(),
             homeTransactionId: transfer.transferId,
@@ -215,34 +209,40 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
-    private validateQuote(transfer: TtransferRequest): boolean {
+    private validateQuote(transfer: TtransferRequest): TValidationResponse {
         this.logger.info(`Validating quote for transfer with amount ${transfer.amount}`);
         let result = true;
+        const message: string[] = [];
         if (transfer.amountType === 'SEND') {
-            if (!this.checkSendAmounts(transfer)) {
+            const checkSendAmountRes = this.checkSendAmounts(transfer);
+            if (!checkSendAmountRes.result) {
                 result = false;
+                message.push(...checkSendAmountRes.message);
             }
         } else if (transfer.amountType === 'RECEIVE') {
-            if (!this.checkReceiveAmounts(transfer)) {
+            const checkReceiveAmounts = this.checkReceiveAmounts(transfer);
+            if (!checkReceiveAmounts.result) {
                 result = false;
+                message.push(...checkReceiveAmounts.message);
             }
         }
-        return result;
+        return { result, message };
     }
 
-    private checkSendAmounts(transfer: TtransferRequest): boolean {
+    private checkSendAmounts(transfer: TtransferRequest): TValidationResponse {
+        this.logger.info('Validating Type Send Quote...', { transfer });
         let result = true;
+        const message: string[] = [];
         if (
             parseFloat(transfer.amount) !==
             parseFloat(transfer.quote.transferAmount) - parseFloat(transfer.quote.payeeFspCommissionAmount || '0')
             // POST /transfers request.amount == request.quote.transferAmount - request.quote.payeeFspCommissionAmount
         ) {
-            this.logger.error(`Invalid amount ${transfer.amount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspCommissionAmount}`);
             result = false;
+            message.push(`transfer.amount ${transfer.amount} did not equal transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount ${transfer.quote.payeeFspCommissionAmount} `);
         }
 
         if (!transfer.quote.payeeReceiveAmount || !transfer.quote.payeeFspFeeAmount) {
-            this.logger.error(`transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined`);
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeReceiveAmount or !transfer.quote.payeeFspFeeAmount not defined", "5000");
         }
 
@@ -251,18 +251,17 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.transferAmount) -
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
-            this.logger.error(`Invalid payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspFeeAmount}`);
             result = false;
-
+            message.push(`transfer.quote.payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount} `);
         }
-        return result;
+        return { result, message };
     }
 
-    private checkReceiveAmounts(transfer: TtransferRequest): boolean {
+    private checkReceiveAmounts(transfer: TtransferRequest): TValidationResponse {
         this.logger.info('Validating Type Receive Quote...', { transfer });
         let result = true;
+        const message: string[] = [];
         if (!transfer.quote.payeeFspFeeAmount || !transfer.quote.payeeReceiveAmount) {
-            this.logger.error(`transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined`);
             throw ValidationError.notEnoughInformationError("transfer.quote.payeeFspFeeAmount or transfer.quote.payeeReceiveAmount not defined", "5000");
         }
         if (
@@ -271,40 +270,36 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             parseFloat(transfer.quote.payeeFspCommissionAmount || '0') +
             parseFloat(transfer.quote.payeeFspFeeAmount)
         ) {
-            this.logger.error(`Invalid amount ${transfer.amount} != ${transfer.quote.transferAmount} - ${transfer.quote.payeeFspCommissionAmount} + ${transfer.quote.payeeFspFeeAmount}`);
             result = false;
+            message.push(`transfer.amount ${transfer.amount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount} minus transfer.quote.payeeFspCommissionAmount || 0 ${transfer.quote.payeeFspCommissionAmount} plus transfer.quote.payeeFspFeeAmount ${transfer.quote.payeeFspFeeAmount}`);
         }
 
         if (parseFloat(transfer.quote.payeeReceiveAmount) !== parseFloat(transfer.quote.transferAmount)) {
-            this.logger.error(`Invalid payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} != ${transfer.quote.transferAmount}`);
             result = false;
+            message.push(`transfer.quote.payeeReceiveAmount ${transfer.quote.payeeReceiveAmount} is equal to transfer.quote.transferAmount ${transfer.quote.transferAmount}`);
         }
-        return result;
-    }
-
-    private async checkAccountBarred(msisdn: string): Promise<void> {
-        const res = await this.nbmClient.getKyc({ account_number: msisdn });
-        // Add Logic for Barred Account
-        if (res.data.locked_amount) {
-            throw ValidationError.accountBarredError();
-        }
+        return { result, message };
     }
 
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
-            await this.initiateCompensationAction();
             throw ValidationError.transferNotCompletedError();
         }
-        const makePaymentRequest: TNBMDisbursementRequestBody = this.getMakePaymentRequestBody(updateTransferPayload);
-        await this.nbmClient.sendMoney(makePaymentRequest); //todo: define better error handling logic
+        const makePaymentRequest: TNBMTransferMoneyRequest = this.getMakePaymentRequestBody(updateTransferPayload);
+        try {
+            await this.nbmClient.makeTransfer(makePaymentRequest);
+        } catch (err: unknown) {
+            await this.initiateCompensationAction(makePaymentRequest);
+        }
     }
 
-    private async initiateCompensationAction() {
-        // todo function implementation to be defined.
+    private async initiateCompensationAction(req: TNBMTransferMoneyRequest) {
+        this.logger.error("Failed to make transfer to customer", { request: req });
+        await this.nbmClient.logFailedIncomingTransfer(req);
     }
 
-    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMDisbursementRequestBody {
+    private getMakePaymentRequestBody(requestBody: TtransferPatchNotificationRequest): TNBMTransferMoneyRequest {
         if (!requestBody.quoteRequest) {
             throw ValidationError.quoteNotDefinedError('Quote Not Defined Error', '5000', 500);
         }
@@ -314,185 +309,220 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         }
 
         return {
-            "payee": {
-                "msisdn": requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
-                "wallet_type": "NORMAL",
-            },
-            "reference": requestBody.quoteRequest.body.note !== undefined ? requestBody.quoteRequest.body.note : "No note returned",
-            "pin": this.cbsConfig.AIRTEL_PIN,
-            "transaction": {
-                "amount": Number(requestBody.quoteRequest.body.amount.amount),
-                "id": requestBody.transferId,
-                "type": "B2B"
-            }
+            amount: requestBody.quoteRequest.body.amount.amount,
+            description: requestBody.quoteRequest.body.transactionId,
+            reference: requestBody.transferId,
+            credit_account: requestBody.quoteRequest.body.payee.partyIdInfo.partyIdentifier,
+            currency: requestBody.quoteRequest.body.amount.currency
         };
     }
 
     // Payer
-    async sendMoney(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse> {
+    async sendMoney(transfer: TNBMSendMoneyRequest | TNBMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
-
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return await this.checkAndRespondToConversionTerms(res);
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
+        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
+        } else {
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
-        if (!this.validateReturnedQuote(res.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTCbsSendMoneyResponse(res.data);
     }
 
-    private async checkAndRespondToConversionTerms(res: THttpResponse<TSDKOutboundTransferResponse>): Promise<TNBMSendMoneyResponse> {
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
+    }
+
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TNBMSendMoneyResponse> {
+        /*
+            check fxQuote
+            respond to conversion terms
+            receive response from sdk
+            check return quote
+            return normalQuote in required format for customer to review 
+        */
         let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!this.validateConversionTerms(res.data)) {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateFxRes = this.validateConversionTerms(res);
+        if (!validateFxRes.result) {
             acceptRes = await this.sdkClient.updateTransfer({
                 "acceptConversion": false
-            }, res.data.transferId);
-            throw ValidationError.invalidConversionQuoteError("Recieved Conversion Terms are invalid", "4000", 500);
+            }, res.transferId);
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        else {
-            if (!res.data.transferId) {
-                throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-            }
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptConversion": true
-            }, res.data.transferId);
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptConversion": true
+        }, res.transferId);
+        const validateQuoteRes = this.validateReturnedQuote(acceptRes.data);
+        if (!validateQuoteRes.result) {
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        if (!this.validateReturnedQuote(acceptRes.data)) {
-            throw ValidationError.invalidReturnedQuoteError();
-        }
-        return this.getTCbsSendMoneyResponse(acceptRes.data);
+        return this.getTCbsSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): boolean {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TNBMSendMoneyResponse> {
+        /*
+            check returned normalQuote
+            respond to quote 
+            receive response from sdk
+            check fxQuote
+            return returned quote in format specified for customer to review 
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateQuoteRes = this.validateReturnedQuote(res);
+        if (!validateQuoteRes.result && this.checkPayeeKYCInformation(res)) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptQuote": false
+            }, res.transferId);
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptQuote": true
+        }, res.transferId);
+        const validateFxRes = this.validateConversionTerms(acceptRes.data);
+        if (!validateFxRes.result) {
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
+        }
+        return this.getTCbsSendMoneyResponse(acceptRes.data,  homeTransactionId);
+    }
+
+    private validateConversionTerms(transferRes: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Conversion Terms with transfer response amount ${transferRes.amount}`);
         let result = true;
+        const message: string[] = [];
         if (
-            !(this.cbsConfig.X_CURRENCY === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)
+            !(this.cbsConfig.CURRENCY === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)
         ) {
-            this.logger.error(`X_CURRENCY ${this.cbsConfig.X_CURRENCY} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             result = false;
+            message.push(`cbsConfig.TNM_CURRENCY ${this.cbsConfig.CURRENCY} did not match currency returned in transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
         }
         if (transferRes.amountType === 'SEND') {
-            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount}`);
+            if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
                 result = false;
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}}`);
             }
-            if (!transferRes.to.supportedCurrencies) {
-                this.logger.error(`Payee Supported Currency not defined`);
-                throw SDKClientError.genericQuoteValidationError("Payee Supported Currency not defined", { httpCode: 500, mlCode: "4000" });
+            if (transferRes.to.supportedCurrencies) {
+                if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
+                    result = false;
+                    message.push(`transferRes.to.supportedCurrencies ${transferRes.to.supportedCurrencies.toString()} did not contain transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency} `);
+                }
             }
-            if (!transferRes.to.supportedCurrencies.some(value => value === transferRes.quoteResponse?.body.transferAmount.currency)) {
-                this.logger.error(`Payee Supported Currency ${transferRes.to.supportedCurrencies} does not contain ${transferRes.quoteResponse?.body.transferAmount.currency}`);
+            if (!(transferRes.currency === transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency)) {
                 result = false;
-            }
-            if (!(transferRes.currency === transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency)) {
-                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency}`);
-                result = false;
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferRes.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
             }
         } else if (transferRes.amountType === 'RECEIVE') {
-            if (!(transferRes.amount === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount)) {
-                this.logger.error(`Amount ${transferRes.amount} != ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount}`);
+            if (!(transferRes.amount === transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount)) {
                 result = false;
+                message.push(`transferRes.amount ${transferRes.amount} did not equal transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.amount ${transferRes.fxQuoteResponse?.body.conversionTerms.targetAmount.amount}`);
             }
             if (!(transferRes.currency === transferRes.quoteResponse?.body.transferAmount.currency)) {
-                this.logger.error(`Currency ${transferRes.currency} != ${transferRes.quoteResponse?.body.transferAmount.currency}`);
                 result = false;
-            }
-            if (transferRes.fxQuotesResponse) {
-                if (!transferRes.from.supportedCurrencies) {
-                    this.logger.error(`Payee Supported Currency not defined`);
-                    throw ValidationError.unsupportedCurrencyError();
-                }
-                if (!(transferRes.from.supportedCurrencies.some(value => value === transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency))) {
-                    this.logger.error(`Payee Supported Currency ${transferRes.from.supportedCurrencies} does not contain ${transferRes.fxQuotesResponse?.body.conversionTerms.targetAmount.currency}`);
-                    result = false;
-                }
+                message.push(`transferRes.currency ${transferRes.currency} did not equal transferRes.quoteResponse?.body.transferAmount.currency ${transferRes.quoteResponse?.body.transferAmount.currency}`);
             }
         }
-        return result;
+        return { result, message };
     }
 
-    private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): boolean {
-        this.logger.info(`Validating Returned Quote with transfer response amount ${outboundTransferRes.amount}`);
-
+    private validateReturnedQuote(outboundTransferRes: TSDKOutboundTransferResponse): TValidationResponse {
+        this.logger.info(`Validating Retunred Quote with transfer response amount${outboundTransferRes.amount}`);
         let result = true;
-        if (!this.validateConversionTerms(outboundTransferRes)) {
-            result = false;
+        const message: string[] = [];
+        if (outboundTransferRes.amountType === "SEND") {
+            const validateFxRes = this.validateConversionTerms(outboundTransferRes);
+            if (!validateFxRes.result) {
+                result = false;
+                message.push(...validateFxRes.message);
+            }
         }
         const quoteResponseBody = outboundTransferRes.quoteResponse?.body;
-        const fxQuoteResponseBody = outboundTransferRes.fxQuotesResponse?.body;
+        const fxQuoteResponseBody = outboundTransferRes.fxQuoteResponse?.body;
         if (!quoteResponseBody) {
-            this.logger.error(`Quote Response Body not defined`);
             throw SDKClientError.noQuoteReturnedError();
         }
         if (outboundTransferRes.amountType === "SEND") {
-            if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
-                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
+            const quoteRequestAmount: string = outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount ? outboundTransferRes.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount : outboundTransferRes.amount;
+            if (!(parseFloat(quoteRequestAmount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
                 result = false;
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`);
             }
             if (!quoteResponseBody.payeeReceiveAmount) {
-                this.logger.error(`Payee Receive Amount not defined`);
                 throw SDKClientError.genericQuoteValidationError("Payee Receive Amount not defined", { httpCode: 500, mlCode: "4000" });
             }
             if (!(parseFloat(quoteResponseBody.payeeReceiveAmount.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || '0'))) {
-                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount}`);
                 result = false;
+                message.push(`quoteResponseBody.payeeReceiveAmount.amount ${quoteResponseBody.payeeReceiveAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`);
             }
             if (!(fxQuoteResponseBody?.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
-                this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
+                message.push(`fxQuoteResponseBody?.conversionTerms.targetAmount.amount ${fxQuoteResponseBody?.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
             }
         } else if (outboundTransferRes.amountType === "RECEIVE") {
             if (!outboundTransferRes.quoteResponse) {
-                this.logger.error(`Quote Response not defined`);
                 throw SDKClientError.noQuoteReturnedError();
             }
             if (!(parseFloat(outboundTransferRes.amount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0") + parseFloat(quoteResponseBody.payeeFspFee?.amount || "0"))) {
-                this.logger.error(`Invalid amount ${outboundTransferRes.amount} != ${quoteResponseBody.transferAmount.amount} - ${quoteResponseBody.payeeFspCommission?.amount} + ${quoteResponseBody.payeeFspFee?.amount}`);
                 result = false;
+                message.push(`outboundTransferRes.amount ${outboundTransferRes.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount} plus quoteResponseBody.payeeFspFee?.amount ${quoteResponseBody.payeeFspFee?.amount}`);
             }
 
             if (!(quoteResponseBody.payeeReceiveAmount?.amount === quoteResponseBody.transferAmount.amount)) {
-                this.logger.error(`Invalid payeeReceiveAmount ${quoteResponseBody.payeeReceiveAmount?.amount} != ${quoteResponseBody.transferAmount.amount}`);
                 result = false;
+                message.push(`quoteResponseBody.payeeReceiveAmount?.amount ${quoteResponseBody.payeeReceiveAmount?.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
             }
             if (fxQuoteResponseBody) {
                 if (!(fxQuoteResponseBody.conversionTerms.targetAmount.amount === quoteResponseBody.transferAmount.amount)) {
-                    this.logger.error(`Invalid fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} != ${quoteResponseBody.transferAmount.amount}`);
                     result = false;
+                    message.push(`fxQuoteResponseBody.conversionTerms.targetAmount.amount ${fxQuoteResponseBody.conversionTerms.targetAmount.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount}`);
                 }
             }
         } else {
-            this.logger.error(`Invalid amountType received ${outboundTransferRes.amountType}`);
             SDKClientError.genericQuoteValidationError("Invalid amountType received", { httpCode: 500, mlCode: "4000" });
         }
-        return result;
+        return { result, message };
     }
 
-    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TNBMSendMoneyResponse {
+    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TNBMSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : ""
             },
+            "sendAmount": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.amount : "No send amount ",
+            "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency : "No send currency ",
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
-            "receiveCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuotesResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
+            "targetFees": this.getQuoteCharges(transfer),
+            "sourceFees": this.getFxQuoteResponseCharges(transfer),
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+            "homeTransactionId": homeTransactionId
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse): string {
+        return parseFloat(transferRes.quoteResponse?.body.payeeFspFee?.amount ?? "0").toString();
+    }
+
+    private getFxQuoteResponseCharges(data: TSDKOutboundTransferResponse): string {
+        if (data.fxQuoteResponse && data.fxQuoteResponse.body.conversionTerms.charges) {
+            return data.fxQuoteResponse.body.conversionTerms.charges.reduce((total, charge) => {
+                return total + parseFloat(charge.sourceAmount !== undefined ? charge.sourceAmount.amount : "0");
+            }, 0).toString();
+        }
+        return "0";
+    }
+
+
+    private async getTSDKOutboundTransferRequest(transfer: TNBMSendMoneyRequest | TNBMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.nbmClient.getKyc({
             account_number: transfer.payer.payerId
         });
@@ -506,47 +536,86 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
                 "displayName": `${res.data.account_number}`,
 
                 "merchantClassificationCode": "123",
-                extensionList: this.getOutboundTransferExtensionList(transfer)
+                "supportedCurrencies": [config.get("nbm.CURRENCY")]
             },
             'to': {
                 'idType': transfer.payeeIdType,
                 'idValue': transfer.payeeId
             },
             'amountType': amountType,
-            'currency': transfer.sendCurrency,
-            'amount': transfer.sendAmount,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
+            'amount': "sendAmount" in transfer ? transfer.sendAmount : transfer.receiveAmount,
             'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNBMSendMoneyRequest): TPayerExtensionListEntry[] {
-        return [
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-            },
-            {
-                "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-            }
-        ];
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNBMSendMoneyRequest | TNBMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth : "Not defined"
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Nm",
+                    "value": sendMoneyRequestPayload.payer.name
+                },
+                {
+                    "key": "CdtTrfTxInf.Purp.Cd",
+                    "value": amountType === "SEND" ? "MP2P" : "IPAY"
+                }
+            ];
+        }
     }
 
-    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse> {
+    async updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transerId: string): Promise<TtransferContinuationResponse | undefined> {
         this.logger.info(`Updating transfer for id ${updateSendMoneyDeps} `);
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
             throw ValidationError.quoteNotAcceptedError();
         }
-        const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId); //todo: implement better error handling logic 
-        return res.data;
+        try {
+            const res = await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, transerId);
+            return res.data;
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) {
+                await this.handleRefund(updateSendMoneyDeps,transerId);
+            }
+        }
+    }
+
+    private async handleRefund(deps: TNBMUpdateSendMoneyRequest, transferId: string) {
+        try {
+            if (deps.acceptQuote) {
+                await this.nbmClient.makeTransfer(this.getRefundPayload(deps,transferId));
+            }
+        } catch (error: unknown) {
+            this.logger.error("Refund failed. Initiating manual process....");
+            this.nbmClient.logFailedIncomingTransfer(this.getRefundPayload(deps,transferId));
+        }
+    }
+
+    private getRefundPayload(deps: TNBMUpdateSendMoneyRequest, transferId: string): TNBMTransferMoneyRequest {
+        return {
+            "amount": deps.amount,
+            "description": "Refund",
+            "reference": transferId,
+            "credit_account": deps.account,
+            "currency": this.nbmClient.NBMConfig.CURRENCY
+        };
     }
 }
