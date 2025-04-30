@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import 'dotenv/config';
 import Convict from 'convict';
 import { TNMConfig } from './domain/CBSClient';
 

@@ -89,17 +89,23 @@ const config = Convict<IConfigSchema>({
             default: null, // required
             env: 'CLIENT_SECRET',
         },
-        COUNTRY: {
+        GRANT_TYPE: {
+            doc: 'Airtel Grant Type',
+            format: String,
+            default: null, // required
+            env: 'GRANT_TYPE',
+        },
+        X_COUNTRY: {
             doc: 'Country',
             format: String,
             default: null, // required
-            env: 'COUNTRY',
+            env: 'X_COUNTRY',
         },
-        CURRENCY: {
+        X_CURRENCY: {
             doc: 'Currency',
             format: String,
             default: null, // required
-            env: 'CURRENCY',
+            env: 'X_CURRENCY',
         },
         SUPPORTED_ID_TYPE: {
             doc: 'Supported Id Type',

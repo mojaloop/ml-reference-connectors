@@ -2308,7 +2308,7 @@ components:
             FSPID of the entity that supplied the quote response. This may not be the same as the FSPID of the entity which owns the end user account in the case of a FOREX transfer. i.e. it may be a FOREX gateway.
         conversionRequestId:
           $ref: '#/components/schemas/CorrelationId'
-        fxQuoteResponse:
+        fxQuotesResponse:
           type: object
           required:
             - body
@@ -2317,7 +2317,7 @@ components:
               $ref: '#/components/schemas/FxQuotesPostOutboundResponse'
             headers:
               type: object
-        fxQuoteResponseSource:
+        fxQuotesResponseSource:
           type: string
           description: |
             FXPID of the entity that supplied the fxQuotes response.

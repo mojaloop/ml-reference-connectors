@@ -163,10 +163,7 @@ export type TGetQuotesDeps = {
     expiration: string;
     quoteRequest: TQuoteRequest
 }
-export type TValidationResponse = {
-    result: boolean;
-    message: string[];
-}
+
 export interface ICoreConnectorAggregate {
     sdkClient: ISDKClient;
     nbmClient: INBMClient;
@@ -178,5 +175,5 @@ export interface ICoreConnectorAggregate {
     receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TNBMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNBMSendMoneyResponse>
-    updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse | undefined>
+    updateSendMoney(updateSendMoneyDeps: TNBMUpdateSendMoneyRequest, transferId: string): Promise<TtransferContinuationResponse>
 }

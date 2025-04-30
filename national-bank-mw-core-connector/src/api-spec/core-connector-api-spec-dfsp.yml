@@ -137,12 +137,12 @@ paths:
           description: >-
             Transfer Timeout.
 
-  /merchant-payment/{transferId}:
+  /merchant-payment/{id}:
     put:
       summary: Confirm send money
       operationId: updateInitiatedMerchantPayment
       parameters:
-        - name: transferId
+        - name: id
           in: path
           required: true
           description: The ID of the transaction
@@ -183,42 +183,30 @@ components:
     callbackPayload:
       type: object
       properties:
-        financialTransactionId:
-          type: string
-          example: BBZMiscxy
-          description: Unique identifier for the transaction.
-        externalId:
-          type: string
-          example: "EXT123456789"
-          description: External reference ID for the transaction.
-        amount:
-          type: string
-          example: "5000"
-          description: Transaction amount.
-        currency:
-          type: string
-          example: "UGX"
-          description: Currency of the transaction.
-        payee:
+        transaction:
           type: object
           properties:
-            partyIdType:
+            id:
               type: string
-              example: "MSISDN"
-              description: Type of identifier for the payee.
-            partyId:
+              example: BBZMiscxy
+              description: Unique identifier for the transaction.
+            message:
               type: string
-              example: "777503758"
-              description: Payee's identifier.
-        payeeNote:
-          type: string
-          example: "Payment for services"
-          description: Note from the payee.
-        status:
-          type: string
-          example: "TS"
-          description: Status of the transaction.
-
+              example: Paid UGX 5,000 to TECHNOLOGIES LIMITED Charge UGX 140, Trans ID MP210603.1234.L06941.
+              description: Transaction message detailing payment, charges, and transaction ID.
+            status_code:
+              type: string
+              example: TS
+              description: Status code of the transaction.
+            airtel_money_id:
+              type: string
+              example: MP210603.1234.L06941
+              description: Airtel money transaction ID.
+          required:
+            - id
+            - message
+            - status_code
+            - airtel_money_id
     merchantPaymentRequest:
       type: object
       properties:
@@ -231,12 +219,12 @@ components:
         payeeIdType:
           type: string
           example: "MSISDN"
+        sendAmount:
+          type: string
+          example: "150.00"
         sendCurrency:
           type: string
           example: "UGX"
-        receiveAmount:
-          type: string
-          example: "150.00"
         receiveCurrency:
           type: string
           example: "KES"
@@ -303,32 +291,29 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            name:
+            firstName:
               type: string
-              example: "Chimweso"
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
 
-        sendAmount:
-          type: string
-          example: "140.00"
-        sendCurrency:
-          type: string
-          example: "ZMW"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "MWK"
-        targetFees:
+          example: "EUR"
+        fees:
           type: string
           example: "10.00"
-        sourceFees:
+        feeCurrency:
           type: string
-          example: "10.00"
+          example: "USD"
         transactionId:
-          type: string
-          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
-        homeTransactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyResponse:
@@ -346,32 +331,29 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            name:
+            firstName:
               type: string
-              example: "Chimweso"
+              example: "Niza"
+            lastName:
+              type: string
+              example: "Tembo"
+            dateOfBirth:
+              type: string
+              example: "1997/09/04"
 
-        sendAmount:
-          type: string
-          example: "140.00"
-        sendCurrency:
-          type: string
-          example: "ZMW"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "MWK"
-        targetFees:
+          example: "EUR"
+        fees:
           type: string
           example: "10.00"
-        sourceFees:
+        feeCurrency:
           type: string
-          example: "10.00"
+          example: "USD"
         transactionId:
-          type: string
-          example: "01JKB0F2WV7YVSA6CXGP977XT9"
-        homeTransactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyRequest:
@@ -453,9 +435,3 @@ components:
         amount:
           type: string
           example: "500"
-        payerMessage:
-          type: string
-          example: "Payment for services"
-        payeeNote:
-          type: string
-          example: "Thank you!"
