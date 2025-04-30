@@ -188,13 +188,37 @@ export type TNMSendMoneyResponse = {
         "fspId": string;
         "name": string;
     };
-    "receiveAmount": string;
-    "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
+    "sendAmount": string,
+    "sendCurrency": string,
+    "receiveAmount": string,
+    "receiveCurrency": string,
+    "targetFees": string,
+    "sourceFees": string,
     "transactionId": string;
+    "homeTransactionId": string;
 }
 export type TNMMerchantPaymentResponse = TNMSendMoneyResponse; 
+
+export type TNMMerchantPaymentRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveAmount": string;
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        }
+    }
+}
 
 export type TNMSendMoneyRequest = {
     homeTransactionId: string;
@@ -202,6 +226,7 @@ export type TNMSendMoneyRequest = {
     payeeIdType: components["schemas"]["PartyIdType"];
     sendAmount: string;
     sendCurrency: components['schemas']['Currency'];
+    receiveAmount: string;
     receiveCurrency: components['schemas']['Currency'];
     transactionDescription: string;
     transactionType: components['schemas']['transferTransactionType'];
