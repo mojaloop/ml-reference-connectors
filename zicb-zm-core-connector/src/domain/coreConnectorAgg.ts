@@ -429,7 +429,7 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     async sendMoney(transfer: TZicbSendMoneyRequest | TZicbMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TZicbSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
 
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType)
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
         const res = await this.sdkClient.initiateTransfer(transferRequest);
         
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
