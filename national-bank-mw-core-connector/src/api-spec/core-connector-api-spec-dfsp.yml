@@ -328,6 +328,9 @@ components:
         transactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
+        homeTransactionId:
+          type: string
+          example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyResponse:
       type: object
       properties:
