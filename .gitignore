@@ -1,0 +1,12 @@
+#MAC
+.DS_Store
+
+# IDEA
+.idea/
+
+# Node
+node_modules/
+
+#Environment
+dist/
+.env
