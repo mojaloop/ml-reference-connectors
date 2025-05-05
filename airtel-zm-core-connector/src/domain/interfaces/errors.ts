@@ -37,11 +37,6 @@ export type ErrorOptions = {
     details?: TJson;
 };
 
-type RefundDetails = {
-    amount: number;
-    fineractAccountId: number;
-};
-
 export class BasicError extends Error {
     cause?: Error;
     httpCode?: number;
@@ -66,26 +61,10 @@ export class ValidationError extends BasicError {
         });
     }
 
-    static accountVerificationError() {
-        return new ValidationError('Funds Source Account is not active in Fineract', {
-            mlCode: '3200',
-            httpCode: 400, // todo: think, which http code should be used here
-        });
-    }
-
     static unsupportedIdTypeError() {
         return new ValidationError('Unsupported Id Type', {
             mlCode: '3100',
             httpCode: 400,
-        });
-    }
-
-    // think, if it's better to move to a separate class
-    static refundFailedError(details: RefundDetails) {
-        return new ValidationError('Refund Failed', {
-            mlCode: '2001',
-            httpCode: 500,
-            details, // object returned to allow for reconciliation later
         });
     }
 

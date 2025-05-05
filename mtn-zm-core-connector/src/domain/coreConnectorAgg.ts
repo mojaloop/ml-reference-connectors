@@ -21,7 +21,6 @@
 
  * Niza Tembo <mcwayzj@gmail.com>
  * Elijah Okello <elijahokello90@gmail.com>
- * Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
 
  --------------
  ******/
@@ -42,6 +41,7 @@ import {
     TMTNKycResponse,
     TMTNCallbackPayload,
     TMTNRefundRequestBody,
+    TMTNMerchantPaymentRequest,
 } from './CBSClient';
 import {
     ILogger,
@@ -76,7 +76,7 @@ export class CoreConnectorAggregate {
         private readonly mtnConfig: TMTNConfig,
         logger: ILogger,
     ) {
-        // todo: set the IdType from here 
+        // todo: set the IdType from here
         this.IdType = config.get("mtn.SUPPORTED_ID_TYPE");
         this.logger = logger;
     }
@@ -100,37 +100,34 @@ export class CoreConnectorAggregate {
                 displayName: `${mtnKycResponse.given_name} ${mtnKycResponse.family_name}`,
                 firstName: mtnKycResponse.given_name,
                 idType: config.get("mtn.SUPPORTED_ID_TYPE"),
+
                 idValue: idValue,
                 lastName: mtnKycResponse.family_name,
                 middleName: mtnKycResponse.given_name,
                 type: PartyType.CONSUMER,
                 kycInformation: `${JSON.stringify(mtnKycResponse)}`,
                 extensionList: this.getGetPartiesExtensionList(),
-                supportedCurrencies: config.get("mtn.DFSP_CURRENCY"),
+                supportedCurrencies: config.get("mtn.DFSP_CURRENCY")
             },
             statusCode: 200,
         };
     }
 
-    // Get Extension List DTO to be used in Party Response on Extension List
-    // Get Parties   --(1.1)
     private getGetPartiesExtensionList(): TPayeeExtensionListEntry[] {
         return [
             {
                 "key": "Rpt.UpdtdPtyAndAcctId.Agt.FinInstnId.LEI",
                 "value": config.get("mtn.LEI")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.PstlAdr.Ctry",
-                "value": config.get("mtn.X_COUNTRY")
-            },
-            {
-                "key": "Rpt.UpdtdPtyAndAcctId.Pty.CtryOfRes",
-                "value": config.get("mtn.X_COUNTRY")
             }
         ];
     }
 
+    private async checkAccountBarred(msisdn: string): Promise<void> {
+        const res = await this.mtnClient.getKyc({ msisdn: msisdn });
+        if (res.status == "NOT FOUND") {
+            throw ValidationError.accountBarredError();
+        }
+    }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Quote requests for ${this.IdType} ${quoteRequest.to.idValue}`);
@@ -147,6 +144,8 @@ export class CoreConnectorAggregate {
 
         const serviceChargePercentage = Number(config.get("mtn.SERVICE_CHARGE"));
         const fees = serviceChargePercentage / 100 * Number(quoteRequest.amount);
+
+
         await this.checkAccountBarred(quoteRequest.to.idValue);
         const quoteExpiration = config.get("mtn.EXPIRATION_DURATION");
         const expiration = new Date();
@@ -155,11 +154,14 @@ export class CoreConnectorAggregate {
         return this.getQuoteResponse(quoteRequest, fees.toString(), expirationJSON);
     }
 
+    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
+        return !!(quoteRequest.extensionList && quoteRequest.extensionList.length > 0);
+    }
 
     private getQuoteResponse(quoteRequest: TQuoteRequest, fees: string, expiration: string): TQuoteResponse {
         return {
             expiration: expiration,
-            extensionList: this.getQuoteResponseExtensionList(quoteRequest),
+            extensionList: this.getQuoteResponseExtensionList(),
             payeeFspCommissionAmount: '0',
             payeeFspCommissionAmountCurrency: quoteRequest.currency,
             payeeFspFeeAmount: fees,
@@ -174,15 +176,49 @@ export class CoreConnectorAggregate {
     }
 
 
-    private checkQuoteExtensionLists(quoteRequest: TQuoteRequest): boolean {
-        return !!(quoteRequest.to.extensionList && quoteRequest.from.extensionList && quoteRequest.to.extensionList.length > 0 && quoteRequest.from.extensionList.length > 0);
+    private getQuoteResponseExtensionList(): TPayeeExtensionListEntry[] {
+        return [
+            {
+                "key": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+                "value": config.get("mtn.X_COUNTRY")
+            },
+            {
+                "key": "CdtTrfTxInf.CdtrAgt.FinInstnId.LEI",
+                "value": config.get("mtn.LEI")
+            }
+        ];
     }
 
-    private async checkAccountBarred(msisdn: string): Promise<void> {
-        const res = await this.mtnClient.getKyc({ msisdn: msisdn });
-        if (res.status == "NOT FOUND") {
-            throw ValidationError.accountBarredError();
+
+    async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
+        this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
+        if (transfer.to.idType != this.IdType) {
+            throw ValidationError.unsupportedIdTypeError();
         }
+        if (this.mtnConfig.MTN_ENV === 'production' && transfer.currency !== config.get("mtn.X_CURRENCY")) {
+            throw ValidationError.unsupportedCurrencyError();
+        }
+
+        const validateQuoteRes = this.validateQuote(transfer);
+        if (!validateQuoteRes.result) {
+            throw ValidationError.invalidQuoteError(validateQuoteRes.message.toString());
+        }
+
+        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
+            this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
+        }
+
+        await this.checkAccountBarred(transfer.to.idValue);
+        return {
+            completedTimestamp: new Date().toJSON(),
+            homeTransactionId: transfer.transferId,
+            transferState: 'RESERVED',
+        };
+    }
+
+    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
+        this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
+        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
     }
 
     private validateQuote(transfer: TtransferRequest): TValidationResponse {
@@ -204,7 +240,6 @@ export class CoreConnectorAggregate {
         }
         return { result, message };
     }
-
 
     private checkSendAmounts(transfer: TtransferRequest): TValidationResponse {
         this.logger.info('Validating Type Send Quote...', { transfer });
@@ -259,61 +294,6 @@ export class CoreConnectorAggregate {
     }
 
 
-    // Get Quote Resonse Extension List DTO to be used in Quote Response on Extension List
-
-    private getQuoteResponseExtensionList(quoteRequest: TQuoteRequest): TPayeeExtensionListEntry[] {
-        const newExtensionList: TPayeeExtensionListEntry[] = [];
-        //todo: check if the correct level of information has been provided.
-        if (quoteRequest.extensionList) {
-            newExtensionList.push(...quoteRequest.extensionList);
-        }
-
-        if (quoteRequest.from.extensionList) {
-            newExtensionList.push(...quoteRequest.from.extensionList);
-        }
-
-        if (quoteRequest.to.extensionList) {
-            newExtensionList.push(...quoteRequest.to.extensionList);
-        }
-        return newExtensionList;
-    }
-
-
-    async receiveTransfer(transfer: TtransferRequest): Promise<TtransferResponse> {
-        this.logger.info(`Transfer for  ${this.IdType} ${transfer.to.idValue}`);
-        if (transfer.to.idType != this.IdType) {
-            throw ValidationError.unsupportedIdTypeError();
-        }
-        if (this.mtnConfig.MTN_ENV === 'production' && transfer.currency !== config.get("mtn.X_CURRENCY")) {
-            throw ValidationError.unsupportedCurrencyError();
-        }
-
-        const validateQuoteRes = this.validateQuote(transfer);
-        if (!validateQuoteRes.result) {
-            throw ValidationError.invalidQuoteError(validateQuoteRes.message.toString());
-        }
-
-
-        if (!this.checkPayeeTransfersExtensionLists(transfer)) {
-            this.logger.warn("Some extensionLists are undefined; Checks Failed", transfer);
-        }
-
-
-        await this.checkAccountBarred(transfer.to.idValue);
-        return {
-            completedTimestamp: new Date().toJSON(),
-            homeTransactionId: transfer.transferId,
-            transferState: 'RESERVED',
-        };
-    }
-
-
-    private checkPayeeTransfersExtensionLists(transfer: TtransferRequest): boolean {
-        this.logger.info(`checking Payee Transfer Extension List ${transfer}`);
-        return !!(transfer.to.extensionList && transfer.from.extensionList && transfer.to.extensionList.length > 0 && transfer.from.extensionList.length > 0);
-    }
-
-
     async updateTransfer(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing The Transfer with id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
@@ -361,144 +341,30 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "firstName": transfer.to.firstName !== undefined ? transfer.to.firstName : "No First Name Returned",
-                "lastName": transfer.to.lastName !== undefined ? transfer.to.lastName : "No Last Name Returned",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : ""
             },
+            "sendAmount": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.amount : "No send amount ",
+            "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency : "No send currency ",
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "targetFees": this.getQuoteCharges(transfer),
+            "sourceFees": this.getFxQuoteResponseCharges(transfer),
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
             "homeTransactionId": homeTransactionId
         };
     }
 
-    // Payer
-    async sendTransfer(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNSendMoneyResponse> {
-        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
-
-        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
-        const res = await this.sdkClient.initiateTransfer(transferRequest);
-
-        if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
-        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
-        } else {
-            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
-        }
+    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse): string {
+        return parseFloat(transferRes.quoteResponse?.body.payeeFspFee?.amount ?? "0").toString();
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
-        const res = await this.mtnClient.getKyc({
-            msisdn: transfer.payer.payerId
-        });
-        return {
-            'homeTransactionId': transfer.homeTransactionId,
-            'from': {
-                'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
-                'idValue': transfer.payer.payerId,
-                'fspId': this.mtnConfig.FSP_ID,
-                "displayName": `${res.given_name} ${res.family_name}`,
-                "firstName": res.given_name,
-                "middleName": res.given_name,
-                "lastName": res.family_name,
-                "merchantClassificationCode": "123",
-                "extensionList": this.getOutboundTransferExtensionList(transfer),
-                "supportedCurrencies": [this.mtnConfig.DFSP_CURRENCY]
-            },
-            'to': {
-                'idType': transfer.payeeIdType,
-                'idValue': transfer.payeeId
-            },
-            'amountType': amountType,
-            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
-            'amount': transfer.sendAmount,
-            'transactionType': transfer.transactionType,
-        };
-    }
-
-    // Get OutBound Transfer Extension List DTO used in getTSDKOutboundTransferRequest DTO --(5.1.1)
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
-        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
-            return [
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-                }
-            ];
+    private getFxQuoteResponseCharges(data: TSDKOutboundTransferResponse): string {
+        if (data.fxQuoteResponse && data.fxQuoteResponse.body.conversionTerms.charges) {
+            return data.fxQuoteResponse.body.conversionTerms.charges.reduce((total, charge) => {
+                return total + parseFloat(charge.sourceAmount !== undefined ? charge.sourceAmount.amount : "0");
+            }, 0).toString();
         }
-    }
-
-    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
-        /*
-            check fxQuote
-            respond to conversion terms
-            receive response from sdk
-            check return quote
-            return normalQuote in required format for customer to review 
-        */
-        let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!res.transferId) {
-            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-        }
-        const validateFxRes = this.validateConversionTerms(res);
-        if (!validateFxRes.result) {
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptConversion": false
-            }, res.transferId);
-            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
-        }
-        acceptRes = await this.sdkClient.updateTransfer({
-            "acceptConversion": true
-        }, res.transferId);
-        const validateQuoteRes = this.validateReturnedQuote(acceptRes.data);
-        if (!validateQuoteRes.result) {
-            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
-        }
-        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
-    }
-
-    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
-        /*
-            check returned normalQuote
-            respond to quote 
-            receive response from sdk
-            check fxQuote
-            return returned quote in format specified for customer to review 
-        */
-        let acceptRes: THttpResponse<TtransferContinuationResponse>;
-        if (!res.transferId) {
-            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
-        }
-        const validateQuoteRes = this.validateReturnedQuote(res);
-        if (!validateQuoteRes.result) {
-            acceptRes = await this.sdkClient.updateTransfer({
-                "acceptQuote": false
-            }, res.transferId);
-            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
-        }
-        acceptRes = await this.sdkClient.updateTransfer({
-            "acceptQuote": true
-        }, res.transferId);
-        const validateFxRes = this.validateConversionTerms(acceptRes.data);
-        if (!validateFxRes.result) {
-            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
-        }
-        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
+        return "0";
     }
 
     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): TValidationResponse {
@@ -512,7 +378,6 @@ export class CoreConnectorAggregate {
             message.push(`this.mtnConfig.MTN_ENV ${this.mtnConfig.MTN_ENV} did not equal transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferResponse.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency}`);
         }
         if (transferResponse.amountType === 'SEND') {
-
             if (!(transferResponse.amount === transferResponse.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount)) {
                 result = false;
                 message.push(`transferResponse.amount ${transferResponse.amount} did not equal transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.amount ${transferResponse.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount}`);
@@ -527,7 +392,6 @@ export class CoreConnectorAggregate {
                 result = false;
                 message.push(`transferResponse.currency ${transferResponse.currency} did not equal transferResponse.fxQuotesResponse?.body.conversionTerms.sourceAmount.currency ${transferResponse.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency} `);
             }
-
         } else if (transferResponse.amountType === 'RECEIVE') {
             if (!(transferResponse.amount === transferResponse.fxQuoteResponse?.body.conversionTerms.targetAmount.amount)) {
                 result = false;
@@ -540,7 +404,6 @@ export class CoreConnectorAggregate {
         }
         return { result, message };
     }
-
 
     private validateReturnedQuote(transferResponse: TSDKOutboundTransferResponse): TValidationResponse {
         this.logger.info(`Validating Retunred Quote with transfer response amount${transferResponse.amount}`);
@@ -555,13 +418,11 @@ export class CoreConnectorAggregate {
         }
         const quoteResponseBody = transferResponse.quoteResponse?.body;
         const fxQuoteResponseBody = transferResponse.fxQuoteResponse?.body;
-
         if (!quoteResponseBody) {
             throw SDKClientError.noQuoteReturnedError();
         }
         if (transferResponse.amountType === "SEND") {
             const quoteRequestAmount: string = transferResponse.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount ? transferResponse.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount : transferResponse.amount;
-
             if (!(parseFloat(quoteRequestAmount) === parseFloat(quoteResponseBody.transferAmount.amount) - parseFloat(quoteResponseBody.payeeFspCommission?.amount || "0"))) {
                 result = false;
                 message.push(`transferResponse.amount ${transferResponse.amount} or transferResponse.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount ${transferResponse.fxQuoteResponse?.body?.conversionTerms?.targetAmount?.amount} did not equal quoteResponseBody.transferAmount.amount ${quoteResponseBody.transferAmount.amount} minus quoteResponseBody.payeeFspCommission?.amount ${quoteResponseBody.payeeFspCommission?.amount}`);
@@ -602,6 +463,147 @@ export class CoreConnectorAggregate {
         return { result, message };
     }
 
+
+
+    private async getTSDKOutboundTransferRequest(transfer: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+        const res = await this.mtnClient.getKyc({
+            msisdn: transfer.payer.payerId
+        });
+        return {
+            'homeTransactionId': transfer.homeTransactionId,
+            'from': {
+                'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
+                'idValue': transfer.payer.payerId,
+                'fspId': this.mtnConfig.FSP_ID,
+                "displayName": `${res.given_name} ${res.family_name}`,
+                "firstName": res.given_name,
+                "middleName": res.given_name,
+                "lastName": res.family_name,
+                "merchantClassificationCode": "123",
+                "supportedCurrencies": [this.mtnConfig.DFSP_CURRENCY]
+            },
+            'to': {
+                'idType': transfer.payeeIdType,
+                'idValue': transfer.payeeId,
+            },
+            'amountType': amountType,
+            'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
+            'amount': "sendAmount" in transfer ? transfer.sendAmount : transfer.receiveAmount,
+            'transactionType': transfer.transactionType,
+            'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
+            'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType)
+        };
+    }
+
+
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
+        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
+            return [
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth : "Not defined"
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
+                },
+                {
+                    "key": "CdtTrfTxInf.Dbtr.Nm",
+                    "value": sendMoneyRequestPayload.payer.name
+                },
+                {
+                    "key": "CdtTrfTxInf.Purp.Cd",
+                    "value": amountType === "SEND" ? "MP2P" : "IPAY"
+                }
+            ];
+        }
+    }
+
+
+    // Payer
+    async sendMoney(transfer: TMTNSendMoneyRequest | TMTNMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TMTNSendMoneyResponse> {
+        this.logger.info(`Transfer from mtn account with ID ${transfer.payer.payerId}`);
+
+        const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
+        const res = await this.sdkClient.initiateTransfer(transferRequest);
+        if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
+        } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
+        } else {
+            throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
+        }
+    }
+
+    private checkPayeeKYCInformation(res: TSDKOutboundTransferResponse | TtransferContinuationResponse): boolean {
+        return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
+    }
+
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
+        /*
+            check fxQuote
+            respond to conversion terms
+            receive response from sdk
+            check return quote
+            return normalQuote in required format for customer to review
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateFxRes = this.validateConversionTerms(res);
+        if (!validateFxRes.result) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptConversion": false
+            }, res.transferId);
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptConversion": true
+        }, res.transferId);
+        const validateQuoteRes = this.validateReturnedQuote(acceptRes.data);
+        if (!validateQuoteRes.result) {
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
+        }
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
+    }
+
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
+        /*
+            check returned normalQuote
+            respond to quote
+            receive response from sdk
+            check fxQuote
+            return returned quote in format specified for customer to review
+        */
+        let acceptRes: THttpResponse<TtransferContinuationResponse>;
+        if (!res.transferId) {
+            throw ValidationError.transferIdNotDefinedError("Transfer Id not defined in transfer response", "4000", 500);
+        }
+        const validateQuoteRes = this.validateReturnedQuote(res);
+        if (!(validateQuoteRes.result && this.checkPayeeKYCInformation(res))) {
+            acceptRes = await this.sdkClient.updateTransfer({
+                "acceptQuote": false
+            }, res.transferId);
+            throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
+        }
+        acceptRes = await this.sdkClient.updateTransfer({
+            "acceptQuote": true
+        }, res.transferId);
+        const validateFxRes = this.validateConversionTerms(acceptRes.data);
+        if (!validateFxRes.result) {
+            throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
+        }
+        return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
+    }
 
     private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
         return {

@@ -37,6 +37,7 @@ import {
     TNMError,
     TNMInvoiceRequest,
     TNMInvoiceResponse,
+    TNMMerchantPaymentRequest,
     TNMSendMoneyRequest,
     TNMSendMoneyResponse,
     TNMUpdateSendMoneyRequest,
@@ -345,19 +346,19 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
     }
 
     // Payer
-    async sendMoney(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TNMSendMoneyResponse> {
+    async sendMoney(transfer: TNMSendMoneyRequest | TNMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TNMSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
         const res = await this.sdkClient.initiateTransfer(await this.getTSDKOutboundTransferRequest(transfer, amountType));
         if (res.data.currentState === "WAITING_FOR_CONVERSION_ACCEPTANCE") {
-            return this.handleSendTransferRes(res.data);
+            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
         } else if (res.data.currentState === "WAITING_FOR_QUOTE_ACCEPTANCE") {
-            return this.handleReceiveTransferRes(res.data);
+            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(`Returned currentStateUnsupported. ${res.data.currentState}`, { httpCode: 500, mlCode: "2000" });
         }
     }
 
-    private async handleSendTransferRes(res: TSDKOutboundTransferResponse): Promise<TNMSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TNMSendMoneyResponse> {
         /*
             check fxQuote
             respond to conversion terms
@@ -383,10 +384,10 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!validateQuoteRes.result) {
             throw ValidationError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
-        return this.getTCbsSendMoneyResponse(acceptRes.data);
+        return this.getTCbsSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse): Promise<TNMSendMoneyResponse> {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TNMSendMoneyResponse> {
         /*
             check returned normalQuote
             respond to quote 
@@ -412,7 +413,20 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         if (!validateFxRes.result) {
             throw ValidationError.invalidConversionQuoteError(validateFxRes.message.toString(), "4000", 500);
         }
-        return this.getTCbsSendMoneyResponse(acceptRes.data);
+        return this.getTCbsSendMoneyResponse(acceptRes.data, homeTransactionId);
+    }
+
+    private getQuoteCharges(transferRes: TSDKOutboundTransferResponse): string {
+        return parseFloat(transferRes.quoteResponse?.body.payeeFspFee?.amount ?? "0").toString();
+    }
+
+    private getFxQuoteResponseCharges(data: TSDKOutboundTransferResponse): string {
+        if (data.fxQuoteResponse && data.fxQuoteResponse.body.conversionTerms.charges) {
+            return data.fxQuoteResponse.body.conversionTerms.charges.reduce((total, charge) => {
+                return total + parseFloat(charge.sourceAmount !== undefined ? charge.sourceAmount.amount : "0");
+            }, 0).toString();
+        }
+        return "0";
     }
 
     private validateConversionTerms(transferResponse: TSDKOutboundTransferResponse): TValidationResponse {
@@ -511,24 +525,27 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
         return { result, message };
     }
 
-    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse): TNMSendMoneyResponse {
+    private getTCbsSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TNMSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : "",
+                "name": transfer.getPartiesResponse?.body.party.name !== undefined ? transfer.getPartiesResponse?.body.party.name : ""    
             },
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "sendAmount": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.amount : "No send amount ",
+            "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency : "No send currency ",
+            "targetFees": this.getQuoteCharges(transfer),
+            "sourceFees": this.getFxQuoteResponseCharges(transfer),
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+            "homeTransactionId": homeTransactionId
         };
     }
 
-    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
+    private async getTSDKOutboundTransferRequest(transfer: TNMSendMoneyRequest | TNMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): Promise<TSDKOutboundTransferRequest> {
         const res = await this.tnmClient.getKyc({
             msisdn: transfer.payer.payerId
         });
@@ -550,35 +567,39 @@ export class CoreConnectorAggregate implements ICoreConnectorAggregate {
             },
             'amountType': amountType,
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
-            'amount': transfer.sendAmount,
+            'amount': 'sendAmount' in transfer ? transfer.sendAmount : transfer.receiveAmount,
             'transactionType': transfer.transactionType,
             'quoteRequestExtensions': this.getOutboundTransferExtensionList(transfer, amountType),
             'transferRequestExtensions': this.getOutboundTransferExtensionList(transfer,amountType)
         };
     }
 
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
+    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TNMSendMoneyRequest | TNMMerchantPaymentRequest, amountType: "SEND" | "RECEIVE"): TPayerExtensionListEntry[] | undefined {
         if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
             return [
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.BirthDt",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
+                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth : "Not defined"
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CityOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
                 },
                 {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
+                    "key": "CdtTrfTxInf.Dbtr.Id.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
                     "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
                 },
                 {
-                    "key":"CdtTrfTxInf.Purp.Cd",
-                    "value":amountType === "SEND" ? "MP2P" : "IPAY"
+                    "key": "CdtTrfTxInf.Dbtr.Nm",
+                    "value": sendMoneyRequestPayload.payer.name
+                },
+                {
+                    "key": "CdtTrfTxInf.Purp.Cd",
+                    "value": amountType === "SEND" ? "MP2P" : "IPAY"
                 }
             ];
         }

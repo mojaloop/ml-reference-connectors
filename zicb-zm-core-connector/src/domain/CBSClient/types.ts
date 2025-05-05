@@ -67,7 +67,26 @@ export type TZicbSendMoneyRequest = {
     };
 }
 
-export type TZicbMerchantPaymentRequest = TZicbSendMoneyRequest;
+export type TZicbMerchantPaymentRequest = {
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveAmount": string;
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionDescription": string;
+    "transactionType": components['schemas']['transferTransactionType'];
+    "payer": {
+        "name": string;
+        "payerId": string;
+        "DateAndPlaceOfBirth": {
+            "BirthDt": string;
+            "PrvcOfBirth": string;
+            "CityOfBirth": string;
+            "CtryOfBirth": string;
+        }
+    }
+}
 
 // Response sent back to ZICB
 
@@ -76,17 +95,17 @@ export type TZicbSendMoneyResponse = {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "firstName": string;
-        "lastName": string;
-        "dateOfBirth": string;
-    },
-    "receiveAmount": string;
-    "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
+        "name": string;
+    };
+    "sendAmount": string,
+    "sendCurrency": string,
+    "receiveAmount": string,
+    "receiveCurrency": string,
+    "targetFees": string,
+    "sourceFees": string,
     "transactionId": string;
+    "homeTransactionId": string;
 }
-
 export type TZicbMerchantPaymentResponse = TZicbSendMoneyResponse;
 
 export type TZicbUpdateSendMoneyRequest = {
