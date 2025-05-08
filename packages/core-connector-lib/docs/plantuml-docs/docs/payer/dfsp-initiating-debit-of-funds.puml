@@ -3,17 +3,18 @@
 skinparam defaultFontSize 10
 autonumber
 
-participant "FINCA Customer App" as App
+participant "DFSP Customer App" as App
 participant "Core Connector" as Core
 participant "ML Connector" as ML
-participant "FINCA API" as BankAPI
+participant "DFSP API" as BankAPI
 
 App ->> App: Seek customer consent and debit funds from customer wallet if customer consents
 
-App ->> Core: PUT /send-money/{id}
+App ->> Core: PUT /send-money/{id} OR PUT /merchant-payment/{id}
 note left
 {
     "acceptQuote": true
+    "homeTransactionId": "HTX123456789"
 }
 end note
 

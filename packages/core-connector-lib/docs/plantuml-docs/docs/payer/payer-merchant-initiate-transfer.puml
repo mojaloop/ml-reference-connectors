@@ -7,8 +7,8 @@ skinparam wrapWidth 50                ' Set the width of the note
 
 autonumber
 
-actor "FINCA Customer" as Customer
-participant "FINCA Customer App" as App
+actor "D SPCustomer" as Customer
+participant "D SPCustomer App" as App
 participant "Core Connector" as Core
 participant "ML Connector" as ML
 
@@ -65,11 +65,8 @@ alt if WAITING_FOR_CONVERSION_ACCEPTANCE
         ML -->> Core: Response 
         Core -->> App: Response 500
     end
-
-    Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
 end
 
-ML -->> Core: Response 200
 Core ->> Core: Prepare Quote Details
 
 Core -->> App: Response 200 [Quote]

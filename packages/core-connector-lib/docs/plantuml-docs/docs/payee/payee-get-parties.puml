@@ -5,7 +5,7 @@ autonumber
 
 participant "ML Connector" as ML
 participant "Core Connector" as CC
-participant "FINCA API" as SBAPI
+participant "DFSP API" as SBAPI
 
 ML ->> CC: GET /parties/{idType}/{idValue}
 
