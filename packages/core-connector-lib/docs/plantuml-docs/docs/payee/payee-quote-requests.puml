@@ -1,0 +1,125 @@
+@startuml name="payee-quote-request"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "FINCA API" as SBAPI
+
+ML ->> CC: POST /quote-requests/{}
+
+alt if required fields missing
+    CC -->> ML: Response 400 Bad Request
+end
+
+CC ->> CC: Validation Check,\nQuote Validation,\nExpiration Check
+
+alt if Id Type invalid
+    CC -->> ML: Response 400 Bad Request
+end
+
+alt if Currency Not Supported
+    CC -->> ML: Response 500
+end
+
+CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
+
+SBAPI -->> CC: Response
+note right
+{
+  "partyIdType": "MSISDN",
+  "partyIdentifier": "string",
+  "name": "string",
+  "currency": "MWK",
+  "isActive": true
+}
+end note
+
+CC ->> CC: Response Check
+
+alt If Response is Not Successful
+    CC -->> ML: Response 500
+end
+
+alt If No Party found
+    CC -->> ML: Response 404
+end
+
+CC ->> SBAPI: POST /quotes
+note left
+{
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "1110202939338",
+        "accountType": "SAVINGS"
+    },
+    "amount": {
+        "amount": 100.5,
+        "currency": "MWK"
+    }
+}
+end note
+
+
+SBAPI -->> CC: Response 200 [Qoute]
+note right
+{
+    "quoteId": "adss2-adsa-2232-fafa",
+    "transferId": "THRHEIE24323FF",
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "11110203420498",
+        "accountType": "SAVINGS",
+        "name": "John Doe"
+    },
+    "currency": "MWK",
+    "sendAmount": 150,
+    "receiveAmount": 140,
+    "fees": 10,
+    "expiry": "2025-04-16T12:37:12.328Z"
+}
+end note
+
+CC ->> CC: Calculate Charge
+
+CC ->> SBAPI: POST /agreements/due-diligence
+note left
+{
+    "payer": {
+            "partyIdType": "ACCOUNT_NUMBER",
+            "partyIdentifier": "10086784563219",
+            "dfspId": "STANBANK_MW",
+            "dfspLei": "fincamw",
+            "accountType": "SAVINGS"
+    },
+    "payee": {
+            "partyIdType": "MSISDN",
+            "partyIdentifier": "9993472288",
+            "dfspId": "AIRTEL_ZM",
+            "dfspLei": "airtelzambia",
+            "accountType": "WALLET"
+    },
+    "transferAmount": {
+            "amount": 150,
+            "currency": "MWK"
+    },
+    "purposeCode": "MP2P",
+}
+end note
+
+SBAPI -->> CC: Response 200 [Due Diligence]
+note right
+{
+    "canTransferProceed": true,
+}
+end note
+
+CC ->> CC: Due Diligence Check
+alt if canTransferProceed == false
+    CC -->> ML: Response 500
+end
+
+CC ->> CC: Prepare Response
+CC -->> ML: Response 200
+@enduml
