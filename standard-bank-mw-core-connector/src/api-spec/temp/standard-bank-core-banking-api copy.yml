@@ -1,0 +1,418 @@
+openapi: 3.0.1
+info:
+  title: Core Banking System Core Connector Send Money API
+  description: >
+    
+  license:
+    name: Apache License Version 2.0, January 2004
+    url: https://github.com/mojaloop/documentation/blob/main/LICENSE.md
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Health check endpoint
+      description: >-
+        This endpoint allows a user of the SDK scheme adapter to check the
+        outbound transfers service is listening.
+      tags:
+        - Health
+      responses:
+        "200":
+          description: >-
+            Returns empty body if the scheme adapter outbound transfers service
+            is running.
+ 
+
+  /account/{accountId}:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        description: >-
+          The account ID of the DFSP to get account information for.
+        schema:
+          type: string
+          example: "1234567890"
+    get:
+      summary: Get account details 
+      description: >-
+        The Endpoint for getting account information of a DFSP
+
+      operationId: getAccount
+      tags:
+        - Get Account
+      responses:
+        "200":
+          description: >-
+            Account exists and is active 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getAccountResponse"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+  /quote:
+    post:
+      summary: Get cost of transfer
+      description: >-
+        The Endpoint for getting the cost of a transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/getQuoteRequest"
+              
+      operationId: getAccount
+      tags:
+        - Get Quote
+      responses:
+        "200":
+          description: >-
+            Account exists and is active 
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getQuoteResponse"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+  
+  /reserve-funds:
+    post:
+      summary: Reserve funds for payee
+      description: >-
+        The Endpoint for reserving funds for a payee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/reserveFundsRequest"
+              
+      operationId: reserveFunds
+      tags:
+        - Payee Funds
+      responses:
+        "200":
+          description: >-
+            Reserve funds for payee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/reserveFundsResponse"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+  /commit-funds:
+    post:
+      summary: Commit funds to payee account
+      description: >-
+        The Endpoint for committing funds to a payee account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/commitFundsRequest"
+              
+      operationId: commitFunds
+      tags:
+        - Payee Funds
+      responses:
+        "200":
+          description: >-
+            Reserve funds for payee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/commitFundsResponse"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+  /unreserve-funds:
+    post:
+      summary: Unreserve funds for payee
+      description: >-
+        The Endpoint for unreserving funds for a payee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/unreserveFundsRequest"
+              
+      operationId: unreserveFunds
+      tags:
+        - Payee Funds
+      responses:
+        "200":
+          description: >-
+            Unreserve funds for payee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unreserveFundsRequest"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+  /account-refund:
+    post:
+      summary: Refund payer account on failed transfer
+      description: >-
+        The Endpoint for refunding a payer account on failed transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/accountRefundRequest"
+              
+      operationId: accountRefund
+      tags:
+        - Payee Funds
+      responses:
+        "200":
+          description: >-
+            Refund payer account on failed transfer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/accountRefundResponse"
+        "400":
+          description: >-
+            Response for a bad request.
+        "500":
+          description: >-
+            Response for an internal server error
+        "504":
+          description: >-
+            Response for a timed out transfer
+
+
+
+
+
+components:
+  schemas:
+    getAccountResponse:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          example: "1234567890"
+        name:
+          type: string
+          example: "Prince Thawani"
+        isActive:
+          type: boolean
+          example: true
+        
+
+    getQuoteRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          example: 150.00
+        currency:
+          type: string
+          example: "MWK"
+        destinationAccountId:
+          type: string
+          example: "1234567890"
+
+
+    getQuoteResponse:
+      type: object
+      properties:
+        currency:
+            type: string
+            example: "MWK"
+        receiveAmount:
+          type: number
+          example: 140.00
+        fees:
+          type: number
+          example: 10.00
+
+        
+    
+    reserveFundsRequest:
+      type: object
+      properties:
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        destinationAccountId:
+          type: string
+          example: "1234567890"
+        transferId:
+          type: string
+          example: "YXYXYXYXY"
+
+
+    reserveFundsResponse:
+      type: object
+      properties:
+        isReserved:
+          type: boolean
+          example: true
+        currency:
+          type: string
+          example: "MWK"
+        accountNumber:
+          type: string
+          example: "1234567890"
+        transferId:
+          type: string
+          example: "XYXYXYXYXYX"
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+        amount:
+          type: number
+          example: 150.00
+        
+
+    commitFundsRequest:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+
+
+    commitFundsResponse:
+      type: object
+      properties:
+        isCommitted:
+          type: boolean
+          example: true
+        currency:
+          type: string
+          example: "MWK"
+        accountNumber:
+          type: string
+          example: "1234567890"
+        amount:
+          type: number
+          example: 150.00
+        transferId:
+          type: string
+          example: "XYXYXYXYXYX"
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+
+
+    accountRefundRequest:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+
+
+    accountRefundResponse:
+      type: object
+      properties:
+        isRefunded:
+          type: boolean
+          example: true
+        accountNumber:
+          type: string
+          example: "1234567890"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        transferId:
+          type: string
+          example: "XYXYXYXYXYX"
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+        transferStatus:
+          type: string
+          example: "FAILED"
+
+
+    unreserveFundsRequest:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+
+
+    unreserveFundsResponse:
+      type: object
+      properties:
+        isUnreserved:
+          type: boolean
+          example: true
+        currency:
+          type: string
+          example: "MWK"
+        accountNumber:
+          type: string
+          example: "1234567890"
+        amount:
+          type: number
+          example: 150.00
+        transferId:
+          type: string
+          example: "XYXYXYXYXYX"
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+        transferStatus:
+          type: string
+          example: "FAILED"

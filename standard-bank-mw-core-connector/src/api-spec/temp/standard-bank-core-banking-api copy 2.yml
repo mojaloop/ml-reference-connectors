@@ -1,0 +1,511 @@
+openapi: 3.0.1
+info:
+  title: Standard Bank API
+  description: >
+    Specification for querying transfer status and details via the Standard Bank Transfer API.
+
+    This API is implemented by the Standard Bank Core Banking connector. It allows
+    external systems to retrieve the status and metadata of previously initiated transfers,
+    using the unique `transferId` assigned to each transaction.
+
+    **USE CASE AND SCENARIO**
+
+    Suppose a user initiates a funds transfer through an application integrated with Standard Bank’s services.
+    At any point after initiation, the user or system may wish to check the progress, status,
+    or final outcome of the transaction — whether it's pending, committed, or failed.
+    
+    To facilitate this, a GET request is issued to the `/transfer/{transferId}` endpoint of this API,
+    where the backend responds with all relevant data about the transfer.
+
+    This enables applications to provide real-time feedback to users and maintain consistent transaction
+    records across integrated systems.
+  version: 1.0.0
+  license:
+    name: Apache License Version 2.0, January 2004
+    url: https://github.com/mojaloop/documentation/blob/main/LICENSE.md
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      tags: [Health]
+      description: Check if the service is operational.
+      responses:
+        "200":
+          description: Service is running.
+
+  /accounts/{partyIdType}/{partyIdentifier}:
+    get:
+      summary: Get Account Details
+      tags: [Accounts]
+      description: Retrieve details of a DFSP account by ID.
+      operationId: getAccount
+      parameters:
+        - name: partyId
+          in: path
+          required: true
+          description: The account ID of the DFSP.
+          schema:
+            type: string
+            example: "1234567890"
+        - name: partyIdType
+          in: path  
+          required: true
+          description: The account type of the DFSP.
+          schema:
+            type: string
+            example: "MSISDN"
+      responses:
+        "200":
+          description: Account details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAccountResponse"
+        "400":
+          description: Bad request.
+        "500":
+          description: Internal server error.
+        "504":
+          description: Request timed out.
+
+  /transfers/{transferId}:
+    parameters:
+      - name: transferId
+        in: path
+        required: true
+        description: Unique ID representing a specific transfer
+        schema:
+          type: string
+          example: "ABC123XYZ"
+    get:
+      summary: Get transfer details
+      description: Retrieve details of a specific transfer using its transfer ID.
+      operationId: getTransferDetails
+      tags: [Transfers]
+      responses:
+        "200":
+          description: Transfer details found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/transferDetailsResponse"
+        "404":
+          description: Transfer not found
+        "500":
+          description: Internal server error
+
+  /quotes:
+    post:
+      summary: Get Transfer Quote
+      tags: [Agreements]
+      description: Calculate transfer cost including fees.
+      operationId: getQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetQuoteRequest"
+      responses:
+        "200":
+          description: Quote generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetQuoteResponse"
+        "400":
+          description: Bad request.
+        "500":
+          description: Internal server error.
+        "504":
+          description: Request timed out.
+
+  /agreements/due-dilligence:
+    post:
+      summary: Get Transfer Quote
+      tags: [Agreements]
+      description: Calculate transfer cost including fees.
+      operationId: agreements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgreementsRequest"
+      responses:
+        "200":
+          description: Quote generated successfully.
+          # content:
+          #   application/json:
+              # schema:
+                # $ref: "#/components/schemas/AgreementsResponse"
+        "400":
+          description: Bad request.
+        "500":
+          description: Internal server error.
+        "504":
+          description: Request timed out.
+
+
+  /funds/reserve:
+    post:
+      summary: Reserve Funds
+      tags: [Transfers]
+      description: Reserve funds for a payee.
+      operationId: reserveFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReserveFundsRequest"
+      responses:
+        "200":
+          description: Funds reserved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReserveFundsResponse"
+        "400": { description: Bad request. }
+        "500": { description: Internal server error. }
+        "504": { description: Request timed out. }
+
+  /funds/commit:
+    post:
+      summary: Commit Reserved Funds
+      tags: [Transfers]
+      description: Commit previously reserved funds to the payee account.
+      operationId: commitFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommitFundsRequest"
+      responses:
+        "200":
+          description: Funds committed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitFundsResponse"
+        "400": { description: Bad request. }
+        "500": { description: Internal server error. }
+        "504": { description: Request timed out. }
+
+  /funds/unreserve:
+    post:
+      summary: Unreserve Funds
+      tags: [Transfers]
+      description: Release previously reserved funds.
+      operationId: unreserveFunds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnreserveFundsRequest"
+      responses:
+        "200":
+          description: Funds unreserved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreserveFundsResponse"
+        "400": { description: Bad request. }
+        "500": { description: Internal server error. }
+        "504": { description: Request timed out. }
+
+  /funds/refund:
+    post:
+      summary: Refund Payer Account
+      tags: [Transfers]
+      description: Refund payer's account due to a failed transfer.
+      operationId: refundAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRefundRequest"
+      responses:
+        "200":
+          description: Account refunded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountRefundResponse"
+        "400": { description: Bad request. }
+        "500": { description: Internal server error. }
+        "504": { description: Request timed out. }
+
+components:
+  schemas:
+    GetAccountResponse:
+      type: object
+      properties:
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        name:
+          type: string
+          example: "John Doe"
+        isActive:
+          type: boolean
+          example: true
+
+    GetQuoteRequest:
+      type: object
+      required: [amount, currency, partyIdType, destinationPartyId]
+      properties:
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+
+    GetQuoteResponse:
+      type: object
+      properties:
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+
+        receiveAmount:
+          type: number
+          example: 140.00
+        fees:
+          type: number
+          example: 10.00
+        isActive:
+          type: boolean
+          example: true
+
+    ReserveFundsRequest:
+      type: object
+      required: [currency, amount, destinationAccountId, transferId]
+      properties:
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+
+    ReserveFundsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        isReserved:
+          type: boolean
+          example: true
+
+    CommitFundsRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+
+    CommitFundsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        isCommitted:
+          type: boolean
+          example: true
+
+    UnreserveFundsRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+
+    UnreserveFundsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        transferStatus:
+          type: string
+          example: "FAILED"
+        isUnreserved:
+          type: boolean
+          example: true
+
+    AccountRefundRequest:
+      type: object
+      required: [reserveId]
+      properties:
+        reserveId:
+          type: string
+          example: "aaaaabbababa"
+
+    AccountRefundResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        partyIdentifier:
+          type: string
+          example: "0086784563219"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        currency:
+          type: string
+          example: "MWK"
+        amount:
+          type: number
+          example: 150.00
+        transferStatus:
+          type: string
+          example: "FAILED"
+        isRefunded:
+          type: boolean
+          example: true
+
+    transferDetailsResponse:
+      type: object
+      properties:
+        reserveId:
+          type: string
+          example: "abcdef123456"
+        transferId:
+          type: string
+          example: "ABC123XYZ"
+        partyIdType:
+          type: string
+          example: "ACCOUNT_NUMBER"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        partyIdentifier:
+          type: string
+          example: "1234567890"
+        currency:
+          type: string
+          example: "MWK"
+        receiveAmount:
+          type: number
+          example: 140.00
+        fee:
+          type: number
+          example: 10.00
+        status:
+          type: string
+          example: "COMMITTED"
+
+    AgreementsRequest:
+      type: object
+      required: [currency, amount, payerIdType, payerId, payeeIdType, payeeId, payerDFSP, payerDFSP_LEI, payeeDFSP, payeeDFSP_LEI]
