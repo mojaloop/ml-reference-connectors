@@ -54,7 +54,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
                 BackendQuoteRequest: this.quoteRequests.bind(this),
                 BackendTransfersPost: this.transfers.bind(this),
                 BackendTransfersPut: this.updateTransfers.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
+                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(400),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
         });
@@ -121,7 +121,7 @@ export class CoreConnectorRoutes extends BaseRoutes {
         try {
             const result = await this.aggregate.receiveTransfer(transfer);
             this.logger.info(`Transfers ${transfer}`);
-            return this.handleResponse(result, h, 201);
+            return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             return this.handleError(error, h);
         }

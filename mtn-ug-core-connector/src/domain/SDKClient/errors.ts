@@ -69,4 +69,11 @@ export class SDKClientError extends BasicError {
             options
         );
     }
+
+    static getTransfersError(message: string, options: ErrorOptions){
+        return new SDKClientError(
+            message,
+            options
+        );
+    }
 }
