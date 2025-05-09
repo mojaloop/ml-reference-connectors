@@ -242,7 +242,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 "data": {
                     "full_name": "Promise Mphoola"
                 }
-
             });
             sdkClient.initiateTransfer = jest.fn().mockResolvedValue({
                 ...sdkInitiateTransferResponseDto(MSISDN_NO, "WAITING_FOR_CONVERSION_ACCEPTANCE")
