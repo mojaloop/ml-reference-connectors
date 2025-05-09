@@ -33,7 +33,7 @@ import { loggerFactory } from '../../../src/infra/logger';
 import config from '../../../src/config';
 import { IMTNClient } from '../../../src/domain/CBSClient';
 import { MTNClientFactory } from '../../../src/domain/CBSClient/MTNClientFactory';
-import {quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, sendMoneyMerchantPaymentDTO, TMTNCallbackPayloadDto, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
+import {quoteRequestDto, sdkInitiateTransferResponseDto, sendMoneyDTO, sendMoneyMerchantPaymentDTO, transferPatchNotificationRequestDto, transferRequestDto, updateMerchantPaymentRequestDTO, updateSendMoneyDTO } from '../../fixtures';
 import { randomUUID } from 'crypto';
 
 
@@ -190,7 +190,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test("Update Send Money, should trigger a request to pay using mtn client", async () => {
             //Arrange 
-            const updateSendMoneyPayload = updateSendMoneyDTO(1000, true, idValue);
+            const updateSendMoneyPayload = updateSendMoneyDTO(true);
             sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
             const sdkUpdateSpy = jest.spyOn(sdkClient,"updateTransfer");
 
@@ -256,7 +256,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
 
         test("Update Merchant Collect Money, Should Trigger a Request to Pay Using MTN Client", async () => {
             //Arrange 
-            const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(1000, true, idValue);
+            const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(true);
             sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
             const sdkUpdateSpy = jest.spyOn(sdkClient,"updateTransfer");
 

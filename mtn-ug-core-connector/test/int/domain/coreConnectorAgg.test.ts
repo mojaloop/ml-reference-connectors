@@ -28,7 +28,7 @@
  import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
  import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNMerchantPaymentRequest, TMTNUpdateMerchantPaymentRequest } from '../../../src/domain/CBSClient';
  import { loggerFactory } from '../../../src/infra/logger';
- import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto, merchantPaymentRequestDTO, updateMerchantPaymentRequestDTO } from '../../fixtures';
+ import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, merchantPaymentRequestDTO, updateMerchantPaymentRequestDTO } from '../../fixtures';
  import { Service } from '../../../src/core-connector-svc';
  import axios from 'axios';
  import { randomUUID } from 'crypto';
@@ -144,7 +144,7 @@
  
  
          test('Test Put/ send-money{id}: response should be 200', async () => {
-             const updateSendMoneyRequest: TMTNUpdateSendMoneyRequest = updateSendMoneyDTO(1, true, MSISDN);
+             const updateSendMoneyRequest: TMTNUpdateSendMoneyRequest = updateSendMoneyDTO(true);
              const url = `${DFSP_URL}/send-money/${randomUUID()}`;
              const res = await axios.put(url, JSON.stringify(updateSendMoneyRequest), {
                  headers: {
@@ -178,7 +178,7 @@
          // Confirm Merchant Payment
  
          test('Test Put/merchant-payment{id}: response should be 200', async () => {
-             const updateMerchantPaymentRequest: TMTNUpdateMerchantPaymentRequest = updateMerchantPaymentRequestDTO(1, true, MSISDN);
+             const updateMerchantPaymentRequest: TMTNUpdateMerchantPaymentRequest = updateMerchantPaymentRequestDTO(true);
              const url = `${DFSP_URL}/merchant-payment/${randomUUID()}`;
              const res = await axios.put(url, JSON.stringify(updateMerchantPaymentRequest), {
                  headers: {

@@ -481,12 +481,12 @@ export const merchantPaymentRequestDTO = (idValue: string, amount: string): TMTN
 });
 
 
-export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+export const updateMerchantPaymentRequestDTO = (acceptQuote: boolean): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "homeTransactionId":crypto.randomUUID()
 });
 
-export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
+export const updateSendMoneyDTO = (acceptQuote: boolean): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
   "homeTransactionId":crypto.randomUUID()
 });
