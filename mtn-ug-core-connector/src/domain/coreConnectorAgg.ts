@@ -36,12 +36,11 @@ import {
     PartyType,
     TMTNSendMoneyRequest,
     TMTNSendMoneyResponse,
-    TMTNCollectMoneyRequest,
     TMTNUpdateSendMoneyRequest,
     TMTNKycResponse,
-    TMTNCallbackPayload,
     TMTNRefundRequestBody,
     TMTNMerchantPaymentRequest,
+    TMTNUpdateSendMoneyResponse,
 } from './CBSClient';
 import {
     ILogger,
@@ -56,10 +55,12 @@ import {
     TPayeeExtensionListEntry,
     TPayerExtensionListEntry,
     TValidationResponse,
+    BasicError,
 } from './interfaces';
 import {
     ISDKClient,
     SDKClientError,
+    TGetTransfersResponse,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
@@ -174,7 +175,6 @@ export class CoreConnectorAggregate {
             transferAmountCurrency: quoteRequest.currency,
         };
     }
-
 
     private getQuoteResponseExtensionList(): TPayeeExtensionListEntry[] {
         return [
@@ -334,7 +334,7 @@ export class CoreConnectorAggregate {
 
     }
 
-    private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string): TMTNSendMoneyResponse {
+    private getTMTNSendMoneyResponse(transfer: TSDKOutboundTransferResponse, homeTransactionId: string = ""): TMTNSendMoneyResponse {
         this.logger.info(`Getting response for transfer with Id ${transfer.transferId}`);
         return {
             "payeeDetails": {
@@ -470,7 +470,7 @@ export class CoreConnectorAggregate {
             msisdn: transfer.payer.payerId
         });
         return {
-            'homeTransactionId': transfer.homeTransactionId,
+            'homeTransactionId': transfer.homeTransactionId ? transfer.homeTransactionId : "",
             'from': {
                 'idType': this.mtnConfig.SUPPORTED_ID_TYPE,
                 'idValue': transfer.payer.payerId,
@@ -547,7 +547,7 @@ export class CoreConnectorAggregate {
         return !!(res.quoteResponse?.body.extensionList?.extension && res.quoteResponse?.body.extensionList?.extension.length > 0);
     }
 
-    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
+    private async handleSendTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string = ""): Promise<TMTNSendMoneyResponse> {
         /*
             check fxQuote
             respond to conversion terms
@@ -576,7 +576,7 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string): Promise<TMTNSendMoneyResponse> {
+    private async handleReceiveTransferRes(res: TSDKOutboundTransferResponse, homeTransactionId: string = ""): Promise<TMTNSendMoneyResponse> {
         /*
             check returned normalQuote
             respond to quote 
@@ -605,46 +605,23 @@ export class CoreConnectorAggregate {
         return this.getTMTNSendMoneyResponse(acceptRes.data, homeTransactionId);
     }
 
-    private getTMTNCollectMoneyRequest(deps: TMTNUpdateSendMoneyRequest, transferId: string): TMTNCollectMoneyRequest {
-        return {
-            "amount": deps.amount,
-            "amountType": "RECEIVE",
-            "currency": this.mtnConfig.X_CURRENCY,
-            "externalId": transferId,
-            "payer": {
-                "partyId": deps.msisdn,
-                "partyIdType": this.mtnConfig.SUPPORTED_ID_TYPE,
-            },
-            "payerMessage": deps.payerMessage,
-            "payeeNote": deps.payeeNote,
-
-        };
-    }
-
-    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<void> {
-        this.logger.info(`Updating transfer for id ${transferAccept.msisdn} and transfer id ${transferId}`);
+    async updateSentTransfer(transferAccept: TMTNUpdateSendMoneyRequest, transferId: string): Promise<TMTNUpdateSendMoneyResponse> {
+        this.logger.info(`Updating transfer for transfer id ${transferId} and homeTransactionId ${transferAccept.homeTransactionId}`);
 
         if (!(transferAccept.acceptQuote)) {
+            await this.sdkClient.updateTransfer({acceptQuoteOrConversion: false},transferId);
             throw ValidationError.quoteNotAcceptedError();
         }
-        await this.mtnClient.collectMoney(this.getTMTNCollectMoneyRequest(transferAccept, transferId));
-    }
-
-    async handleCallback(payload: TMTNCallbackPayload): Promise<void> {
-        this.logger.info(`Handling callback for transaction with id ${payload.externalId}`);
-        try {
-            if (payload.status === "SUCCESSFUL") {
-                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: true }, payload.externalId);
-            } else {
-                await this.sdkClient.updateTransfer({ acceptQuoteOrConversion: false }, payload.externalId);
+        try{
+            await this.sdkClient.updateTransfer({acceptQuoteOrConversion: true},transferId);
+            return {
+                transferId: transferId
+            };
+        }catch(error : unknown){
+            if(error instanceof SDKClientError && transferAccept.acceptQuote){
+                await this.handleRefund(this.getRefundRequestBody(transferAccept));
             }
-        } catch (error: unknown) {
-            if (error instanceof SDKClientError) {
-                // perform refund or rollback if payment was successful
-                if (payload.status === "SUCCESSFUL") {
-                    await this.handleRefund(this.getRefundRequestBody(payload));
-                }
-            }
+            throw ValidationError.updateSendMoneyFailedError(`Committing Payment with homeTransactionId ${transferAccept.homeTransactionId} failed. Message ${error instanceof BasicError ? error.message : ""}`,'2000',500);
         }
     }
 
@@ -656,15 +633,14 @@ export class CoreConnectorAggregate {
         }
     }
 
-    private getRefundRequestBody(callbackPayload: TMTNCallbackPayload): TMTNRefundRequestBody {
+    private getRefundRequestBody(updateSendMoneyPayload: TMTNUpdateSendMoneyRequest): TMTNRefundRequestBody {
         return {
-            "amount": callbackPayload.amount,
-            "currency": callbackPayload.currency,
-            "externalId": callbackPayload.externalId,
-            "payerMessage": "Refund",
-            "payeeNote": callbackPayload.payeeNote,
-            "referenceIdToRefund": callbackPayload.financialTransactionId
+            homeTransactionId : updateSendMoneyPayload.homeTransactionId
         };
+    }
+
+    async getTransfers(transferId: string): Promise<TGetTransfersResponse>{
+        return await this.sdkClient.getTransfers(transferId);
     }
 
 }

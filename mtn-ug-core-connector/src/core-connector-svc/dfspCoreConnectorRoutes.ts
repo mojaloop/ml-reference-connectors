@@ -30,7 +30,7 @@ import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
-import { TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
+import { TMTNMerchantPaymentRequest, TMTNSendMoneyRequest, TMTNUpdateMerchantPaymentRequest, TMTNUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 import config from '../config';
 
 const API_SPEC_FILE = config.get('server.DFSP_API_SPEC_FILE');
@@ -54,8 +54,8 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
                 sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
                 initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
                 updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
-                callback: this.callbackHandler.bind(this),
-                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(412),
+                transfersEnquiry: this.getTransfer.bind(this),
+                validationFail: async (context, req, h) => h.response({ error: context.validation.errors }).code(400),
                 notFound: async (context, req, h) => h.response({ error: 'Not found' }).code(404),
             },
         });
@@ -141,15 +141,14 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
         }
     }
 
-    private async callbackHandler(context: Context, request: Request, h:ResponseToolkit){
-        const callbackPayload = request.payload as TMTNCallbackPayload;
-        this.logger.info(`Transfer Callback ${callbackPayload}`);
+    private async getTransfer(context: Context, request: Request, h: ResponseToolkit){
+        const transferId = context.request.params["transferId"] as string;
+        this.logger.info(`Getting transfer with id ${transferId}`);
         try{
-            const callbackRes = await this.aggregate.handleCallback(callbackPayload);
-            return this.handleResponse(callbackRes,h);
-        }catch (error: unknown){
+            const res = await this.aggregate.getTransfers(transferId);
+            return this.handleResponse(res,h);
+        }catch(error : unknown){
             return this.handleError(error,h);
         }
     }
-
 }

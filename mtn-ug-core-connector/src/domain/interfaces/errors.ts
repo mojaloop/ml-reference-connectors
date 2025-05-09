@@ -149,6 +149,13 @@ export class ValidationError extends BasicError {
             httpCode: 500,
         });
     }
+
+    static updateSendMoneyFailedError(message: string, mlCode: string, httpCode: number){
+        return new ValidationError(message,{
+            mlCode: mlCode,
+            httpCode: httpCode,
+        });    
+    }
 }
 
 export class MTNError extends BasicError{

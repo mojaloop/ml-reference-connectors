@@ -422,7 +422,7 @@ export const sendMoneyDTO = (idValue: string, amount: string): TMTNSendMoneyRequ
   "sendAmount": amount,
   "sendCurrency": "UGX",
   "receiveCurrency": "MWK",
-  "transactionDescription": "Payment for services",
+  "purposeCode": "P2P",
   "transactionType": "TRANSFER",
   "payer": {
     "name": "Niza Tembo",
@@ -445,7 +445,7 @@ export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string): TM
   "sendAmount": amount,
   "sendCurrency": "ZMW",
   "receiveCurrency": "ZMW",
-  "transactionDescription": "Payment for services",
+  "purposeCode": "P2P",
   "transactionType": "TRANSFER",
   "payer": {
     "name": "Elijah Okello",
@@ -466,7 +466,7 @@ export const merchantPaymentRequestDTO = (idValue: string, amount: string): TMTN
   "receiveAmount": amount,
   "sendCurrency": "UGX",
   "receiveCurrency": "UGX",
-  "transactionDescription": "Payment for services",
+  "purposeCode": "MP2P",
   "transactionType": "TRANSFER",
   "payer": {
     "name": "Niza Tembo",
@@ -483,18 +483,12 @@ export const merchantPaymentRequestDTO = (idValue: string, amount: string): TMTN
 
 export const updateMerchantPaymentRequestDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "msisdn": idValue,
-  "amount": amount.toString(),
-  "payerMessage": "School Fees",
-  "payeeNote": "School Fees"
+  "homeTransactionId":crypto.randomUUID()
 });
 
 export const updateSendMoneyDTO = (amount: number, acceptQuote: boolean, idValue: string): TMTNUpdateSendMoneyRequest => ({
   "acceptQuote": acceptQuote,
-  "msisdn": idValue,
-  "amount": amount.toString(),
-  "payerMessage": "School Fees",
-  "payeeNote": "School Fees"
+  "homeTransactionId":crypto.randomUUID()
 });
 
 export const TMTNCallbackPayloadDto = (currency: string, idValue: string) => (

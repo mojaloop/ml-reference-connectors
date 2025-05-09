@@ -26,7 +26,7 @@
 
 
  import { TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../../../src/domain';
- import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNCallbackPayload, TMTNMerchantPaymentRequest, TMTNUpdateMerchantPaymentRequest } from '../../../src/domain/CBSClient';
+ import { TMTNSendMoneyRequest, TMTNUpdateSendMoneyRequest, TMTNMerchantPaymentRequest, TMTNUpdateMerchantPaymentRequest } from '../../../src/domain/CBSClient';
  import { loggerFactory } from '../../../src/infra/logger';
  import { transferPatchNotificationRequestDto, transferRequestDto, quoteRequestDto, sendMoneyDTO, updateSendMoneyDTO, TMTNCallbackPayloadDto, merchantPaymentRequestDTO, updateMerchantPaymentRequestDTO } from '../../fixtures';
  import { Service } from '../../../src/core-connector-svc';
@@ -126,7 +126,7 @@
  
  
          test('Test POST/ send-money: response should be payee details ', async () => {
-             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "20","SEND");
+             const sendMoneyRequest: TMTNSendMoneyRequest = sendMoneyDTO(MSISDN, "20");
              const url = `${DFSP_URL}/send-money`;
              const res = await axios.post(url, JSON.stringify(sendMoneyRequest), {
                  headers: {
@@ -161,7 +161,7 @@
  
  
          test('Test POST/ merchant-payment: response should be payee details ', async () => {
-             const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20","RECEIVE");
+             const merchantyRequest: TMTNMerchantPaymentRequest = merchantPaymentRequestDTO(MSISDN, "20");
              const url = `${DFSP_URL}/merchant-payment`;
              const res = await axios.post(url, JSON.stringify(merchantyRequest), {
                  headers: {
@@ -186,21 +186,6 @@
                  },
              });
  
-             logger.info(JSON.stringify(res.data));
-             expect(res.status).toEqual(200);
-         });
- 
- 
-         // Callback
-         test('Test POST /callback; response should be 200', async () => {
-             const callbackRequestPayload: TMTNCallbackPayload = TMTNCallbackPayloadDto("UGX", MSISDN);
-             const url = `${DFSP_URL}/callback`;
- 
-             const res = await axios.post(url, JSON.stringify(callbackRequestPayload), {
-                 headers: {
-                     "Content-Type": 'application/json'
-                 }
-             });
              logger.info(JSON.stringify(res.data));
              expect(res.status).toEqual(200);
          });

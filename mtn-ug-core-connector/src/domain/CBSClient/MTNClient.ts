@@ -38,7 +38,6 @@ import {
     TMTNDisbursementRequestBody,
     TMTNTransactionEnquiryResponse,
     TMTNTransactionEnquiryRequest,
-    TMTNCollectMoneyRequest,
     TAuthParameters,
     TMTNRefundRequestBody,
 } from './types';
@@ -217,41 +216,7 @@ export class MTNClient implements IMTNClient {
         }
     }
 
-
-    // Request To Pay
-
-    async collectMoney(deps: TMTNCollectMoneyRequest): Promise<void> {
-        this.logger.info("Collecting Money from MTN");
-        const url = `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.collectMoney}`;
-        try {
-            const res = await this.httpClient.post<TMTNCollectMoneyRequest, unknown>(url, deps, {
-                headers: {
-                    ...this.getDefaultHeader(
-                        this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
-                    ),
-                    'Authorization': `${await this.getAuthHeader({
-                        subscriptionKey: this.mtnConfig.MTN_COLLECTION_SUBSCRIPTION_KEY,
-                        tokenUrl: `https://${this.mtnConfig.MTN_BASE_URL}${MTN_ROUTES.getToken}`,
-                        apiClient: this.mtnConfig.MTN_COLLECTION_CLIENT_ID,
-                        apiKey: this.mtnConfig.MTN_COLLECTION_API_KEY
-                    })}`,
-                    'X-Reference-Id': deps.externalId
-                }
-            });
-            if (res.statusCode !== 202) {
-                this.logger.error(`Failed to Collect Money: ${res.statusCode}`, { url, data: deps });
-                throw MTNError.collectMoneyError();
-            }
-            this.logger.info("Money collection request accepted.");
-        } catch (error) {
-            this.logger.error(`Error Collecting Money: ${error}`, { url, data: deps });
-            throw error;
-        }
-    }
-
-
     //  Transaction Enquiry (Collection) 
-
 
     async getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse> {
         this.logger.info("Getting Transaction Status Enquiry from MTN");
@@ -298,7 +263,7 @@ export class MTNClient implements IMTNClient {
                         apiClient: this.mtnConfig.MTN_DISBURSEMENT_CLIENT_ID,
                         apiKey: this.mtnConfig.MTN_DISBURSEMENT_API_KEY
                     })}`,
-                    'X-Reference-Id': deps.externalId
+                    'X-Reference-Id': deps.homeTransactionId
                 }
             });
             if (res.statusCode !== 202) {
@@ -320,7 +285,7 @@ export class MTNClient implements IMTNClient {
 
     async logFailedRefund(refundReq: TMTNRefundRequestBody): Promise<void> {
         // todo: to be defined based on what DFSP recommends.
-        this.logger.info("Failed refund transaction id", refundReq.referenceIdToRefund);
+        this.logger.info("Failed refund transaction id", refundReq.homeTransactionId);
         return Promise.resolve();
     }
 

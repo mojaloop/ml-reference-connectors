@@ -145,6 +145,8 @@
  };
  
  export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
+
+ export type TGetTransfersResponse = SDKSchemeAdapter.V2_0_0.Outbound.openapi.components["schemas"]["transferStatusResponse"];
  
  export type TSDKClientDeps = {
      logger: ILogger;
@@ -158,6 +160,7 @@
          transferAccept: TSDKTransferContinuationRequest,
          id: string,
      ): Promise<THttpResponse<TtransferContinuationResponse>>;
+     getTransfers(transferId: string): Promise<TGetTransfersResponse>
  }
  
  

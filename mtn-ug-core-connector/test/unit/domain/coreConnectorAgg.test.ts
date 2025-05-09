@@ -127,10 +127,6 @@ describe('CoreConnectorAggregate Tests -->', () => {
         });
 
         test("Transfer Patch notification should credit the Merchant's account if request body is valid", async () => {
-            // Arrange 
-            mtnClient.collectMoney = jest.fn().mockImplementation(() => {
-                return;
-            });
             const patchNotificationPayload = transferPatchNotificationRequestDto("COMPLETED", idType, idValue, "103");
             //Act
             const res = await ccAggregate.updateTransfer(patchNotificationPayload, randomUUID());
@@ -195,27 +191,15 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test("Update Send Money, should trigger a request to pay using mtn client", async () => {
             //Arrange 
             const updateSendMoneyPayload = updateSendMoneyDTO(1000, true, idValue);
-            mtnClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-            const collectMoney = jest.spyOn(mtnClient, "collectMoney");
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
+            const sdkUpdateSpy = jest.spyOn(sdkClient,"updateTransfer");
 
             //Act 
             const res = await ccAggregate.updateSentTransfer(updateSendMoneyPayload, randomUUID());
 
             // Assert 
             logger.info("Response", res);
-            expect(collectMoney).toHaveBeenCalled();
-        });
-
-        test("Callback should call sdk update transfer", async () => {
-            // Arrange
-            const callbackPayload = TMTNCallbackPayloadDto("EUR", idValue);
-            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce(undefined);
-            const sdkUpdateFn = jest.spyOn(sdkClient, "updateTransfer");
-
-            //Act 
-            await ccAggregate.handleCallback(callbackPayload);
-            // Assert
-            expect(sdkUpdateFn).toHaveBeenCalled();
+            expect(sdkUpdateSpy).toHaveBeenCalled();
         });
     });
 
@@ -273,28 +257,15 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test("Update Merchant Collect Money, Should Trigger a Request to Pay Using MTN Client", async () => {
             //Arrange 
             const updateMerchantPaymentPayload = updateMerchantPaymentRequestDTO(1000, true, idValue);
-            mtnClient.collectMoney = jest.fn().mockResolvedValueOnce(undefined);
-            const collectMoney = jest.spyOn(mtnClient, "collectMoney");
+            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({});
+            const sdkUpdateSpy = jest.spyOn(sdkClient,"updateTransfer");
 
             //Act 
             const res = await ccAggregate.updateSentTransfer(updateMerchantPaymentPayload, randomUUID());
 
             // Assert 
             logger.info("Response", res);
-            expect(collectMoney).toHaveBeenCalled();
-        });
-
-
-        test("Callback should call sdk update transfer", async () => {
-            // Arrange
-            const callbackPayload = TMTNCallbackPayloadDto("EUR", idValue);
-            sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce(undefined);
-            const sdkUpdateFn = jest.spyOn(sdkClient, "updateTransfer");
-
-            //Act 
-            await ccAggregate.handleCallback(callbackPayload);
-            // Assert
-            expect(sdkUpdateFn).toHaveBeenCalled();
+            expect(sdkUpdateSpy).toHaveBeenCalled();
         });
     });
 
