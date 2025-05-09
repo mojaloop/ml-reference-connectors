@@ -98,6 +98,10 @@ paths:
       responses:
         "200":
           description: Send money confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfirmSendMoneyResponse"
         "400":
           description: Bad request
 
@@ -159,66 +163,172 @@ paths:
         - Merchant Payments
       responses:
         "200":
-          description: Send money confirmed successfully
+          description: Merchant Payment confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfirmSendMoneyResponse"
         "400":
           description: Bad request
-
-  /callback:
-    put:
-      operationId: callback
+  
+  /transfers/{transferId}:
+    get:
+      summary: Retrieves information for a specific transfer
+      description: The HTTP request `GET /transfers/{transferId}` is used to get information regarding a transfer created or requested earlier. The `{transferId}` in the URI should contain the `transferId` that was used for the creation of the transfer.
       tags:
-        - Callback Endpoint
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/callbackPayload"
+        - Transaction Enquiry
+      operationId: transfersEnquiry
+      parameters:
+        - $ref: '#/components/parameters/transferId'
       responses:
-        "200":
-          description: Receipt of callback confirmed
+        '200':
+          description: Transfer information successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/transferStatusResponse'
+        '500':
+          description: An error occurred processing the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
 
 components:
+  parameters:
+    transferId:
+      name: transferId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/CorrelationId'
+      description: Identifier of the transfer to continue as returned in the response to a `POST /transfers` request.
   schemas:
-    callbackPayload:
+    errorResponse:
       type: object
       properties:
-        financialTransactionId:
+        statusCode:
           type: string
-          example: BBZMiscxy
-          description: Unique identifier for the transaction.
-        externalId:
+          description: |
+            Backend error code from FSP. Ideally, statusCode is FSPIOP conforming. SDK will use status code to retrieve an FSPIOP error with the same code.
+            Otherwise, a suitable generic FSPIOP will be used with the errorResponse in the FSPIOP error message.
+        message:
           type: string
-          example: "EXT123456789"
-          description: External reference ID for the transaction.
-        amount:
-          type: string
-          example: "5000"
-          description: Transaction amount.
-        currency:
-          type: string
-          example: "UGX"
-          description: Currency of the transaction.
-        payee:
+          description: Error message text.
+    ExtensionKey_v2_1_0:
+      title: ExtensionKey_v2_1_0
+      type: string
+      minLength: 1
+      description: Extension key.
+    ExtensionValue:
+      title: ExtensionValue
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Extension value.
+    Extension_v2_1_0:
+      title: Extension_v2_1_0
+      type: object
+      description: Data model for the complex type Extension.
+      properties:
+        key:
+          $ref: '#/components/schemas/ExtensionKey_v2_1_0'
+        value:
+          $ref: '#/components/schemas/ExtensionValue'
+      required:
+        - key
+        - value
+    ExtensionList_v2_1_0:
+      title: ExtensionList
+      type: object
+      description: Data model for the complex type ExtensionList. An optional list of extensions, specific to deployment.
+      properties:
+        extension:
+          type: array
+          items:
+            $ref: '#/components/schemas/Extension_v2_1_0'
+          minItems: 1
+          maxItems: 16
+          description: Number of Extension elements.
+      required:
+        - extension
+    TransferState:
+      title: TransferState
+      type: string
+      enum:
+        - RECEIVED
+        - RESERVED
+        - COMMITTED
+        - ABORTED
+      description: |-
+        Below are the allowed values for the enumeration.
+        - RECEIVED - Next ledger has received the transfer.
+        - RESERVED - Next ledger has reserved the transfer.
+        - COMMITTED - Next ledger has successfully performed the transfer.
+        - ABORTED - Next ledger has aborted the transfer due to a rejection or failure to perform the transfer.
+      example: RESERVED
+    DateTime:
+      title: DateTime
+      type: string
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:(\.\d{3}))(?:Z|[+-][01]\d:[0-5]\d)$
+      description: The API data type DateTime is a JSON String in a lexical format that is restricted by a regular expression for interoperability reasons. The format is according to [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html), expressed in a combined date, time and time zone format. A more readable version of the format is yyyy-MM-ddTHH:mm:ss.SSS[-HH:MM]. Examples are "2016-05-24T08:38:08.699-04:00", "2016-05-24T08:38:08.699Z" (where Z indicates Zulu time zone, same as UTC).
+      example: '2016-05-24T08:38:08.699-04:00'
+    IlpFulfilment:
+      title: IlpFulfilment
+      type: string
+      pattern: ^[A-Za-z0-9-_]{43}$
+      maxLength: 48
+      description: Fulfilment that must be attached to the transfer by the Payee.
+      example: WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8
+    TransfersIDPutResponse:
+      title: TransfersIDPutResponse
+      type: object
+      description: The object sent in the PUT /transfers/{ID} callback.
+      properties:
+        fulfilment:
+          $ref: '#/components/schemas/IlpFulfilment'
+        completedTimestamp:
+          $ref: '#/components/schemas/DateTime'
+        transferState:
+          $ref: '#/components/schemas/TransferState'
+        extensionList:
+          $ref: '#/components/schemas/ExtensionList_v2_1_0'
+      required:
+        - transferState
+    transferStatus:
+      type: string
+      enum:
+        - ERROR_OCCURRED
+        - WAITING_FOR_PARTY_ACCEPTANCE
+        - WAITING_FOR_QUOTE_ACCEPTANCE
+        - WAITING_FOR_CONVERSION_ACCEPTANCE
+        - COMPLETED
+    transferStatusResponse:
+      type: object
+      required:
+        - transferId
+        - currentState
+        - fulfil
+      properties:
+        transferId:
+          $ref: '#/components/schemas/CorrelationId'
+        currentState:
+          $ref: '#/components/schemas/transferStatus'
+        fulfil:
           type: object
+          required:
+            - body
           properties:
-            partyIdType:
-              type: string
-              example: "MSISDN"
-              description: Type of identifier for the payee.
-            partyId:
-              type: string
-              example: "777503758"
-              description: Payee's identifier.
-        payeeNote:
-          type: string
-          example: "Payment for services"
-          description: Note from the payee.
-        status:
-          type: string
-          example: "TS"
-          description: Status of the transaction.
-
+            body:
+              $ref: '#/components/schemas/TransfersIDPutResponse'
+            headers:
+              type: object
+    CorrelationId:
+      title: CorrelationId
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$|^[0-9A-HJKMNP-TV-Z]{26}$
+      description: Identifier that correlates all messages of the same sequence. The supported identifiers formats are for lowercase [UUID](https://datatracker.ietf.org/doc/html/rfc9562) and uppercase [ULID](https://github.com/ulid/spec)
+      example: b51ec534-ee48-4575-b6a9-ead2955b8069
     merchantPaymentRequest:
       type: object
       properties:
@@ -240,9 +350,9 @@ components:
         receiveCurrency:
           type: string
           example: "KES"
-        transactionDescription:
+        purposeCode:
           type: string
-          example: "Payment for services"
+          example: P2P
         transactionType:
           type: string
           example: "TRANSFER"
@@ -278,10 +388,9 @@ components:
             - name
             - payerId
       required:
-        - homeTransactionId
         - payeeId
         - payeeIdType
-        - sendAmount
+        - receiveAmount
         - sendCurrency
         - receiveCurrency
         - transactionType
@@ -303,6 +412,9 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
+            fspLEI:
+              type: string  
+              example: "984500BA13DAVB8B6C61"
             name:
               type: string
               example: "Niza"
@@ -327,6 +439,9 @@ components:
           example: "10.00"
         transactionId:
           type: string
+          example: "01JKB0F2WV7YVSA6CXGP977XT9"
+        homeTransactionId:
+          type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyResponse:
       type: object
@@ -343,6 +458,9 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
+            fspLEI:
+              type: string  
+              example: "984500BA13DAVB8B6C61"
             name:
               type: string
               example: "Niza"
@@ -392,9 +510,9 @@ components:
         receiveCurrency:
           type: string
           example: "KES"
-        transactionDescription:
+        purposeCode:
           type: string
-          example: "Payment for services"
+          example: P2P
         transactionType:
           type: string
           example: "TRANSFER"
@@ -430,7 +548,6 @@ components:
             - name
             - payerId
       required:
-        - homeTransactionId
         - payeeId
         - payeeIdType
         - sendAmount
@@ -444,15 +561,16 @@ components:
       properties:
         acceptQuote:
           type: boolean
-        msisdn:
+        homeTransactionId:
           type: string
-          example: "777503758"
-        amount:
+          example: "HTV5037Y58"
+      required:
+        - acceptQuote
+        - homeTransactionId
+
+    ConfirmSendMoneyResponse:
+      type: object
+      properties:
+        transferId:
           type: string
-          example: "500"
-        payerMessage:
-          type: string
-          example: "Payment for services"
-        payeeNote:
-          type: string
-          example: "Thank you!"
+          example: "HTV5037Y58"

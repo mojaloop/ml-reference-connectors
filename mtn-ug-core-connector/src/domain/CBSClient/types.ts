@@ -166,27 +166,28 @@ export type TMTNCollectMoneyResponse = {
 
 export type TMTNUpdateSendMoneyRequest = {
     "acceptQuote": boolean;
-    "msisdn": string;
-    "amount": string;
-    "payerMessage": string;
-    "payeeNote": string;
+    "homeTransactionId": string;
+}
+
+export type TMTNUpdateSendMoneyResponse = {
+    "transferId": string;
 }
 
 export type TMTNUpdateMerchantPaymentRequest = TMTNUpdateSendMoneyRequest;
 
 export type TMTNSendMoneyRequest = {
-    "homeTransactionId": string;
+    "homeTransactionId"?: string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendAmount": string; 
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": components['schemas']['Currency'];
-    "transactionDescription": string;
+    "purposeCode": string;
     "transactionType": components['schemas']['transferTransactionType'];
     "payer": {
         "name": string;
         "payerId": string;
-        "DateAndPlaceOfBirth": {
+        "DateAndPlaceOfBirth"?: {
             "BirthDt": string;
             "PrvcOfBirth": string;
             "CityOfBirth": string;
@@ -196,18 +197,18 @@ export type TMTNSendMoneyRequest = {
 }
 
 export type TMTNMerchantPaymentRequest = {
-    "homeTransactionId": string;
+    "homeTransactionId"?: string;
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
     "sendCurrency": components['schemas']['Currency'];
     "receiveAmount": string;
     "receiveCurrency": components['schemas']['Currency'];
-    "transactionDescription": string;
+    "purposeCode": string;
     "transactionType": components['schemas']['transferTransactionType'];
     "payer": {
         "name": string;
         "payerId": string;
-        "DateAndPlaceOfBirth": {
+        "DateAndPlaceOfBirth"?: {
             "BirthDt": string;
             "PrvcOfBirth": string;
             "CityOfBirth": string;
@@ -217,20 +218,6 @@ export type TMTNMerchantPaymentRequest = {
 }
 
 export type TMTNMerchantPaymentResponse = TMTNSendMoneyResponse
-
-
-export type TMTNCallbackPayload = {
-    financialTransactionId: string;
-    externalId: string;
-    amount: string;
-    currency: string;
-    payee: {
-        partyIdType: string;
-        partyId: string;
-    },
-    payeeNote: string;
-    status: string;
-}
 
 export type TMTNSendMoneyResponse = {
     "payeeDetails": {
@@ -249,19 +236,6 @@ export type TMTNSendMoneyResponse = {
     "homeTransactionId": string;
 }
 
-export type TMTNCollectMoneyRequest = {
-    "amount": string;
-    "currency": string;
-    "amountType": "RECEIVE" | "SEND",
-    "externalId": string;
-    "payer": {
-        "partyIdType": string,
-        "partyId": string;
-    },
-    "payerMessage": string;
-    "payeeNote": string;
-}
-
 export type TAuthParameters = {
     subscriptionKey: string;
     apiKey: string;
@@ -270,12 +244,7 @@ export type TAuthParameters = {
 }
 
 export type TMTNRefundRequestBody = {
-    "amount": string;
-    "currency": string;
-    "externalId": string;
-    "payerMessage": string;
-    "payeeNote": string;
-    "referenceIdToRefund": string;
+    "homeTransactionId": string;
 }
 
 export interface IMTNClient {
@@ -284,7 +253,6 @@ export interface IMTNClient {
     logger: ILogger;
     getToken(deps: TAuthParameters): Promise<TGetTokenResponse>;
     getKyc(deps: TGetKycArgs): Promise<TMTNKycResponse>;
-    collectMoney(deps: TMTNCollectMoneyRequest): Promise<void>;
     sendMoney(deps: TMTNDisbursementRequestBody): Promise<void>;
     refundMoney(deps: TMTNRefundRequestBody): Promise<void>;
     getCollectionTransactionEnquiry(deps: TMTNTransactionEnquiryRequest): Promise<TMTNTransactionEnquiryResponse>;
