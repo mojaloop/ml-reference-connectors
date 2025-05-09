@@ -1,0 +1,58 @@
+@startuml name="handle-quote-acceptance"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "DFSP Customer App" as App
+participant "Core Connector" as Core
+participant "ML Connector" as ML
+participant "DFSP API" as BankAPI
+
+App ->> App: Seek customer consent and debit funds from customer wallet if customer consents
+
+App ->> Core: PUT /send-money/{id} OR PUT /merchant-payment/{id}
+note left
+{
+    "acceptQuote": true
+    "homeTransactionId": "HTX123456789"
+}
+end note
+
+Core ->> Core: Check acceptQuote
+
+alt If Quote not Accepted
+    Core ->> ML: PUT /transfers/{id} {acceptQuoteOrConversion = false}
+    ML -->> Core: Response
+    Core -->> App: Response 500 OK
+end
+
+Core ->> ML: PUT /transfers/{id} {acceptQuoteOrConversion = true}
+ML -->> Core: Response
+
+Core ->> Core: Check response
+
+alt if HTTP error code 500, 400, 504 or currentState = ERROR_OCCURED
+    Core ->> BankAPI: POST /funds/refund
+    note left
+    {
+        "homeTransactionId": "FNEWPWPKD3904L",
+        "reason": "CUSTOMER_REQUEST"
+    }
+    end note
+
+    BankAPI -->> Core: Check Response
+    note right
+    {
+        "homeTransactionId": "FNEWPWPKD3904L",
+        "refundCompleted": true
+    }
+    end note
+
+    alt if Response not Successful
+        Core ->> Core: Initiate manual refund
+    end
+end
+
+Core -->> App: Response 200
+
+@enduml

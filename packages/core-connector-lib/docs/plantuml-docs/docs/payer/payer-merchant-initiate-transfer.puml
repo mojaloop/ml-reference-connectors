@@ -1,0 +1,95 @@
+@startuml name="initiate-transfer"
+
+skinparam defaultFontSize 10
+skinparam NoteFontSize 9
+skinparam NoteFontName "Courier New"  ' Monospace font
+skinparam wrapWidth 50                ' Set the width of the note
+
+autonumber
+
+actor "D SPCustomer" as Customer
+participant "D SPCustomer App" as App
+participant "Core Connector" as Core
+participant "ML Connector" as ML
+
+Customer ->> App: Customer transfer details.
+
+App ->> Core: POST /merchant-payment
+note left
+{
+    "homeTransactionId": "HTX123456789",
+    "payeeId": "16135551212",
+    "payeeIdType": "MSISDN",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "transactionType": "PAYMENT",
+    "payer": {
+        "name": "John Doe",
+        "payerId": "9876543210"
+    }
+}
+end note
+
+Core ->> Core: Check Request
+
+alt if Checks fail
+    Core -->> App: Response 400
+end
+
+
+
+Core ->> ML: POST /transfers /{amountType: RECEIVE} 
+ML -->> Core: Response 200 [Quote]
+Core ->> Core: Validate Quote
+
+alt if WAITING_FOR_QUOTE_ACCEPTANCE
+
+    alt if Invalid Quote Terms
+        Core ->> ML: PUT /transfers/{transferId} acceptQuote: false
+        ML -->> Core: Response 
+        Core -->> App: Response 500
+    end
+
+    Core ->> ML: PUT /transfers/{transferId} acceptQuote: true
+end
+
+
+ML -->> Core: Response 200 [FXP Quote]
+Core ->> Core: Validate Conversion Terms
+
+
+alt if WAITING_FOR_CONVERSION_ACCEPTANCE
+    alt if Invalid Conversion Terms
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
+        ML -->> Core: Response 
+        Core -->> App: Response 500
+    end
+end
+
+Core ->> Core: Prepare Quote Details
+
+Core -->> App: Response 200 [Quote]
+note right
+{
+    "payeeDetails": {
+        "idType": "MSISDN",
+        "idValue": "990454454",
+        "fspId": "airtelzambia",
+        "fspLEI": "984500BA13DAVB8B6C61"
+        "name": "Niza"
+    },
+    "sendAmount": "150.00",
+    "sendCurrency": "MWK",
+    "receiveAmount": "140.00",
+    "receiveCurrency": "ZMW",
+    "targetFees": "10.00",
+    "sourceFees": "10.00",
+    "transactionId": "0GJGH201JGJ1J12324H",
+    "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
+}
+end note
+
+App -->> Customer: Terms of transfer
+
+@enduml

@@ -1,0 +1,118 @@
+@startuml name="ml-transfer-reservation-commit"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "DFSP API" as SBAPI
+
+ML ->> CC: POST /transfers/ {}
+
+CC ->> CC: Validation Checks, Expiration Check,\nQuote Expiration Validation,\nCurrency Conversion Checks
+
+alt if Checks Fail
+    CC -->> ML: Response 500
+end
+
+CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
+
+note over SBAPI
+{
+    "partyIdType": "MSISDN",
+    "partyIdentifier": "string",
+    "name": "string",
+    "currency": "MWK",
+    "isActive": true
+}
+end note
+SBAPI -->> CC: Response
+
+CC ->> CC: Check response and customer account status
+
+alt if Customer account has issues
+    CC -->> ML: Response 500, mlCode: 5400
+end
+
+
+CC ->> SBAPI: POST /funds/reserve
+note left
+{
+    "transferId": "string",
+    "payee": {
+        "partyIdType": "MSISDN",
+        "partyIdentifier": "string",
+        "name": "string",
+        "accountType": "string"
+    },
+    "amount": {
+        "amount": 100.5,
+        "currency": "MWK"
+    }
+}
+end note
+
+
+SBAPI -->> CC: Response
+note right
+{
+    "reserveId": "string",
+    "transferId": "string",
+    "status": "RESERVED"
+}
+end note
+
+alt if Reservation Not Successful
+    CC -->> ML: Response 500, mlCode: 5400
+end
+
+CC -->> ML: Response 200 [RESERVED]
+
+ML ->> CC: PUT /transfers/{id}
+
+
+alt if Current State !== COMPLETED
+   
+    CC ->> SBAPI: POST /funds/unreserve
+    note left
+    {
+        "reserveId": "string",
+        "reason": "string"
+    }
+    end note
+
+    
+    SBAPI -->> CC: Response 200
+    note right
+    {
+        "reserveId": "string",
+        "status": "RELEASED"
+    }
+    end note
+    CC -->> ML: Response 500
+end
+
+
+CC ->> SBAPI: POST /funds/commit
+note left
+{
+    "reserveId": "string"
+}
+end note
+
+SBAPI -->> CC: Response
+note right
+{
+    "transferId": "string",
+    "status": "COMMITTED"
+}
+end note
+
+CC ->> CC: Check response
+
+alt if status != COMMITTED
+    CC -->> ML: Response 500
+end
+
+CC -->> ML: Response 200
+@enduml

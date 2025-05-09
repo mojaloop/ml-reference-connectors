@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",                         // Use modern JS features
+      "module": "CommonJS",                        // For Node.js (require/export)
+      "moduleResolution": "Node",
+      "outDir": "./dist",                          // Where compiled .js files go
+      "rootDir": ".",                              // Root is project root
+      "baseUrl": ".",                              // Allow clean relative imports
+      "paths": {
+        "src/*": ["src/*"],
+        "test/*": ["test/*"]
+      },
+      "esModuleInterop": true,                     // Allow default imports from CJS modules
+      "forceConsistentCasingInFileNames": true,     // Safer imports
+      "strict": true,                              // Full type checking (recommended)
+      "skipLibCheck": true,                         // Faster build
+      "resolveJsonModule": true,                    // Allow importing JSON files
+      "types": ["node", "jest"]                     // Include Node and Jest typings
+    },
+    "include": ["src", "test", "index.ts", "config.ts"],
+    "exclude": ["node_modules", "dist"]
+  }
+  
