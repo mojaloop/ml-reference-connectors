@@ -1,4 +1,4 @@
-h# Payee Get Parties for Airtel 
+# Payee Get Parties for Airtel 
 ```mermaid
 sequenceDiagram
   autonumber
