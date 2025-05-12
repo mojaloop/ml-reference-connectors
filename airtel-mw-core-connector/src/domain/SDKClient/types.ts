@@ -77,6 +77,7 @@ export type TSDKOutboundTransferResponse = {
                     partyIdType: string,
                     partyIdentifier: string,
                     fspId: string
+                   
                 },
                 name: string,
                 supportedCurrencies: string[],

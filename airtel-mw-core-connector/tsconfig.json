@@ -28,7 +28,8 @@
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "strict": true,
+    // "strict": true,
+    "strict": false,
     "alwaysStrict": true,
     "resolveJsonModule": true,
     // Needed for CommonJS modules

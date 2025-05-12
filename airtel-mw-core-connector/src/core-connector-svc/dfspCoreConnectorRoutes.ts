@@ -22,6 +22,7 @@
  - Okello Ivan Elijah <elijahokello90@gmail.com>
  - Kasweka Michael Mukoko <kaswekamukoko@gmail.com>
  - Niza Tembo <mcwayzj@gmail.com>
+ 
 
  --------------
  ******/
@@ -31,7 +32,7 @@
 import { CoreConnectorAggregate, ILogger } from '../domain';
 import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import OpenAPIBackend, { Context } from 'openapi-backend';
-import { TAirtelMerchantPaymentRequest, TAirtelSendMoneyRequest, TAirtelUpdateMerchantPaymentRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest } from '../domain/CBSClient';
+import { TAirtelSendMoneyRequest, TAirtelUpdateMerchantPaymentRequest, TAirtelUpdateSendMoneyRequest, TCallbackRequest } from '../domain/CBSClient';
 import { BaseRoutes } from './BaseRoutes';
 
 const API_SPEC_FILE = './src/api-spec/core-connector-api-spec-dfsp.yml';
@@ -127,7 +128,7 @@ export class DFSPCoreConnectorRoutes extends BaseRoutes {
     }
 
     private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
-        const transfer = request.payload as TAirtelMerchantPaymentRequest;
+        const transfer = request.payload as TAirtelSendMoneyRequest;
         this.logger.info(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendMoney(transfer,"RECEIVE");

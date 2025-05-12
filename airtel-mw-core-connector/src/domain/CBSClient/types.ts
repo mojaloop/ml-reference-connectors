@@ -411,24 +411,18 @@ export type TAirtelDisbursementResponse = {
 
 // Request coming from Airtel
 export type TAirtelSendMoneyRequest = {
+    payeeName: string;
     "homeTransactionId": string;
-    "amountType": "RECEIVE" | "SEND",
     "payeeId": string;
     "payeeIdType": components["schemas"]["PartyIdType"];
-    "sendAmount": string;
+    "sendAmount"?: components['schemas']['Amount'];
+    "receiveAmount"?: components['schemas']['Amount'];
     "sendCurrency": components['schemas']['Currency'];
     "receiveCurrency": components['schemas']['Currency'];
-    "transactionDescription": string;
     "transactionType": components['schemas']['transferTransactionType'];
     payer: {
         name: string;
         payerId: string;
-        DateAndPlaceOfBirth: {
-            BirthDt: string;
-            PrvcOfBirth: string;
-            CityOfBirth: string;
-            CtryOfBirth: string;
-        };
     };
 }
 
@@ -439,20 +433,35 @@ export type TAirtelSendMoneyResponse = {
         "idType": string;
         "idValue": string;
         "fspId": string;
-        "displayName": string;
-        "dateOfBirth": string;
-      };
+        "fspLEI": string;
+        "name": string;
+    },
+    "sendAmount": string;
+    "sendCurrency": string;
     "receiveAmount": string;
     "receiveCurrency": string;
-    "fees": string;
-    "feeCurrency": string;
-    "transactionId": string;
+    "targetFees": string;
+    "sourceFees": string;
+      "transactionId": string;
+    "homeTransactionId": string;
 }
 
 
 // Merchant Types (Same types as Payer Send Money Request
 
-export type TAirtelMerchantPaymentRequest = TAirtelSendMoneyRequest
+export type TAirtelMerchantPaymentRequest ={
+    "homeTransactionId": string;
+    "payeeId": string;
+    "payeeIdType": components["schemas"]["PartyIdType"];
+    "receiveAmount": components['schemas']['Amount'];
+    "sendCurrency": components['schemas']['Currency'];
+    "receiveCurrency": components['schemas']['Currency'];
+    "transactionType": components['schemas']['transferTransactionType'];
+    payer: {
+        name: string;
+        payerId: string;
+    };
+}
 
 export type TAirtelMerchantPaymentResponse = TAirtelSendMoneyResponse
 

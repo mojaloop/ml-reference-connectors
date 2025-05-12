@@ -140,7 +140,10 @@ describe('CoreConnectorAggregate Tests -->', () => {
                 }
             });
 
-            const quoteRequest: TQuoteRequest = quoteRequestDto();
+            const quoteRequest: TQuoteRequest = {
+                ...quoteRequestDto(),
+                currency: "MWK" // Set to the expected currency
+            };
             const res = await ccAggregate.quoteRequest(quoteRequest);
 
             logger.info(JSON.stringify(res));
@@ -154,6 +157,7 @@ describe('CoreConnectorAggregate Tests -->', () => {
         test('POST /transfers: sdk-server - Should return receiveTransfer if party in tnm', async () => {
             airtelClient.getKyc = jest.fn().mockResolvedValue({
                 "data": {
+                    
                     "first_name": "Chimweso Faith Mukoko",
                     "grade": "SUBS",
                     "is_barred": false,

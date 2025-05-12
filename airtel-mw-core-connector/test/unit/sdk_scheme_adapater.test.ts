@@ -58,7 +58,6 @@ describe('SDK Scheme Adapter Unit Tests', () => {
             currency: 'AED',
             from: {
                 dateOfBirth: '8477-05-21',
-                displayName: 'string',
                 extensionList: [
                     {
                         key: 'string',
@@ -77,7 +76,6 @@ describe('SDK Scheme Adapter Unit Tests', () => {
             },
             to: {
                 dateOfBirth: '8477-05-21',
-                displayName: 'string',
                 extensionList: [
                     {
                         key: 'string',

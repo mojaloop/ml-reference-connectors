@@ -1,4 +1,4 @@
-# Airtel Core Connector 
+# Airtel Core Connector: haha
 
 # Introdution
 This core connector facilitates communication between the Airtel Zambia mobile money api and the Mojaloop Connector. It processes incoming requests from Airtel's customer facing platform and routes them to mojaloop through the mojaloop connector. It was created based on the [Core Connector Template](../core-connector-template/). 

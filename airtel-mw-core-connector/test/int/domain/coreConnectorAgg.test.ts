@@ -67,6 +67,15 @@
      afterAll(async () => {
          await Service.stop();
      });
+
+     afterEach(async () => {
+         // Ensure the service is stopped after each test to free the port
+         try {
+             await Service.stop();
+         } catch (e) {
+            
+         }
+     });
  
      beforeEach(() => {
          // mockAxios.reset();
@@ -198,7 +207,7 @@
          //  Merchant Payment
  
          test('Test POST /merchant-payment: response should be merchant details', async()=>{
-             const merchantPaymentRequest : TAirtelMerchantPaymentRequest =  sendMoneyMerchantPaymentDTO(MSISDN, "500", "RECEIVE");
+             const merchantPaymentRequest : TAirtelSendMoneyRequest =  sendMoneyMerchantPaymentDTO(MSISDN, "500", "RECEIVE");
              const url = `${DFSP_URL}/merchant-payment`;
 
              const res = await axios.post(url, JSON.stringify(merchantPaymentRequest), {

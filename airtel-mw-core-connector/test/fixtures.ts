@@ -340,23 +340,18 @@ export const transferRequestDto = (idType: string, idValue: string, amount: stri
 
 export const sendMoneyMerchantPaymentDTO = (idValue: string, amount: string, amountType: "RECEIVE" | "SEND"): TAirtelSendMoneyRequest => ({
   "homeTransactionId": "HTX123456789",
-  "amountType": amountType,
+
   "payeeId": "07676767676",
   "payeeIdType": "MSISDN",
   "sendAmount": amount,
   "sendCurrency": "ZMW",
   "receiveCurrency": "ZMW",
-  "transactionDescription": "Payment for services",
+ 
   "transactionType": "TRANSFER",
   "payer": {
     "name": "Elijah Okello",
     payerId: idValue,
-    DateAndPlaceOfBirth: {
-      BirthDt: "1985-04-12",
-      PrvcOfBirth: "Lusaka",
-      CityOfBirth: "Lusaka",
-      CtryOfBirth: "Lusaka",
-    },
+ 
   },
 
 });
@@ -383,7 +378,7 @@ export const tSDKOutboundTransferRequestDTO = (): TSDKOutboundTransferRequest =>
   "amountType": "SEND",
   "currency": "ZMW",
   "from": {
-    "displayName": "Chimweso Faith Mukoko Test1",
+    "name": "Chimweso Faith Mukoko Test1",
     "extensionList": [],
     "firstName": "Chimweso Faith Mukoko",
     "fspId": "airtelzambia",

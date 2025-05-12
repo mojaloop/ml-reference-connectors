@@ -1,0 +1,80 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:5000"
+  redis:
+    image: "redis:alpine"
+
+  mojaloop-testing-toolkit:
+    #image: mojaloop/ml-testing-toolkit:v15.6.1
+    image: mojaloop/ml-testing-toolkit:v18.5.1
+    build:
+      context: .
+      target: builder
+    user: root
+    volumes:
+      - "./spec_files:/opt/app/spec_files"
+      - "./secrets:/opt/app/secrets"
+      - "./examples:/opt/app/examples"
+    environment:
+      REPORTING_DB_CONNECTION_PASSWORD: ttk@123$asdf
+      TTK_SYSTEM_CONFIG: |-
+        {
+          "DB": {
+            "HOST": "ttk-mongodb",
+            "PORT": 27017,
+            "USER": "ttk",
+            "PASSWORD": "",
+            "DATABASE": "admin"
+          }
+        }
+    ports:
+      - "4040:4040"
+      - "5050:5050"
+    command:
+      - sh
+      - -c
+      - "npm start"
+  mojaloop-testing-toolkit-ui:
+    image: mojaloop/ml-testing-toolkit-ui:v16.0.4
+    ports:
+      - "6060:6060"
+    environment:
+      - API_BASE_URL=http://localhost:5050
+      - AUTH_ENABLED=FALSE
+    command:
+      - sh
+      - /usr/share/nginx/start.sh
+
+  mojaloop-airtel-core-connector:
+    image: mojaloop/airtel-core-connector:latest
+    # build:
+    #   context: .
+    # networks:
+    #   - mojaloop-net
+    env_file: .env.example
+    ports:
+      - "3003:3003"
+      - "3004:3004"
+
+  ttk-mongodb:
+    image: mongo:6.0.5
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ttk
+      MONGO_INITDB_ROOT_PASSWORD: ttk@123$asdf
+      ALLOW_EMPTY_PASSWORD: "true"
+    ports:
+      - 27017:27017
+    # volumes:
+    #   - ttk-db-data:/data/db
+
+
+networks:
+  default:
+    name: mojaloop-testing-toolkit
+
+# volumes:
+#   ttk-db-data:
+#     driver: local

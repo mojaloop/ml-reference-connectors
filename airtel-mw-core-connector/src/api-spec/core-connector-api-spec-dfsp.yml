@@ -218,22 +218,18 @@ components:
           example: "16135551212"
         payeeIdType:
           type: string
-          example: "MSISDN"
-        sendAmount:
-          type: string
-          example: "150.00"
         sendCurrency:
           type: string
-          example: "UGX"
+          example: "MWK"
+        receiveAmount:
+          type: string
+          example: "140.00"
         receiveCurrency:
           type: string
-          example: "KES"
-        transactionDescription:
-          type: string
-          example: "Payment for services"
+          example: "ZMW"
         transactionType:
           type: string
-          example: "TRANSFER"
+          example: "PAYMENT"
         payer:
           type: object
           properties:
@@ -243,29 +239,6 @@ components:
             payerId:
               type: string
               example: "9876543210"
-            DateAndPlaceOfBirth:
-              type: object
-              properties:
-                BirthDt:
-                  type: string
-                  example: "20-09-2001"
-                PrvcOfBirth:
-                  type: string
-                  example: "ProvinceOfBirth"
-                CityOfBirth:
-                  type: string
-                  example: "Lusaka"
-                CtryOfBirth:
-                  type: string
-<<<<<<< HEAD
-                  example: "malawi"
-=======
-                  example: "Zambia"
->>>>>>> b324befa322b5b94b68ad4e11fc9e18e507af8ee
-              required:
-                - BirthDt
-                - CityOfBirth
-                - CtryOfBirth
           required:
             - name
             - payerId
@@ -295,31 +268,30 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            name:
               type: string
-              example: "Niza"
-            lastName:
-              type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
-
-        receiveAmount:
+              example: "Prisca"
+        sendAmount:
           type: string
-          example: "140.00"
+          example: "150.00"
+        sendCurrency:
+          type: string
+          example: "MWK"
         receiveCurrency:
           type: string
-          example: "EUR"
-        fees:
+          example: "MWK"
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
+        homeTransactionId:
+          type: string
+          example: "24dn186-sjhd-0293-4484-4724hf"
     sendMoneyResponse:
       type: object
       properties:
@@ -335,29 +307,34 @@ components:
             fspId:
               type: string
               example: "airtelzambia"
-            firstName:
+            fspLEI:
               type: string
-              example: "Niza"
-            lastName:
+              example: "984500BA13DAVB8B6C61"
+            name:
               type: string
-              example: "Tembo"
-            dateOfBirth:
-              type: string
-              example: "1997/09/04"
-
+              example: "Prisca"
+        sendAmount:
+          type: string
+          example: "150.00"
+        sendCurrency:
+          type: string
+          example: "MWK"
         receiveAmount:
           type: string
           example: "140.00"
         receiveCurrency:
           type: string
-          example: "EUR"
-        fees:
+          example: "ZMW"
+        targetFees:
           type: string
           example: "10.00"
-        feeCurrency:
+        sourceFees:
           type: string
-          example: "USD"
+          example: "10.00"
         transactionId:
+          type: string
+          example: "01JKKB0F2WV7YVSA6CXGP977XT9"
+        homeTransactionId:
           type: string
           example: "42fdb186-2a36-46f1-9be9-8989a9e0aeb4"
     sendMoneyRequest:
@@ -377,13 +354,13 @@ components:
           example: "150.00"
         sendCurrency:
           type: string
-          example: "UGX"
+          example: "MWK"
         receiveCurrency:
           type: string
-          example: "KES"
-        transactionDescription:
+          example: "ZMW"
+        purposeCode:
           type: string
-          example: "Payment for services"
+          example: "MP2P"
         transactionType:
           type: string
           example: "TRANSFER"
@@ -396,25 +373,6 @@ components:
             payerId:
               type: string
               example: "9876543210"
-            DateAndPlaceOfBirth:
-              type: object
-              properties:
-                BirthDt:
-                  type: string
-                  example: "20-09-2001"
-                PrvcOfBirth:
-                  type: string
-                  example: "ProvinceOfBirth"
-                CityOfBirth:
-                  type: string
-                  example: "Lusaka"
-                CtryOfBirth:
-                  type: string
-                  example: "Zambia"
-              required:
-                - BirthDt
-                - CityOfBirth
-                - CtryOfBirth
           required:
             - name
             - payerId

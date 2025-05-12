@@ -372,7 +372,7 @@ export class CoreConnectorAggregate {
     //  Payer (These are used in the DFSP Core Connector Routes)
     // Send Transfer  -- (5)
 
-    async sendMoney(transfer: TAirtelSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TAirtelSendMoneyResponse> {
+    async sendMoney(transfer: TAirtelSendMoneyRequest , amountType: "SEND" | "RECEIVE"): Promise<TAirtelSendMoneyResponse> {
         this.logger.info(`Transfer from airtel account with ID${transfer.payer.payerId}`);
 
         const transferRequest: TSDKOutboundTransferRequest = await this.getTSDKOutboundTransferRequest(transfer, amountType);
@@ -449,13 +449,22 @@ export class CoreConnectorAggregate {
         const res = await this.airtelClient.getKyc({
             msisdn: transfer.payer.payerId
         });
+
+        let amount;
+
+        if (amountType === "SEND") {
+            amount = transfer.sendAmount?.toString();
+        } else if (amountType === "RECEIVE") {
+            amount = transfer.receiveAmount?.toString();
+        }
+
         return {
             'homeTransactionId': randomUUID(),
             'from': {
                 'idType': this.airtelConfig.SUPPORTED_ID_TYPE,
                 'idValue': transfer.payer.payerId,
                 'fspId': this.airtelConfig.FSP_ID,
-                "displayName": `${res.data.first_name} ${res.data.last_name}`,
+                // 'name': `${res.data.first_name} ${res.data.last_name}`,
                 "firstName": res.data.first_name,
                 "middleName": res.data.first_name,
                 "lastName": res.data.last_name,
@@ -465,37 +474,19 @@ export class CoreConnectorAggregate {
             },
             'to': {
                 'idType': transfer.payeeIdType,
-                'idValue': transfer.payeeId
+                'idValue': transfer.payeeId,
+                'firstName': transfer.payeeName,
             },
             'amountType': amountType,
             'currency': amountType === "SEND" ? transfer.sendCurrency : transfer.receiveCurrency,
-            'amount': transfer.sendAmount,
+            'amount': amount? amount : "Amount not defined",
             'transactionType': transfer.transactionType,
         };
     }
 
     // Get OutBound Transfer Extension List DTO used in getTSDKOutboundTransferRequest DTO --(5.1.1)
-    private getOutboundTransferExtensionList(sendMoneyRequestPayload: TAirtelSendMoneyRequest): TPayerExtensionListEntry[] | undefined {
-        if (sendMoneyRequestPayload.payer.DateAndPlaceOfBirth) {
-            return [
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.BirthDt",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.BirthDt
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.PrvcOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth ? "Not defined" : sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.PrvcOfBirth
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CityOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CityOfBirth
-                },
-                {
-                    "key": "CdtTrfTxInf.Dbtr.PrvtId.DtAndPlcOfBirth.CtryOfBirth",
-                    "value": sendMoneyRequestPayload.payer.DateAndPlaceOfBirth.CtryOfBirth
-                }
-            ];
-        }
+    private getOutboundTransferExtensionList(): TPayerExtensionListEntry[] | undefined {
+        return [];
     }
 
 
@@ -507,14 +498,18 @@ export class CoreConnectorAggregate {
                 "idType": transfer.to.idType,
                 "idValue": transfer.to.idValue,
                 "fspId": transfer.to.fspId !== undefined ? transfer.to.fspId : "No FSP ID Returned",
-                "displayName": transfer.getPartiesResponse !== undefined ? transfer.getPartiesResponse.body.party.name : "Chikondi Banda",
-                "dateOfBirth": transfer.to.dateOfBirth !== undefined ? transfer.to.dateOfBirth : "No Date of Birth Returned",
+                "fspLEI": transfer.to.fspLEI !== undefined ? transfer.to.fspLEI as string : "No fspLEI ID Returned",
+                "name": transfer.getPartiesResponse !== undefined ? transfer.getPartiesResponse.body.party.name : "Chikondi Banda",
             },
+            "sendAmount": transfer.quoteResponse?.body.payeeSendAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeSendAmount.amount : "No payee send amount",
             "receiveAmount": transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined ? transfer.quoteResponse.body.payeeReceiveAmount.amount : "No payee receive amount",
+            // "sendCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
+            "sendCurrency": config.get("airtel.X_CURRENCY"),
             "receiveCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Currency returned from Mojaloop Connector",
-            "fees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No fee amount returned from Mojaloop Connector",
-            "feeCurrency": transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency : "No Fee currency retrned from Mojaloop Connector",
+            "targetFees": transfer.quoteResponse?.body.payeeFspFee?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspFee?.amount : "No target fees returned from Mojaloop Connector",
+            "sourceFees": transfer.quoteResponse?.body?.payeeFspCommission?.amount !== undefined ? transfer.quoteResponse?.body.payeeFspCommission.amount : "No source fees returned from Mojaloop Connector",
             "transactionId": transfer.transferId !== undefined ? transfer.transferId : "No transferId returned",
+            "homeTransactionId": transfer.homeTransactionId !== undefined ? transfer.homeTransactionId : "No home transaction ID returned",
         };
     }
 
