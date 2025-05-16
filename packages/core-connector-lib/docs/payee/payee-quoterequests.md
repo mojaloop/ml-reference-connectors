@@ -25,5 +25,5 @@ End
 Alt if Account is barred
 CC-->>ML Connector:Response 500: Ml Code :5400
 End
-CC-->>ML Connector: Repsonse 200
+CC-->>ML Connector: Response 200
 ```
