@@ -30,7 +30,7 @@ import { ICbsClient, IDFSPCoreConnectorAggregate, IHTTPClient, ILogger, IService
 import { DFSPCoreConnectorAggregate } from '../domain';
 import { AxiosClientFactory } from '../infra/axiosHttpClient';
 import { SDKCoreConnectorRoutes } from './sdkCoreConnectorRoutes';
-import { loggerFactory } from '../infra/logger';
+import { logger } from 'src/infra';
 import { createPlugins } from '../plugins';
 import { ISDKClient, SDKClientFactory } from '../domain/SDKClient';
 import { DFSPCoreConnectorRoutes } from './dfspCoreConnectorRoutes';
@@ -42,7 +42,7 @@ import { FXPCoreConnectorAggregate } from '../domain/fxpCoreConnectorAgg';
 import { FXPCoreConnectorRoutes } from './fxpCoreConnectorRoutes';
 import path from 'path';
 
-export type TServiceDeps<D,F> = {
+export type TCoreConnectorServiceDeps<D,F> = {
     httpClient?: IHTTPClient,
     dfspServer?: Server ,
     fxpServer?: Server ,
@@ -58,11 +58,11 @@ export type TServiceDeps<D,F> = {
     dfspApiSpec?: string;
 }
 
-export const serviceFactory = <D,F>(deps: TServiceDeps<D,F>) => {
-    return new Service(deps);
+export const coreConnectorServiceFactory = <D,F>(deps: TCoreConnectorServiceDeps<D,F>) => {
+    return new CoreConnectorService(deps);
 };
 
-export class Service<D,F> implements IService<D,F> {
+export class CoreConnectorService<D,F> implements IService<D,F> {
     httpClient: IHTTPClient | undefined;
     dfspServer: Server | undefined;
     config: IConnectorConfigSchema<D,F>;
@@ -77,7 +77,7 @@ export class Service<D,F> implements IService<D,F> {
     sdkApiSpec: string | undefined;
     dfspApiSpec: string | undefined;
 
-    constructor(deps: TServiceDeps<D,F>) {
+    constructor(deps: TCoreConnectorServiceDeps<D,F>) {
         this.httpClient = deps.httpClient;
         this.dfspServer = deps.dfspServer;
         this.config = deps.config;
@@ -96,7 +96,7 @@ export class Service<D,F> implements IService<D,F> {
             this.httpClient = AxiosClientFactory.createAxiosClientInstance();
         }
         if(!this.logger){
-            this.logger = loggerFactory({ context: this.config.server.CBS_NAME });
+            this.logger = logger.child({component: this.config.server.CBS_NAME});
         }
         this.sdkApiSpec = path.resolve(__dirname, "../api-spec", "core-connector-api-spec-sdk.yml");
         this.dfspApiSpec = path.resolve(__dirname, "../api-spec", "core-connector-api-spec-dfsp.yml");
@@ -155,11 +155,11 @@ export class Service<D,F> implements IService<D,F> {
     
             await this.dfspServer.register(createPlugins({ logger }));
             const sdkCoreConnectorRoutes = new SDKCoreConnectorRoutes<D>(dfspAggregate, logger,this.sdkApiSpec);
-            await sdkCoreConnectorRoutes.init();
+            await sdkCoreConnectorRoutes.initialise();
             
 
             const dfspCoreConnectorRoutes = new DFSPCoreConnectorRoutes<D>(dfspAggregate, logger,this.dfspApiSpec);
-            await dfspCoreConnectorRoutes.init();
+            await dfspCoreConnectorRoutes.initialise();
     
             this.sdkServer.route(sdkCoreConnectorRoutes.getRoutes());
             this.dfspServer.route(dfspCoreConnectorRoutes.getRoutes());
@@ -176,7 +176,7 @@ export class Service<D,F> implements IService<D,F> {
             });
             await this.fxpServer.register(createPlugins({logger}));
             const fxpCoreConnectorRoutes = new FXPCoreConnectorRoutes(fxpAggregate,logger,this.sdkApiSpec);
-            await fxpCoreConnectorRoutes.init();
+            await fxpCoreConnectorRoutes.initialise();
 
             this.fxpServer.route(fxpCoreConnectorRoutes.getRoutes());
 

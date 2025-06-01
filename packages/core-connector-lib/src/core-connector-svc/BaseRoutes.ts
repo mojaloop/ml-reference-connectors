@@ -26,13 +26,12 @@
 
 'use strict';
 
-import { ResponseToolkit } from '@hapi/hapi';
+import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
 import { ResponseValue } from 'hapi';
 import { BasicError, TJson } from '../domain';
 import { AxiosError } from 'axios';
-import { loggerFactory } from '../infra';
-
-const logger = loggerFactory({context: "Routes"});
+import { logger } from '../infra';
+import OpenAPIBackend from 'openapi-backend';
 
 type ErrorResponseDetails = {
     message: string;
@@ -51,6 +50,27 @@ const getErrorDetails = (error: unknown): ErrorResponseDetails => {
         };
     }
 
+    if (error instanceof AxiosError) {
+        const { response } = error;
+        if (response) {
+            return {
+                message: error.message,
+                status: '2000',
+                httpCode: response.status,
+                details: {
+                    res: JSON.stringify(response.data),
+                    headers: `${response.headers}`
+                }
+            }
+        } else {
+            return {
+                message: error.message,
+                status: '2000',
+                httpCode: 500
+            }
+        }
+    }
+
     return {
         message: error instanceof Error ? error.message : 'Unknown Error',
         status: '2000',
@@ -59,30 +79,59 @@ const getErrorDetails = (error: unknown): ErrorResponseDetails => {
 };
 
 export class BaseRoutes {
+    apiSpecFile: string = "";
+    routes: ServerRoute[] = [];
+
+    async init(handlers: {} ) {
+        // initialise openapi backend with validation
+        const api = new OpenAPIBackend({
+            definition: this.apiSpecFile,
+            handlers: handlers,
+        });
+
+        await api.init();
+
+        this.routes.push({
+            method: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+            path: '/{path*}',
+            handler: (req: Request, h: ResponseToolkit) =>
+                api.handleRequest(
+                    {
+                        method: req.method,
+                        path: req.path,
+                        body: req.payload,
+                        query: req.query,
+                        headers: req.headers,
+                    },
+                    req,
+                    h,
+                ),
+        });
+
+        this.routes.push({
+            method: ['GET'],
+            path: '/health',
+            handler: async (req: Request, h: ResponseToolkit) => {
+                const success = true; // todo: think about better healthCheck logic
+                return h.response({ success }).code(success ? 200 : 503);
+            },
+        });
+    }
+
+    getRoutes(): ServerRoute[] {
+        return this.routes;
+    }
+
     protected handleResponse(data: unknown, h: ResponseToolkit, statusCode: number = 200) {
         return h.response(data as ResponseValue).code(statusCode);
     }
 
     protected handleError(error: unknown, h: ResponseToolkit) {
         const { message, status, httpCode, details } = getErrorDetails(error);
-        if (error instanceof AxiosError){
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                logger.error(`${JSON.stringify(error.response.data)}`);
-                logger.error(`${error.response.status}`);
-                logger.error(`${error.response.headers}`);
-              } else if (error.request) {
-                // The request was made but no response was received
-                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                // http.ClientRequest in node.js
-                logger.error(error.request);
-              } else {
-                // Something happened in setting up the request that triggered an Error
-                logger.error('Error', error.message);
-              }
-              logger.error(`${JSON.stringify(error.config)}`);
-        }
+        const { method, path } = h.request;
+        logger.error(`error in handling incoming request: `, {
+            method, path, message, status, httpCode, details
+        });
         return h.response({ status, message, details }).code(httpCode);
     }
 }

@@ -34,9 +34,7 @@ import { IFxpCoreConnectorAgg, TConfirmFxTransferRequest, TFxQuoteRequest, TNoti
 
 export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
     private readonly aggregate: IFxpCoreConnectorAgg<F>;
-    private readonly routes: ServerRoute[] = [];
     private readonly logger: ILogger;
-    private readonly apiSpecFile: string;
 
     private readonly handlers = {
         FxQuotesPost: this.fxQuote.bind(this),
@@ -53,48 +51,8 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         this.apiSpecFile = apiSpecFile;
     }
 
-    async init() {
-        // initialise openapi backend with validation
-        const api = new OpenAPIBackend({
-            definition: this.apiSpecFile,
-            handlers: this.getHandlers(),
-        });
-
-        await api.init();
-
-        this.routes.push({
-            method: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-            path: '/{path*}',
-            handler: (req: Request, h: ResponseToolkit) =>
-                api.handleRequest(
-                    {
-                        method: req.method,
-                        path: req.path,
-                        body: req.payload,
-                        query: req.query,
-                        headers: req.headers,
-                    },
-                    req,
-                    h,
-                ),
-        });
-
-        this.routes.push({
-            method: ['GET'],
-            path: '/health',
-            handler: async (req: Request, h: ResponseToolkit) => {
-                const success = true; // todo: think about better healthCheck logic
-                return h.response({ success }).code(success ? 200 : 503);
-            },
-        });
-    }
-
-    getRoutes(): ServerRoute[] {
-        return this.routes;
-    }
-
-    private getHandlers(){
-        return this.handlers;
+    async initialise(){
+        await this.init(this.handlers);
     }
 
     private async fxQuote(context: Context, request: Request, h: ResponseToolkit){
