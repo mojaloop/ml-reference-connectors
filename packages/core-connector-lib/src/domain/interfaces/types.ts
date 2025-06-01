@@ -194,28 +194,7 @@ export interface IDFSPCoreConnectorAggregate<D> {
 }
 
 export interface IService<D,F> {
-    dfspCoreConnectorAggregate: IDFSPCoreConnectorAggregate<D> | undefined;
-    fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
-    httpClient: IHTTPClient | undefined;
-    sdkServer: Server | undefined;
-    dfspServer: Server | undefined;
-    fxpServer: Server | undefined;
-    logger: ILogger | undefined;
-    cbsClient: ICbsClient<D> | undefined;
-    fxpClient: IFXPClient<F> | undefined;
-    config: IConnectorConfigSchema<D,F>;
-    sdkClient: ISDKClient | undefined;
-    sdkApiSpec: string | undefined;
-    dfspApiSpec: string | undefined;
-
     start():Promise<void>;
     setupAndStartUpServer(logger: ILogger, dfspAggregate: IDFSPCoreConnectorAggregate<D> | undefined, fxpAggregate: IFxpCoreConnectorAgg<F> | undefined):Promise<void>;
     stop():Promise<void>;
-}
-
-export interface ICoreConnector<D,F> {
-    service: IService<D,F> | undefined;
-
-    start():Promise<void>;
-    stop(): Promise<void>;
 }
