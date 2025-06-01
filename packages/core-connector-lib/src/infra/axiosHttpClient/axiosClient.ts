@@ -72,7 +72,7 @@ export class AxiosHTTPClient implements IHTTPClient {
             data,
             statusCode: status,
         });
-        this.logger.info('Received response:', json);
+        this.logger.debug('Received response:', json);
         return json;
     }
 }

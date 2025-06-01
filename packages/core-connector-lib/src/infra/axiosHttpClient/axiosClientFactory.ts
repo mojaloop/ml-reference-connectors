@@ -28,7 +28,7 @@
 
 import { AxiosHTTPClient } from './axiosClient';
 import { CreateAxiosDefaults } from 'axios';
-import { loggerFactory } from '../logger';
+import { logger } from '../logger';
 
 export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
     timeout: 3000,
@@ -45,7 +45,7 @@ export class AxiosClientFactory {
     static createAxiosClientInstance() {
         return new AxiosHTTPClient({
             options: defaultHttpOptions,
-            logger: loggerFactory({ context: 'http' }),
+            logger: logger.child({component: 'http'}),
         });
     }
 }
