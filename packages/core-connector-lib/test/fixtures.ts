@@ -1,9 +1,9 @@
-import { IConnectorConfigSchema } from "src/domain";
+import { IConnectorConfigSchema } from "../src/domain";
 import { TBlueBankConfig } from "./unit/dfspCoreConnectorAgg.test";
 import { TBlueBankFXPConfig } from "./unit/fxpCoreConnectorAgg.test";
-import { TCbsMerchantPaymentRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest, THttpResponse, TQuoteRequest, TSDKOutboundTransferResponse, TtransferPatchNotificationRequest, TtransferRequest } from "src/domain";
+import { TCbsMerchantPaymentRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest, THttpResponse, TQuoteRequest, TSDKOutboundTransferResponse, TtransferPatchNotificationRequest, TtransferRequest } from "../src/domain";
 import { randomUUID } from "crypto";
-import { TConfirmFxTransferRequest, TFxQuoteRequest, TNotifyFxTransferStateRequest } from "src/domain/FXPClient";
+import { TConfirmFxTransferRequest, TFxQuoteRequest, TNotifyFxTransferStateRequest } from "../src/domain/FXPClient";
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
 
 export const dfspConfig: IConnectorConfigSchema<TBlueBankConfig, never> = {

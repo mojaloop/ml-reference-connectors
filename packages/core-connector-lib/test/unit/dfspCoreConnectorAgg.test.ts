@@ -24,8 +24,8 @@
 'use strict';
 
 import { randomUUID } from "crypto";
-import { coreConnectorFactory, ICbsClient, IHTTPClient, ILogger } from "../../src";
-import { AxiosClientFactory, loggerFactory } from "../../src/infra";
+import { coreConnectorServiceFactory, ICbsClient, IHTTPClient, ILogger } from "../../src";
+import { AxiosClientFactory, logger } from "../../src/infra";
 import { confirmSendMoneyDTO, dfspConfig, quoteRequestDTO, reserveTransferDTO, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferNotificationDTO } from "../fixtures";
 import { MockCBSClient } from "../mocks";
 
@@ -36,14 +36,16 @@ export type TBlueBankConfig = {
 }
 
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
-const logger: ILogger = loggerFactory({context: "DFSP Connector"});
 
 if(!dfspConfig.cbs){
     throw new Error("CBS Config must be defined");
 }
 
 const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
-const coreConnector = coreConnectorFactory<TBlueBankConfig, never>({config: dfspConfig,cbsClient: cbsClient});
+const coreConnector = coreConnectorServiceFactory({
+    cbsClient: cbsClient,
+    config: dfspConfig
+})
 
 const MSISDN = "883999934";
 const IDTYPE = "MSISDN";
@@ -61,7 +63,7 @@ describe("DFSP Core Connector Tests", () => {
     describe("Incoming Payments Tests",()=>{
         test("Test Get Parties",async ()=>{
             // Act 
-            const res = await coreConnector.service?.dfspCoreConnectorAggregate?.getParties(MSISDN,IDTYPE);
+            const res = await coreConnector.dfspCoreConnectorAggregate?.getParties(MSISDN,IDTYPE);
             // Assert
             expect(res?.extensionList).toBeDefined();
             expect(res?.firstName).toEqual("John");
@@ -71,7 +73,7 @@ describe("DFSP Core Connector Tests", () => {
             // Arrange 
             const quoteRequest = quoteRequestDTO(MSISDN);
             // Act
-            const res = await coreConnector.service?.dfspCoreConnectorAggregate?.quoteRequest(quoteRequest);
+            const res = await coreConnector.dfspCoreConnectorAggregate?.quoteRequest(quoteRequest);
             // Assert
             expect(res?.extensionList).toBeDefined();
             expect(res?.payeeFspFeeAmount).toEqual("2.50");
@@ -81,7 +83,7 @@ describe("DFSP Core Connector Tests", () => {
             // Arrange 
             const reserveTransfer = reserveTransferDTO("103");
             // Act
-            const res = await coreConnector.service?.dfspCoreConnectorAggregate?.receiveAndReserveTransfer(reserveTransfer);
+            const res = await coreConnector.dfspCoreConnectorAggregate?.receiveAndReserveTransfer(reserveTransfer);
             //Assert
             expect(res?.transferState).toEqual("RESERVED");
         });
@@ -90,7 +92,7 @@ describe("DFSP Core Connector Tests", () => {
             // Arrange
             const transferNotification = transferNotificationDTO();
             // Act
-            const res = coreConnector.service?.dfspCoreConnectorAggregate?.updateAndCommitTransferOnPatchNotification(transferNotification,randomUUID());
+            const res = coreConnector.dfspCoreConnectorAggregate?.updateAndCommitTransferOnPatchNotification(transferNotification,randomUUID());
             // Assert
             expect(await res).resolves;
         });
@@ -98,22 +100,22 @@ describe("DFSP Core Connector Tests", () => {
 
     describe("Outgoing Payments Tests", ()=>{
         test("Test Send Money P2P", async ()=>{
-            if(!coreConnector.service?.sdkClient){
+            if(!coreConnector.sdkClient){
                 throw Error("SDK Client undefined in core connector");
             }
             // Arrange 
             const sendMoneyReq = sendMoneyReqDTO();
-            coreConnector.service.sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+            coreConnector.sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
 
-            coreConnector.service.sdkClient.updateTransfer =jest.fn().mockResolvedValueOnce({
+            coreConnector.sdkClient.updateTransfer =jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
-            const sdkSpyInitiate = jest.spyOn(coreConnector.service.sdkClient,"initiateTransfer");
-            const sdkSpyUpdate = jest.spyOn(coreConnector.service.sdkClient,"updateTransfer");
+            const sdkSpyInitiate = jest.spyOn(coreConnector.sdkClient,"initiateTransfer");
+            const sdkSpyUpdate = jest.spyOn(coreConnector.sdkClient,"updateTransfer");
             // Act 
-            const res = await coreConnector.service.dfspCoreConnectorAggregate?.sendMoney(sendMoneyReq,"SEND");
+            const res = await coreConnector.dfspCoreConnectorAggregate?.sendMoney(sendMoneyReq,"SEND");
             // Assert
             expect(res).toBeTruthy();
             expect(res?.receiveAmount).toBeDefined();
@@ -122,22 +124,22 @@ describe("DFSP Core Connector Tests", () => {
         }); 
 
         test("Test Merchant Payment", async ()=>{
-            if(!coreConnector.service?.sdkClient){
+            if(!coreConnector.sdkClient){
                 throw Error("SDK Client undefined in core connector");
             }
             // Arrange 
             const sendMoneyReq = sendMoneyReqDTO();
-            coreConnector.service.sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
+            coreConnector.sdkClient.initiateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_QUOTE_ACCEPTANCE")
             });
 
-            coreConnector.service.sdkClient.updateTransfer =jest.fn().mockResolvedValueOnce({
+            coreConnector.sdkClient.updateTransfer =jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(MSISDN, "WAITING_FOR_CONVERSION_ACCEPTANCE")
             });
-            const sdkSpyInitiate = jest.spyOn(coreConnector.service.sdkClient,"initiateTransfer");
-            const sdkSpyUpdate = jest.spyOn(coreConnector.service.sdkClient,"updateTransfer");
+            const sdkSpyInitiate = jest.spyOn(coreConnector.sdkClient,"initiateTransfer");
+            const sdkSpyUpdate = jest.spyOn(coreConnector.sdkClient,"updateTransfer");
             // Act 
-            const res = await coreConnector.service.dfspCoreConnectorAggregate?.sendMoney(sendMoneyReq,"RECEIVE");
+            const res = await coreConnector.dfspCoreConnectorAggregate?.sendMoney(sendMoneyReq,"RECEIVE");
             // Assert
             expect(res).toBeTruthy();
             expect(res?.receiveAmount).toBeDefined();
@@ -146,17 +148,17 @@ describe("DFSP Core Connector Tests", () => {
         });
 
         test("Test Confirm Send Money", async ()=>{
-            if(!coreConnector.service?.sdkClient){
+            if(!coreConnector.sdkClient){
                 throw Error("SDK Client undefined in core connector");
             }
             // Arrange
             const confirmSendMoneyReq = confirmSendMoneyDTO();
-            coreConnector.service.sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({
+            coreConnector.sdkClient.updateTransfer = jest.fn().mockResolvedValueOnce({
                 ...sdkInitiateTransferResponseDto(MSISDN, "COMPLETED")
             });
-            const sdkSpyUpdate = jest.spyOn(coreConnector.service.sdkClient,"updateTransfer");
+            const sdkSpyUpdate = jest.spyOn(coreConnector.sdkClient,"updateTransfer");
             // Act
-            const res = await coreConnector.service.dfspCoreConnectorAggregate?.updateSendMoney(confirmSendMoneyReq,randomUUID());
+            const res = await coreConnector.dfspCoreConnectorAggregate?.updateSendMoney(confirmSendMoneyReq,randomUUID());
             //Assert
             expect(res?.transferId).toBeDefined();
             expect(sdkSpyUpdate).toHaveBeenCalled();

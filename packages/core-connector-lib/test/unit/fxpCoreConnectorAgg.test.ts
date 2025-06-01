@@ -23,31 +23,30 @@
 
 'use strict';
 
-import { IFXPClient } from "src/domain/FXPClient";
-import { coreConnectorFactory, IHTTPClient, ILogger } from "../../src";
-import { AxiosClientFactory, loggerFactory } from "../../src/infra";
+import { IFXPClient } from "../../src/domain/FXPClient";
+import { IHTTPClient, coreConnectorServiceFactory } from "../../src";
+import { AxiosClientFactory, logger } from "../../src/infra";
 import { fxpConfig, fxQuotesReqDTO, fxTransferDTO, fxTransferNotificationDTO } from "../fixtures";
 import { MockFXPClient } from "../mocks";
 
 
 export type TBlueBankFXPConfig = {
-    BLUE_BANK_URL : string;
+    BLUE_BANK_URL: string;
     BLUE_BANK_CLIENT_ID: string;
     BLUE_BANK_CLIENT_SECRET: string;
-} 
+}
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
-const logger: ILogger = loggerFactory({context: "FXP Connector"});
 
-if(!fxpConfig.fxpConfig){
+if (!fxpConfig.fxpConfig) {
     throw new Error("FXP Config must be defined");
 }
 
-const fxpClient: IFXPClient<TBlueBankFXPConfig> = new MockFXPClient<TBlueBankFXPConfig>(httpClient,logger,fxpConfig.fxpConfig);
+const fxpClient: IFXPClient<TBlueBankFXPConfig> = new MockFXPClient<TBlueBankFXPConfig>(httpClient, logger, fxpConfig.fxpConfig);
 
-const coreconnector = coreConnectorFactory<never, TBlueBankFXPConfig>({
-    config: fxpConfig,
-    fxpClient: fxpClient
-});
+const coreconnector = coreConnectorServiceFactory({
+    fxpClient: fxpClient,
+    config: fxpConfig
+})
 
 describe("FXP Core Connector Tests", () => {
     beforeAll(async () => {
@@ -58,29 +57,29 @@ describe("FXP Core Connector Tests", () => {
         await coreconnector.stop();
     });
 
-    test("Test Get fxQuotes", async ()=>{
+    test("Test Get fxQuotes", async () => {
         // Arrange 
         const fxQuotes = fxQuotesReqDTO();
         // Act
-        const res = await coreconnector.service?.fxpCoreConnectorAggregate?.getFxQuote(fxQuotes);
+        const res = await coreconnector.fxpCoreConnectorAggregate?.getFxQuote(fxQuotes);
         // Assert
         expect(res?.conversionTerms).toBeDefined();
     });
 
-    test("Test fxTransfer confirm terms", async ()=>{
+    test("Test fxTransfer confirm terms", async () => {
         // Arrange
         const fxTransfer = fxTransferDTO();
         //Act 
-        const res = await coreconnector.service?.fxpCoreConnectorAggregate?.confirmFxTransfer(fxTransfer);
+        const res = await coreconnector.fxpCoreConnectorAggregate?.confirmFxTransfer(fxTransfer);
         //Assert
         expect(res?.conversionState).toEqual("RESERVED");
     });
 
-    test("Test Notify fxTransfer State", async ()=> {
+    test("Test Notify fxTransfer State", async () => {
         // Arrange 
         const fxTransferNotification = fxTransferNotificationDTO();
         // Act
-        const res = coreconnector.service?.fxpCoreConnectorAggregate?.notifyFxTransferState(fxTransferNotification);
+        const res = coreconnector.fxpCoreConnectorAggregate?.notifyFxTransferState(fxTransferNotification);
         // Assert
         expect(await res).resolves;
     });
