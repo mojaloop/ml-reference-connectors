@@ -2,14 +2,17 @@ version: 2.1
 setup: true
 orbs:
   build: mojaloop/build@1.0.66
+
 workflows:
   setup:
     jobs:
+      - build/setup:
+          context: org-global
       - build/pr_title_check:
           context: org-global
       - build/test_lint:
           context: org-global
       - build/test_unit:
           context: org-global
-      - build/npm_publish:
+      - build/publish_npm:
           context: org-global
