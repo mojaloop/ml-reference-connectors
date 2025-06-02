@@ -6,11 +6,11 @@ This sequence diagram shows the set of steps that the core connector goes throug
 autoNumber
 ML Connector ->> CC: POST /quote-requests /{}
 Alt if required fields missing
-CC-->>ML Connector: Response 400 Bad Rquest
+CC-->>ML Connector: Response 400 Bad Request
 End
 CC->> CC:Validation Check, Quote Validation, Expiration Check
 Alt if Id Type invalid
-CC-->>ML Connector: Response 400 Bad Rquest
+CC-->>ML Connector: Response 400 Bad Request
 End
 Alt if Currency Not Supported
 CC-->>ML Connector: Response 500
@@ -25,5 +25,5 @@ End
 Alt if Account is barred
 CC-->>ML Connector:Response 500: Ml Code :5400
 End
-CC-->>ML Connector: Repsonse 200
+CC-->>ML Connector: Response 200
 ```
