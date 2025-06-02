@@ -24,7 +24,7 @@
 'use strict';
 
 import { randomUUID } from "crypto";
-import { coreConnectorServiceFactory, ICbsClient, IHTTPClient, ILogger } from "../../src";
+import { coreConnectorServiceFactory, ICbsClient, IHTTPClient} from "../../src";
 import { AxiosClientFactory, logger } from "../../src/infra";
 import { confirmSendMoneyDTO, dfspConfig, quoteRequestDTO, reserveTransferDTO, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferNotificationDTO } from "../fixtures";
 import { MockCBSClient } from "../mocks";
@@ -41,11 +41,11 @@ if(!dfspConfig.cbs){
     throw new Error("CBS Config must be defined");
 }
 
-const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
+const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
 const coreConnector = coreConnectorServiceFactory({
     cbsClient: cbsClient,
     config: dfspConfig
-})
+});
 
 const MSISDN = "883999934";
 const IDTYPE = "MSISDN";

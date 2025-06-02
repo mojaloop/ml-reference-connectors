@@ -28,14 +28,13 @@
 
 import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
-import { IHTTPClient, ILogger } from './infrastructure';
+import { ILogger } from './infrastructure';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest, TCBSUpdateSendMoneyResponse } from '../CBSClient';
 import { ISDKClient } from '../SDKClient';
-import { Server } from '@hapi/hapi';
-import { IFXPClient, IFxpCoreConnectorAgg, TFxpConfig } from '../FXPClient';
+import { IFxpCoreConnectorAgg, TFxpConfig } from '../FXPClient';
 
 export interface IConnectorConfigSchema<D, F> {
     server: {
@@ -181,7 +180,7 @@ export type TValidationResponse = {
 
 export interface IDFSPCoreConnectorAggregate<D> {
     sdkClient: ISDKClient;
-    cbsClient: ICbsClient<D>;
+    cbsClient: ICbsClient;
     cbsConfig: TCBSConfig<D>;
     IdType: string;
     logger: ILogger;

@@ -51,7 +51,7 @@ export type TCoreConnectorServiceDeps<D,F> = {
     sdkServer?: Server,
     sdkClient?: ISDKClient,
     logger?: ILogger,
-    cbsClient?: ICbsClient<D>,
+    cbsClient?: ICbsClient,
     fxpCoreConnectorAggregate?: IFxpCoreConnectorAgg<F> ;
     fxpClient?: IFXPClient<F> ;
     sdkApiSpec?: string;
@@ -70,7 +70,7 @@ export class CoreConnectorService<D,F> implements IService<D,F> {
     sdkServer: Server | undefined;
     fxpServer: Server | undefined;
     logger: ILogger | undefined;
-    cbsClient: ICbsClient<D> | undefined;
+    cbsClient: ICbsClient | undefined;
     fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
     fxpClient: IFXPClient<F> | undefined;
     sdkClient: ISDKClient | undefined;
@@ -125,7 +125,7 @@ export class CoreConnectorService<D,F> implements IService<D,F> {
         await this.setupAndStartUpServer(logger,undefined,this.fxpCoreConnectorAggregate);
     }
 
-    async startInDFSPMode(logger: ILogger,httpClient: IHTTPClient, cbsClient: ICbsClient<D>, sdkClient?: ISDKClient){
+    async startInDFSPMode(logger: ILogger,httpClient: IHTTPClient, cbsClient: ICbsClient, sdkClient?: ISDKClient){
         if(!sdkClient){
             sdkClient = SDKClientFactory.getSDKClientInstance(
                 logger,

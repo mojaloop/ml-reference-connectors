@@ -9,7 +9,7 @@
     "test:unit": "jest --testMatch='**/unit/**/*.test.ts'",
     "test:unit:cov": "npm run test:unit -- --coverage",
     "test:xunit": "npm run test:unit",
-    "prepare": "husky || true",
+    "prepare": "husky",
     "clean": "npm run clean:npm; npm run clean:dist",
     "clean:dist": "rm -rf dist",
     "clean:npm": "rm -rf node_modules",
@@ -64,7 +64,7 @@
     "prettier": "^3.2.5",
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   },
   "dependencies": {
     "@hapi/hapi": "^21.3.12",

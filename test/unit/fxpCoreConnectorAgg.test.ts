@@ -46,7 +46,7 @@ const fxpClient: IFXPClient<TBlueBankFXPConfig> = new MockFXPClient<TBlueBankFXP
 const coreconnector = coreConnectorServiceFactory({
     fxpClient: fxpClient,
     config: fxpConfig
-})
+});
 
 describe("FXP Core Connector Tests", () => {
     beforeAll(async () => {

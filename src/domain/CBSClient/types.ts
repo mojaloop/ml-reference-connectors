@@ -104,7 +104,7 @@ export type TGetKycArgs = {
 
 }
 
-export interface ICbsClient<C> {
+export interface ICbsClient {
     logger: ILogger;
     getAccountInfo(deps: TGetKycArgs): Promise<Party>;
     getAccountDiscoveryExtensionLists(): TPayeeExtensionListEntry[];

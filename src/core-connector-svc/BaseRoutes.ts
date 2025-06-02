@@ -31,7 +31,7 @@ import { ResponseValue } from 'hapi';
 import { BasicError, TJson } from '../domain';
 import { AxiosError } from 'axios';
 import { logger } from '../infra';
-import OpenAPIBackend from 'openapi-backend';
+import OpenAPIBackend, { Handler } from 'openapi-backend';
 
 type ErrorResponseDetails = {
     message: string;
@@ -61,13 +61,13 @@ const getErrorDetails = (error: unknown): ErrorResponseDetails => {
                     res: JSON.stringify(response.data),
                     headers: `${response.headers}`
                 }
-            }
+            };
         } else {
             return {
                 message: error.message,
                 status: '2000',
                 httpCode: 500
-            }
+            };
         }
     }
 
@@ -78,11 +78,18 @@ const getErrorDetails = (error: unknown): ErrorResponseDetails => {
     };
 };
 
+export type THandlers = {
+    notFound?: Handler;
+    notImplemented?: Handler;
+    validationFail?: Handler;
+    [handler: string]: Handler | undefined;
+}
+
 export class BaseRoutes {
     apiSpecFile: string = "";
     routes: ServerRoute[] = [];
 
-    async init(handlers: {} ) {
+    async init(handlers: THandlers) {
         // initialise openapi backend with validation
         const api = new OpenAPIBackend({
             definition: this.apiSpecFile,

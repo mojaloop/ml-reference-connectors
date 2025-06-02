@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { ICbsClient, TCBSConfig, IHTTPClient, ILogger, TGetKycArgs, Party, TPayeeExtensionListEntry, TQuoteRequest, TQuoteResponse, TtransferRequest, TtransferResponse, TtransferPatchNotificationRequest, TCBSUpdateSendMoneyRequest } from "../src/domain";
 import { IFXPClient, TConfirmFxTransferRequest, TConfirmFxTransferResponse, TFxpConfig, TFxQuoteRequest, TFxQuoteResponse, TNotifyFxTransferStateRequest, TNotifyFxTransferStateResponse } from "../src/domain/FXPClient";
 
-export class MockCBSClient<D> implements ICbsClient<D> {
+export class MockCBSClient<D> implements ICbsClient {
     cbsConfig: TCBSConfig<D>;
     httpClient: IHTTPClient;
     logger: ILogger;

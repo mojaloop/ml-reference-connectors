@@ -27,8 +27,8 @@
 'use strict';
 
 import { IDFSPCoreConnectorAggregate, ILogger } from '../domain';
-import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
-import OpenAPIBackend, { Context } from 'openapi-backend';
+import { Request, ResponseToolkit } from '@hapi/hapi';
+import { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
 import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 

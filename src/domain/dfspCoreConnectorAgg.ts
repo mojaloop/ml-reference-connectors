@@ -60,7 +60,7 @@ import {
 
 export const aggregateFactory = <D>(
     cbsConfig: TCBSConfig<D>,
-    cbsClient: ICbsClient<D>,
+    cbsClient: ICbsClient,
     sdkClient: ISDKClient,
     logger: ILogger
 ): IDFSPCoreConnectorAggregate<D> => {
@@ -79,7 +79,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
 
     constructor(
         readonly sdkClient: ISDKClient,
-        readonly cbsClient: ICbsClient<D>,
+        readonly cbsClient: ICbsClient,
         readonly cbsConfig: TCBSConfig<D>,
         logger: ILogger,
     ) {

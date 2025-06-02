@@ -25,8 +25,8 @@ optionally within square brackets <email>.
 
 'use strict';
 
-import { Request, ResponseToolkit, ServerRoute } from '@hapi/hapi';
-import OpenAPIBackend, { Context } from 'openapi-backend';
+import { Request, ResponseToolkit } from '@hapi/hapi';
+import { Context } from 'openapi-backend';
 import { IDFSPCoreConnectorAggregate, ILogger, TQuoteRequest, TtransferPatchNotificationRequest, TtransferRequest } from '../domain';
 import { BaseRoutes } from './BaseRoutes';
 
