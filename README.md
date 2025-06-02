@@ -25,7 +25,14 @@ create-cc -m dfsp -n mtn-zm-dfsp-cc
 - -m : the mode to use when bootstrapping. `dfsp` or `fxp`
 - -n : connector name e.g `mtn-zm-dfsp-cc`
 
-# Usage
+After running the command, a folder named via the -n option will be created. In this case `mtn-zm-dfsp-cc`
+
+```bash
+cd mtn-zm-dfsp-cc
+```
+This folder contains a core connector based on the connector lib and is ready for you to use to customize it for a specific DFSP or FXP.
+
+# Developing a Core Connector
 To Build a connector using the core-connector-lib, you will need to do the following.
 1. Create a type to define the configuration required by the client
 2. Implement the `ICbsClient` interface for that specific DFSP or the `IFXPClient` interface for that specific FXP
