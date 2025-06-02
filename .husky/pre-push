@@ -1,12 +1,5 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-for dir in */; do
-    case "$dir" in
-        *-core-connector/)
-            cd "$dir" || exit 1
-            npm run dep:check
-            npm run test:unit
-            cd - > /dev/null || exit 1
-            ;;
-    esac
-done
+npm run dep:check
+npm run test:unit
