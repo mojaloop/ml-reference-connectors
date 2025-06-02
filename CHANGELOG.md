@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/mojaloop/ml-reference-connectors/compare/v1.25.0...v2.1.0) (2025-06-02)
+
+
+### Features
+
+* add bootstrap script and update deps ([ad36236](https://github.com/mojaloop/ml-reference-connectors/commit/ad3623692eea128badb340b71fc9c0d6f97763e8))
+* add plantuml docs to core connector lib ([816c25c](https://github.com/mojaloop/ml-reference-connectors/commit/816c25cb1216f2b7a9c3c0b38ee517ef9f7fb7aa))
+* add templating variables to template connectors ([112cbfc](https://github.com/mojaloop/ml-reference-connectors/commit/112cbfc1f2ab5aa14461914e134e71100629711c))
+* add types node to templates ([b7b58d1](https://github.com/mojaloop/ml-reference-connectors/commit/b7b58d1f608e261b8472aa480a5b1779475ff13a))
+* added docs for the fxp core connector ([7fc5b64](https://github.com/mojaloop/ml-reference-connectors/commit/7fc5b640ee4465a6be275bc7cad9876ae3443ef6))
+* added fx designs in lib folder ([79534be](https://github.com/mojaloop/ml-reference-connectors/commit/79534be240642be61d9740daae65de0361c2a24b))
+* added process handler for ctrl + c ([1f26d94](https://github.com/mojaloop/ml-reference-connectors/commit/1f26d9471d189fd74b80ebcf0da1a772cf184776))
+* added usage instructions and example connectors ([be63059](https://github.com/mojaloop/ml-reference-connectors/commit/be630596883fde484b24f5a8fef38ccec8963ca7))
+* implemented connector lib for fxp and dfsp connectors ([b790845](https://github.com/mojaloop/ml-reference-connectors/commit/b790845cb9c467a1329550a36da23496638d1811))
+* Initial core connector library connector ([affd260](https://github.com/mojaloop/ml-reference-connectors/commit/affd2600043840d4368fcd9e3544647abad86e93))
+* setup example connector and added usage docs ([a736ee2](https://github.com/mojaloop/ml-reference-connectors/commit/a736ee201273ce148cc7c5100262be7b8a3e68c0))
+
+
+### Bug Fixes
+
+* fixed documentation ([61aee11](https://github.com/mojaloop/ml-reference-connectors/commit/61aee11adce5a4720ba01c47da25cefe3a30bcd0))
+* fixed failing tests ([e23ab1f](https://github.com/mojaloop/ml-reference-connectors/commit/e23ab1f79e9795cd0680cb34aaef51e46049f212))
+* fxied package.json package name ([4b88f98](https://github.com/mojaloop/ml-reference-connectors/commit/4b88f9851972f4dc1677e1b328e1ae21fe6c70e5))
+* import already implemented logger ([33f52f7](https://github.com/mojaloop/ml-reference-connectors/commit/33f52f707fc13079c4071d79b35f34ad6803b4b8))
+* refactored lib to support usability after changes ([512a416](https://github.com/mojaloop/ml-reference-connectors/commit/512a4165e741e4002336e6f2680cdf830be3140f))
+* removed repeated code and refactored error handling logic ([9e49587](https://github.com/mojaloop/ml-reference-connectors/commit/9e49587e864de8f8673779dae1a25044b40cc992))
+* removed un required non method members from interfaces ([747db94](https://github.com/mojaloop/ml-reference-connectors/commit/747db9489191dd9c6f5a56faf45499f369d5954e))
+* removed unnecessary coreconnector.ts class ([c62bb93](https://github.com/mojaloop/ml-reference-connectors/commit/c62bb93056168dd3876fa6f2a08c56cad0a9a539))
+* removed unrequired exports ([d2fd4a7](https://github.com/mojaloop/ml-reference-connectors/commit/d2fd4a7c47ab01410acf0ae600c0d3c3359e0189))
+* use debug when logging ([d874c68](https://github.com/mojaloop/ml-reference-connectors/commit/d874c68a11b9445cee7c639f3ed8ed33d536144a))
+
 ## 1.25.0 (2025-05-09)
 
 
