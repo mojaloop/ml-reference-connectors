@@ -59,7 +59,7 @@ function renderTemplateDir(src, dest, data) {
 
   try {
     console.log("Cloning template repository...");
-    await git.clone(GIT_REPO_URL, tmpDir, ["--branch", "ft/core-connector-lib", "--single-branch"]);
+    await git.clone(GIT_REPO_URL, tmpDir, ["--branch", "main", "--single-branch"]);
 
     const templatePath = path.join(tmpDir, examplePath);
     if (!fs.existsSync(templatePath)) {
