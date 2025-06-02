@@ -1,0 +1,44 @@
+@startuml name="payee-get-parties"
+
+skinparam defaultFontSize 10
+autonumber
+
+participant "ML Connector" as ML
+participant "Core Connector" as CC
+participant "DFSP API" as SBAPI
+
+ML ->> CC: GET /parties/{idType}/{idValue}
+
+CC ->> CC: Validation Checks, Check idType
+
+alt If Checks fail
+    CC -->> ML: Response 400
+end
+
+CC ->> SBAPI: GET /accounts/{partyIdType}/{partyIdentifier}
+
+SBAPI -->> CC: Response
+note right
+{
+    "partyIdType": "MSISDN",
+    "partyIdentifier": "string",
+    "name": "string",
+    "currency": "MWK",
+    "isActive": true
+}
+end note
+
+CC ->> CC: Response Check
+
+alt If Response is Not Successful
+    CC -->> ML: Response 500
+end
+
+alt If No Party found
+    CC -->> ML: Response 404
+end
+
+CC ->> CC: Prepare Response
+CC -->> ML: Response 200 {}
+
+@enduml

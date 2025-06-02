@@ -1,0 +1,48 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= projectName %> Core Connector",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:functional": "jest --testMatch='**/func/**/*.test.ts' --coverage --collectCoverageFrom='**/src/**/*.ts' --detectOpenHandles",
+    "test:unit": "jest --testMatch='**/unit/**/*.test.ts'",
+    "test:int": "jest --testMatch='**/int/**/*.test.ts'",
+    "test:unit:cov": "npm run test:unit -- --coverage",
+    "prepare": "husky || true",
+    "clean": "npm run clean:npm; npm run clean:dist",
+    "clean:dist": "rm -rf dist",
+    "clean:npm": "rm -rf node_modules",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "build": "tsc",
+    "build:docker": "docker build -t mtn-ug-core-connector:local .",
+    "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp mtn-ug-core-connector:local",
+    "watch": "tsc -w",
+    "start": "npm run start:no-build",
+    "start:no-build": "node dist/index.js",
+    "start:build": "npm run build && npm run start:no-build",
+    "start:dev": "ts-node -r tsconfig-paths/register -P ./tsconfig.json -r dotenv/config src/index.ts dotenv_config_path=.env.example",
+    "start:watch": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dep:check": "npx --no-install ncu -e 2",
+    "dep:update": "npx --no-install ncu -u"
+  },
+  "author": "",
+  "license": "ISC",
+  "lint-staged": {
+    "./src/*.ts": [
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ]
+  },
+  "dependencies": {
+    "@elijahokello/core-connector-lib": "^1.1.12"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.2",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.29"
+  }
+}
