@@ -10,8 +10,20 @@ The goal for connector development is that a developer will only need to impleme
 Install the core connector lib in your project
 
 ```bash
-npm install @mojaloop/core-connector-lib
+npm install -g @mojaloop/core-connector-lib
 ```
+Installing this lib provides you a command `create-cc` which you can use to create new connectors. 
+
+# Creating a new core connector
+After installing the core connector lib, run this command in a directory of your choice to bootstrap a new core connector. 
+
+```bash
+create-cc -m dfsp -n mtn-zm-dfsp-cc
+```
+## CLI Options
+
+- -m : the mode to use when bootstrapping. `dfsp` or `fxp`
+- -n : connector name e.g
 
 # Usage
 To Build a connector using the core-connector-lib, you will need to do the following.
