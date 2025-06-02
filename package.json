@@ -64,7 +64,7 @@
     "prettier": "^3.2.5",
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@hapi/hapi": "^21.3.12",
