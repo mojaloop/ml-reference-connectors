@@ -8,6 +8,7 @@
     "test": "npm run test:unit",
     "test:unit": "jest --testMatch='**/unit/**/*.test.ts'",
     "test:unit:cov": "npm run test:unit -- --coverage",
+    "test:xunit":"npm run test:unit",
     "prepare": "husky || true",
     "clean": "npm run clean:npm; npm run clean:dist",
     "clean:dist": "rm -rf dist",
