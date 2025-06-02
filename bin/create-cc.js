@@ -42,9 +42,7 @@ const examplePath = `examples/${mode}`;
 
   try {
     console.log("Cloning template repository...");
-    await git.clone(GIT_REPO_URL, tmpDir);
-    await git.cwd(tmpDir);
-    await git.checkout("ft/core-connector-lib");
+    await git.clone(GIT_REPO_URL, tmpDir, ["--branch", "ft/core-connector-lib", "--single-branch"]);
 
     const templatePath = path.join(tmpDir, examplePath);
     if (!existsSync(templatePath)) {
