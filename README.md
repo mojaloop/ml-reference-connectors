@@ -23,7 +23,7 @@ create-cc -m dfsp -n mtn-zm-dfsp-cc
 ## CLI Options
 
 - -m : the mode to use when bootstrapping. `dfsp` or `fxp`
-- -n : connector name e.g
+- -n : connector name e.g `mtn-zm-dfsp-cc`
 
 # Usage
 To Build a connector using the core-connector-lib, you will need to do the following.
