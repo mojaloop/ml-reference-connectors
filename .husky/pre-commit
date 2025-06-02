@@ -1,12 +1,5 @@
 #!/bin/sh
 
-for dir in */; do
-    case "$dir" in
-        *-core-connector/)
-            cd "$dir" || exit 1
-            npx lint-staged
-            npm run lint:fix
-            cd - > /dev/null || exit 1
-            ;;
-    esac
-done
+npm run lint
+npx lint-staged
+
