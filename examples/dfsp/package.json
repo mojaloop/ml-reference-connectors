@@ -1,7 +1,7 @@
 {
-  "name": "abc-ug-dfsp-core-connector",
+  "name": "<%= projectName %>",
   "version": "1.0.0",
-  "description": "ABC Uganda Core Connector",
+  "description": "<%= projectName %> Core Connector",
   "main": "dist/index.js",
   "scripts": {
     "test": "npm run test:unit",

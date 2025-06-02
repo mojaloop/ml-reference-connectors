@@ -21,10 +21,10 @@
     "dep:update": "npx --no-install ncu -u",
     "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'ci(release): {{currentTag}} [skip ci]'",
     "snapshot": "npx standard-version --no-verify --skip.changelog --prerelease snapshot --releaseCommitMessageFormat 'ci(snapshot): {{currentTag}}'",
-    "test:coverage-check":"true",
-    "test:functional":"true",
-    "test:integration":"true",
-    "audit:check":"true"
+    "test:coverage-check": "true",
+    "test:functional": "true",
+    "test:integration": "true",
+    "audit:check": "true"
   },
   "repository": {
     "type": "git",
@@ -74,12 +74,14 @@
     "@hapi/hapi": "^21.3.12",
     "@mojaloop/central-services-logger": "^11.9.0",
     "axios": "^1.6.8",
+    "commander": "^10.0.1",
     "convict": "^6.2.4",
     "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
     "fast-safe-stringify": "^2.1.1",
     "openapi-backend": "^5.10.6",
-    "tslib": "^2.6.3",
-    "commander": "^10.0.1"
+    "simple-git": "^3.27.0",
+    "tslib": "^2.6.3"
   },
   "lint-staged": {
     "./src/*.ts": [
@@ -87,7 +89,7 @@
       "prettier --write --ignore-unknown"
     ]
   },
-  "bin":{
+  "bin": {
     "create-cc": "./bin/create-cc.js"
   }
 }

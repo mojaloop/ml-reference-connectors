@@ -6,7 +6,7 @@ networks:
 
 services:
   core-connector-template:
-    image: mojaloop/abc-ug-fxp-core-connector:latest
+    image: <%= projectName %>:latest
     build:
       context: .
     networks:
