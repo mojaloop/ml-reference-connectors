@@ -24,7 +24,7 @@
  --------------
  ******/
 
-'use strict';
+ 'use strict';
 
 import { SDKSchemeAdapter } from '@mojaloop/api-snippets';
 import { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
