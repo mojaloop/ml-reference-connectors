@@ -1,12 +1,33 @@
 version: 2.1
-setup: true
+
 orbs:
   build: mojaloop/build@1.0.66
+
+jobs:
+  npm-build:
+    executor: build/machine
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Build the library
+          command: npm run build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .  
+
 workflows:
-  setup:
+  build-pipeline:
     jobs:
+      - npm-build
       - build/workflow:
           context: org-global
+          requires:
+            - npm-build
+          attach_workspace: true
           filters:
             tags:
               only: /v\d+(\.\d+){2}(-[a-zA-Z-][0-9a-zA-Z-]*\.\d+)?/
