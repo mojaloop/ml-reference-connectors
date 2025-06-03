@@ -40,6 +40,51 @@ paths:
           description: >-
             Returns empty body if the scheme adapter outbound transfers service
             is running.
+  /accounts:
+    post:
+      summary: Create accounts on the Account Lookup Service 
+      description: |-
+        The HTTP request `POST /accounts` is used to create account information on the Account Lookup Service (ALS) regarding the provided list of identities.
+
+        Caller DFSP is used as the account source FSP information
+      operationId: PostAccounts
+      tags:
+        - Accounts
+      requestBody:
+        description: Identities list request body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/accountsRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/accountsCreationCompleted'
+        '400':
+          $ref: '#/components/responses/accountsCreationError'
+        '500':
+          $ref: '#/components/responses/accountsCreationError'
+        '504':
+          $ref: '#/components/responses/accountsCreationTimeout'
+  /accounts/{Type}/{ID}:
+    delete:
+      summary: Delete account on the Account Lookup Service
+      description: The HTTP request `DELETE /accounts/{Type}/{ID}` is used to account account information on the Account Lookup Service (ALS) by Type and ID.
+      operationId: DeleteAccounts
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/Type'
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          $ref: '#/components/responses/accountDeletionCompleted'
+        '400':
+          $ref: '#/components/responses/accountDeletionError'
+        '500':
+          $ref: '#/components/responses/accountDeletionError'
+        '504':
+          $ref: '#/components/responses/accountDeletionTimeout'
   /send-money:
     post:
       summary: Send Money endpoint
@@ -175,6 +220,7 @@ paths:
     get:
       summary: Retrieves information for a specific transfer
       description: The HTTP request `GET /transfers/{transferId}` is used to get information regarding a transfer created or requested earlier. The `{transferId}` in the URI should contain the `transferId` that was used for the creation of the transfer.
+      operationId: OutoundTransfersGet
       tags:
         - Transaction Enquiry
       parameters:
@@ -194,7 +240,65 @@ paths:
                 $ref: '#/components/schemas/errorResponse'
 
 components:
+  responses:
+    accountsCreationCompleted:
+      description: Accounts creation completed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/accountsResponse'
+    accountsCreationError:
+      description: An error occurred creating accounts
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorAccountsResponse'
+    accountsCreationTimeout:
+      description: Timeout occurred creating accounts
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorAccountsResponse'
+    accountDeletionCompleted:
+      description: Account deletion completed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/accountDeletionResponse'
+    accountDeletionError:
+      description: An error occurred while deleting an account
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorAccountsResponse'
+    accountDeletionTimeout:
+      description: Timeout occurred while deleting an account
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorAccountsResponse'
   parameters:
+    Type:
+      name: Type
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The type of the party identifier. For example, `MSISDN`, `PERSONAL_ID`.
+    ID:
+      name: ID
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The identifier value.
+    SubId:
+      name: SubId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: A sub-identifier of the party identifier, or a sub-type of the party identifier's type. For example, `PASSPORT`, `DRIVING_LICENSE`.
     transferId:
       name: transferId
       in: path
@@ -203,6 +307,371 @@ components:
         $ref: '#/components/schemas/CorrelationId'
       description: Identifier of the transfer to continue as returned in the response to a `POST /transfers` request.
   schemas:
+    accountCreationStatus:
+      type: array
+      items:
+        type: object
+        required:
+          - idType
+          - idValue
+        properties:
+          idType:
+            $ref: '#/components/schemas/PartyIdType'
+          idValue:
+            $ref: '#/components/schemas/PartyIdentifier'
+          idSubValue:
+            $ref: '#/components/schemas/PartySubIdOrType'
+          error:
+            $ref: '#/components/schemas/errorResponse'
+    accountsCreationState:
+      type: string
+      enum:
+        - ERROR_OCCURRED
+        - COMPLETED
+    accountsResponse:
+      type: object
+      required:
+        - accounts
+      properties:
+        modelId:
+          $ref: '#/components/schemas/CorrelationId'
+        accounts:
+          $ref: '#/components/schemas/accountsRequest'
+        response:
+          $ref: '#/components/schemas/accountCreationStatus'
+        currentState:
+          $ref: '#/components/schemas/accountsCreationState'
+        lastError:
+          $ref: '#/components/schemas/transferError'
+        postAccountsResponse:
+          type: object
+          required:
+            - body
+          properties:
+            body:
+              type: object
+            headers:
+              type: object
+    errorAccountsResponse:
+      allOf:
+        - $ref: '#/components/schemas/errorResponse'
+        - type: object
+          required:
+            - executionState
+          properties:
+            executionState:
+              $ref: '#/components/schemas/accountsResponse'
+    FspId:
+      title: FspId
+      type: string
+      minLength: 1
+      maxLength: 32
+      description: FSP identifier.
+    accountDeletionStatus:
+      type: array
+      items:
+        type: object
+        required:
+          - fspId
+        properties:
+          fspId:
+            $ref: '#/components/schemas/FspId'
+          error:
+            $ref: '#/components/schemas/errorResponse'
+    accountDeletionState:
+      type: string
+      enum:
+        - ERROR_OCCURRED
+        - COMPLETED
+    accountDeletionResponse:
+      type: object
+      required:
+        - idType
+        - idValue
+      properties:
+        idType:
+          $ref: '#/components/schemas/PartyIdType'
+        idValue:
+          $ref: '#/components/schemas/PartyIdentifier'
+        subIdOrType:
+          $ref: '#/components/schemas/PartySubIdOrType'
+        response:
+          $ref: '#/components/schemas/accountDeletionStatus'
+        currentState:
+          $ref: '#/components/schemas/accountDeletionState'
+        lastError:
+          $ref: '#/components/schemas/transferError'
+        deleteAccountResponse:
+          type: object
+          required:
+            - body
+          properties:
+            body:
+              type: object
+            headers:
+              type: object
+    transferError:
+      type: object
+      description: This object represents a Mojaloop API error received at any time during the transfer process
+      properties:
+        httpStatusCode:
+          type: integer
+          description: The HTTP status code returned to the caller. This is the same as the actual HTTP status code returned with the response.
+        mojaloopError:
+          $ref: '#/components/schemas/mojaloopError'
+    mojaloopError:
+      type: object
+      properties:
+        errorInformation:
+          $ref: '#/components/schemas/ErrorInformation'
+    ErrorInformation:
+      title: ErrorInformation
+      type: object
+      description: Data model for the complex type ErrorInformation.
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        errorDescription:
+          $ref: '#/components/schemas/ErrorDescription'
+        extensionList:
+          $ref: '#/components/schemas/ExtensionList_v2_1_0'
+      required:
+        - errorCode
+        - errorDescription
+    ErrorCode:
+      title: ErrorCode
+      type: string
+      pattern: ^[1-9]\d{3}$
+      description: The API data type ErrorCode is a JSON String of four characters, consisting of digits only. Negative numbers are not allowed. A leading zero is not allowed. Each error code in the API is a four-digit number, for example, 1234, where the first number (1 in the example) represents the high-level error category, the second number (2 in the example) represents the low-level error category, and the last two numbers (34 in the example) represent the specific error.
+      example: '5100'
+    ErrorDescription:
+      title: ErrorDescription
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Error description string.
+    PartyIdType:
+      title: PartyIdType
+      type: string
+      enum:
+        - MSISDN
+        - EMAIL
+        - PERSONAL_ID
+        - BUSINESS
+        - DEVICE
+        - ACCOUNT_ID
+        - IBAN
+        - ALIAS
+      description: |-
+        Below are the allowed values for the enumeration.
+        - MSISDN - An MSISDN (Mobile Station International Subscriber Directory Number, that is, the phone number) is used as reference to a participant. The MSISDN identifier should be in international format according to the [ITU-T E.164 standard](https://www.itu.int/rec/T-REC-E.164/en). Optionally, the MSISDN may be prefixed by a single plus sign, indicating the international prefix.
+        - EMAIL - An email is used as reference to a participant. The format of the email should be according to the informational [RFC 3696](https://tools.ietf.org/html/rfc3696).
+        - PERSONAL_ID - A personal identifier is used as reference to a participant. Examples of personal identification are passport number, birth certificate number, and national registration number. The identifier number is added in the PartyIdentifier element. The personal identifier type is added in the PartySubIdOrType element.
+        - BUSINESS - A specific Business (for example, an organization or a company) is used as reference to a participant. The BUSINESS identifier can be in any format. To make a transaction connected to a specific username or bill number in a Business, the PartySubIdOrType element should be used.
+        - DEVICE - A specific device (for example, a POS or ATM) ID connected to a specific business or organization is used as reference to a Party. For referencing a specific device under a specific business or organization, use the PartySubIdOrType element.
+        - ACCOUNT_ID - A bank account number or FSP account ID should be used as reference to a participant. The ACCOUNT_ID identifier can be in any format, as formats can greatly differ depending on country and FSP.
+        - IBAN - A bank account number or FSP account ID is used as reference to a participant. The IBAN identifier can consist of up to 34 alphanumeric characters and should be entered without whitespace.
+        - ALIAS An alias is used as reference to a participant. The alias should be created in the FSP as an alternative reference to an account owner. Another example of an alias is a username in the FSP system. The ALIAS identifier can be in any format. It is also possible to use the PartySubIdOrType element for identifying an account under an Alias defined by the PartyIdentifier.
+    PartyIdentifier:
+      title: PartyIdentifier
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Identifier of the Party.
+      example: '16135551212'
+    PartySubIdOrType:
+      title: PartySubIdOrType
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: Either a sub-identifier of a PartyIdentifier, or a sub-type of the PartyIdType, normally a PersonalIdentifierType.
+    Currency:
+      title: Currency
+      description: The currency codes defined in [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html) as three-letter alphabetic codes are used as the standard naming representation for currencies.
+      type: string
+      minLength: 3
+      maxLength: 3
+      enum:
+        - AED
+        - AFN
+        - ALL
+        - AMD
+        - ANG
+        - AOA
+        - ARS
+        - AUD
+        - AWG
+        - AZN
+        - BAM
+        - BBD
+        - BDT
+        - BGN
+        - BHD
+        - BIF
+        - BMD
+        - BND
+        - BOB
+        - BRL
+        - BSD
+        - BTN
+        - BWP
+        - BYN
+        - BZD
+        - CAD
+        - CDF
+        - CHF
+        - CLP
+        - CNY
+        - COP
+        - CRC
+        - CUC
+        - CUP
+        - CVE
+        - CZK
+        - DJF
+        - DKK
+        - DOP
+        - DZD
+        - EGP
+        - ERN
+        - ETB
+        - EUR
+        - FJD
+        - FKP
+        - GBP
+        - GEL
+        - GGP
+        - GHS
+        - GIP
+        - GMD
+        - GNF
+        - GTQ
+        - GYD
+        - HKD
+        - HNL
+        - HRK
+        - HTG
+        - HUF
+        - IDR
+        - ILS
+        - IMP
+        - INR
+        - IQD
+        - IRR
+        - ISK
+        - JEP
+        - JMD
+        - JOD
+        - JPY
+        - KES
+        - KGS
+        - KHR
+        - KMF
+        - KPW
+        - KRW
+        - KWD
+        - KYD
+        - KZT
+        - LAK
+        - LBP
+        - LKR
+        - LRD
+        - LSL
+        - LYD
+        - MAD
+        - MDL
+        - MGA
+        - MKD
+        - MMK
+        - MNT
+        - MOP
+        - MRO
+        - MUR
+        - MVR
+        - MWK
+        - MXN
+        - MYR
+        - MZN
+        - NAD
+        - NGN
+        - NIO
+        - NOK
+        - NPR
+        - NZD
+        - OMR
+        - PAB
+        - PEN
+        - PGK
+        - PHP
+        - PKR
+        - PLN
+        - PYG
+        - QAR
+        - RON
+        - RSD
+        - RUB
+        - RWF
+        - SAR
+        - SBD
+        - SCR
+        - SDG
+        - SEK
+        - SGD
+        - SHP
+        - SLL
+        - SOS
+        - SPL
+        - SRD
+        - STD
+        - SVC
+        - SYP
+        - SZL
+        - THB
+        - TJS
+        - TMT
+        - TND
+        - TOP
+        - TRY
+        - TTD
+        - TVD
+        - TWD
+        - TZS
+        - UAH
+        - UGX
+        - USD
+        - UYU
+        - UZS
+        - VEF
+        - VND
+        - VUV
+        - WST
+        - XAF
+        - XCD
+        - XDR
+        - XOF
+        - XPF
+        - XTS
+        - XXX
+        - YER
+        - ZAR
+        - ZMW
+        - ZWD
+    accountsRequest:
+      type: array
+      items:
+        type: object
+        required:
+          - idType
+          - idValue
+        properties:
+          idType:
+            $ref: '#/components/schemas/PartyIdType'
+          idValue:
+            $ref: '#/components/schemas/PartyIdentifier'
+          idSubValue:
+            $ref: '#/components/schemas/PartySubIdOrType'
+          currency:
+            $ref: '#/components/schemas/Currency'
     errorResponse:
       type: object
       properties:
