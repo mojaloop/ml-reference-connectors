@@ -26,7 +26,7 @@
 
 'use strict';
 
-import { IDFSPCoreConnectorAggregate, ILogger } from '../domain';
+import { IDFSPCoreConnectorAggregate, ILogger, TAccountCreationRequest } from '../domain';
 import { Request, ResponseToolkit } from '@hapi/hapi';
 import { Context } from 'openapi-backend';
 import { BaseRoutes } from './BaseRoutes';
@@ -42,6 +42,9 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
         initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
         updateInitiatedMerchantPayment: this.updateInitiatedMerchantPayment.bind(this),
+        PostAccounts: this.postAccounts.bind(this),
+        DeleteAccounts: this.deleteAccounts.bind(this),
+        OutoundTransfersGet: this.getTransfers.bind(this),
         validationFail: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: context.validation.errors }).code(400),
         notFound: async (context: Context, req: Request, h: ResponseToolkit) => h.response({ error: 'Not found' }).code(404),
     };
@@ -59,7 +62,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
 
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest ;
-        this.logger.info(`Transfer request ${transfer}`);
+        this.logger.debug(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendMoney(transfer,"SEND");
             return this.handleResponse(result, h);
@@ -71,7 +74,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
     private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest ;
-        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
+        this.logger.debug(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
@@ -85,7 +88,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
 
     private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest;
-        this.logger.info(`Transfer request ${transfer}`);
+        this.logger.debug(`Transfer request ${transfer}`);
         try {
             const result = await this.aggregate.sendMoney(transfer,"RECEIVE");
             return this.handleResponse(result, h);
@@ -97,7 +100,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
     private async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest;
-        this.logger.info(`Transfer request ${transferAccept} with id ${params.transferId}`);
+        this.logger.debug(`Transfer request ${transferAccept} with id ${params.transferId}`);
         try {
             const updateTransferRes = await this.aggregate.updateSendMoney(
                 transferAccept,
@@ -106,6 +109,39 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
             return this.handleResponse(updateTransferRes, h);
         } catch (error: unknown) {
             return this.handleError(error, h);
+        }
+    }
+
+    private async getTransfers(context: Context, request: Request, h: ResponseToolkit){
+        const { params } = context.request;
+        this.logger.debug(`Get transfer request with id ${params.transferId}`);
+        try{
+            const transfer = await this.aggregate.getTransfers(params.transferId as string);
+            return this.handleResponse(transfer,h);
+        }catch(error: unknown){
+            return this.handleError(error,h);
+        }
+    }
+
+    private async postAccounts(context: Context, request: Request, h: ResponseToolkit ){
+        const account = request.payload as TAccountCreationRequest;
+        this.logger.debug(`Creation account ...`,account);
+        try{
+            const accountRes = await this.aggregate.postAccounts(account);
+            return this.handleResponse(accountRes,h);
+        }catch(error: unknown){
+            return this.handleError(error,h);
+        }
+    }
+
+    private async deleteAccounts(context: Context, request: Request, h: ResponseToolkit ){
+        const {Type ,Id} = request.params;
+        this.logger.debug(`Deleting account ...`, {"Type": Type, "Id": Id});
+        try{
+            const deleteAccountRes = await this.aggregate.deleteAccounts(Id,Type);
+            return this.handleResponse(deleteAccountRes,h);
+        }catch(error: unknown){
+            return this.handleError(error,h);
         }
     }
 }
