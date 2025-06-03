@@ -33,7 +33,7 @@ import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0
 import { components as OutboundComponents } from "@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi";
 import { components as fspiopComponents } from '@mojaloop/api-snippets/lib/fspiop/v2_0/openapi';
 import { ICbsClient, TCBSConfig, TCbsSendMoneyRequest, TCbsSendMoneyResponse, TCBSUpdateSendMoneyRequest, TCBSUpdateSendMoneyResponse } from '../CBSClient';
-import { ISDKClient } from '../SDKClient';
+import { ISDKClient, TAccountCreationRequest, TAccountCreationResponse, TGetTransfersResponse } from '../SDKClient';
 import { IFxpCoreConnectorAgg, TFxpConfig } from '../FXPClient';
 
 export interface IConnectorConfigSchema<D, F> {
@@ -190,6 +190,9 @@ export interface IDFSPCoreConnectorAggregate<D> {
     updateAndCommitTransferOnPatchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
     sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse>
     updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCBSUpdateSendMoneyResponse>
+    getTransfers(transferId: string): Promise<TGetTransfersResponse>;
+    postAccounts(accounts: TAccountCreationRequest):Promise<TAccountCreationResponse>;
+    deleteAccounts(id: string, idType: string):Promise<void>;
 }
 
 export interface IService<D,F> {

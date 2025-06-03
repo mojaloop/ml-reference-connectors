@@ -53,6 +53,9 @@ import {
 import {
     ISDKClient,
     SDKClientError,
+    TAccountCreationRequest,
+    TAccountCreationResponse,
+    TGetTransfersResponse,
     TSDKOutboundTransferRequest,
     TSDKOutboundTransferResponse,
     TtransferContinuationResponse,
@@ -491,5 +494,23 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             }
             throw AggregateError.updateSendMoneyFailedError(`Committing Payment with homeTransactionId ${updateSendMoneyDeps.homeTransactionId} failed. Message ${error instanceof BasicError ? error.message : ""}`,'2000',500);
         }
+    }
+
+    async getTransfers(transferId: string): Promise<TGetTransfersResponse>{
+        this.logger.debug(`Getting transfer with Id ${transferId}`);
+        const res = await this.sdkClient.getTransfers(transferId);
+        return res;
+    }
+
+    async postAccounts(accounts: TAccountCreationRequest): Promise<TAccountCreationResponse> {
+        this.logger.debug(`Adding accounts`,accounts);
+        const res = await this.sdkClient.postAccounts(accounts);
+        return res;
+    }
+
+    async deleteAccounts(id: string, idType: string): Promise<void> {
+        this.logger.debug(`Deleting account`,{"Type":idType,"Id":id});
+        const res = await this.sdkClient.deleteAccounts(id,idType);
+        return res;
     }
 }
