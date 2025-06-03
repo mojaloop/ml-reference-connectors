@@ -1,4 +1,4 @@
-import { IConnectorConfigSchema } from "../src/domain";
+import { IConnectorConfigSchema, TAccountCreationRequest, TGetTransfersResponse } from "../src/domain";
 import { TBlueBankConfig } from "./unit/dfspCoreConnectorAgg.test";
 import { TBlueBankFXPConfig } from "./unit/fxpCoreConnectorAgg.test";
 import { TCbsMerchantPaymentRequest, TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest, THttpResponse, TQuoteRequest, TSDKOutboundTransferResponse, TtransferPatchNotificationRequest, TtransferRequest } from "../src/domain";
@@ -574,7 +574,7 @@ export const fxTransferDTO = (): TConfirmFxTransferRequest => ({
   "condition": "string"
 });
 
-export const fxTransferNotificationDTO = ():TNotifyFxTransferStateRequest => ({
+export const fxTransferNotificationDTO = (): TNotifyFxTransferStateRequest => ({
   "homeTransactionId": "string",
   "fulfilment": "WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8",
   "completedTimestamp": "2016-05-24T08:38:08.699-04:00",
@@ -588,3 +588,35 @@ export const fxTransferNotificationDTO = ():TNotifyFxTransferStateRequest => ({
     ]
   }
 });
+
+export const postAccountsReqDTO = (): TAccountCreationRequest => ([
+  {
+    "idType": "MSISDN",
+    "idValue": "16135551212",
+    "idSubValue": "string",
+    "currency": "AED"
+  }
+]);
+
+export const getTransfersResponseDTO = (currentState: "ERROR_OCCURRED" | "WAITING_FOR_PARTY_ACCEPTANCE" | "WAITING_FOR_QUOTE_ACCEPTANCE" | "COMPLETED"): TGetTransfersResponse => (
+  {
+    "transferId": "b51ec534-ee48-4575-b6a9-ead2955b8069",
+    "currentState": currentState,
+    "fulfil": {
+      "body": {
+        "fulfilment": "WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8",
+        "completedTimestamp": "2016-05-24T08:38:08.699-04:00",
+        "transferState": "RESERVED",
+        "extensionList": {
+          "extension": [
+            {
+              "key": "string",
+              "value": "string"
+            }
+          ]
+        }
+      },
+      "headers": {}
+    }
+  }
+)

@@ -26,7 +26,7 @@
 import { randomUUID } from "crypto";
 import { coreConnectorServiceFactory, ICbsClient, IHTTPClient} from "../../src";
 import { AxiosClientFactory, logger } from "../../src/infra";
-import { confirmSendMoneyDTO, dfspConfig, quoteRequestDTO, reserveTransferDTO, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferNotificationDTO } from "../fixtures";
+import { confirmSendMoneyDTO, dfspConfig, getTransfersResponseDTO, postAccountsReqDTO, quoteRequestDTO, reserveTransferDTO, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferNotificationDTO } from "../fixtures";
 import { MockCBSClient } from "../mocks";
 
 export type TBlueBankConfig = {
@@ -162,6 +162,50 @@ describe("DFSP Core Connector Tests", () => {
             //Assert
             expect(res?.transferId).toBeDefined();
             expect(sdkSpyUpdate).toHaveBeenCalled();
+        });
+
+        test("Test add accounts", async ()=>{
+            if(!coreConnector.sdkClient){
+                throw Error("SDK Client undefined in core connector");
+            }
+            // Arrange
+            const postAccountsReq = postAccountsReqDTO();
+            coreConnector.sdkClient.postAccounts = jest.fn().mockResolvedValueOnce(undefined);
+            const sdkPostAccountSpy = jest.spyOn(coreConnector.sdkClient,"postAccounts");
+            // Act
+            await coreConnector.dfspCoreConnectorAggregate?.postAccounts(postAccountsReq);
+            // Assert
+            expect(sdkPostAccountSpy).toHaveBeenCalled();
+        });
+
+        test("Test delete accounts", async ()=>{
+            if(!coreConnector.sdkClient){
+                throw Error("SDK Client undefined in core connector");
+            }
+            // Arrange 
+            coreConnector.sdkClient.deleteAccounts = jest.fn().mockResolvedValueOnce(undefined);
+            const sdkDeleteAccountSpy = jest.spyOn(coreConnector.sdkClient,"deleteAccounts");
+
+            //Act
+            await coreConnector.dfspCoreConnectorAggregate?.deleteAccounts(MSISDN,IDTYPE);
+            // Assert
+            expect(sdkDeleteAccountSpy).toHaveBeenCalled();
+        });
+
+        test("Test get Transfers", async ()=>{
+            if(!coreConnector.sdkClient){
+                throw Error("SDK Client undefined in core connector");
+            }
+            //Arrange 
+            coreConnector.sdkClient.getTransfers = jest.fn().mockResolvedValueOnce({
+                ...getTransfersResponseDTO("COMPLETED")
+            });
+            const sdkGetTransfersSpy = jest.spyOn(coreConnector.sdkClient, "getTransfers");
+            //Act
+            const res = await coreConnector.dfspCoreConnectorAggregate?.getTransfers(crypto.randomUUID());
+            // Assert
+            expect(sdkGetTransfersSpy).toHaveBeenCalled();
+            expect(res?.currentState).toEqual("COMPLETED");
         });
     });
     
