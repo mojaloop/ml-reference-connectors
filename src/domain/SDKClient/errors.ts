@@ -59,4 +59,25 @@ export class SDKClientError extends BasicError {
             options
         );
     }
+
+    static getTransfersError(message: string, options: ErrorOptions){
+        return new SDKClientError(
+            message,
+            options
+        );
+    }
+
+    static postAccountsError(message: string, options: ErrorOptions){
+        return new SDKClientError(
+            message,
+            options
+        );
+    }
+
+    static deleteAccountsError(message: string, options: ErrorOptions){
+        return new SDKClientError(
+            message,
+            options
+        );
+    }
 }

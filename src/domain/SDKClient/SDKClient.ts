@@ -32,6 +32,9 @@ import {
     TSDKOutboundTransferRequest,
     TSDKTransferContinuationRequest,
     TSDKOutboundTransferResponse,
+    TGetTransfersResponse,
+    TAccountCreationRequest,
+    TAccountCreationResponse,
 } from './types';
 import { IHTTPClient, ILogger, THttpResponse } from '../interfaces';
 import { SDKClientError } from './errors';
@@ -52,9 +55,7 @@ export class SDKClient implements ISDKClient {
         this.SDK_SCHEME_ADAPTER_BASE_URL = deps.schemeAdapterUrl;
     }
 
-    async initiateTransfer(
-        transfer: TSDKOutboundTransferRequest,
-    ): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
+    async initiateTransfer(transfer: TSDKOutboundTransferRequest): Promise<THttpResponse<TSDKOutboundTransferResponse>> {
         this.logger.info('SDKClient initiate receiveTransfer', transfer);
         try {
             const res = await this.httpClient.post<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
@@ -81,10 +82,7 @@ export class SDKClient implements ISDKClient {
         }
     }
 
-    async updateTransfer(
-        transferAccept: TSDKTransferContinuationRequest,
-        id: string,
-    ): Promise<THttpResponse<TtransferContinuationResponse>> {
+    async updateTransfer(transferAccept: TSDKTransferContinuationRequest, id: string,): Promise<THttpResponse<TtransferContinuationResponse>> {
         this.logger.info('SDKClient initiate update receiveTransfer %s', transferAccept);
         try {
             const res = await this.httpClient.put<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
@@ -112,6 +110,80 @@ export class SDKClient implements ISDKClient {
                 errMessage = JSON.stringify(error.response?.data);
             }
             throw SDKClientError.continueTransferError(errMessage);
+        }
+    }
+
+    async getTransfers(transferId: string): Promise<TGetTransfersResponse> {
+        this.logger.debug(`SDK Client get transfers with id ${transferId}`);
+        try {
+            const res = await this.httpClient.get<TGetTransfersResponse>(`${this.SDK_SCHEME_ADAPTER_BASE_URL}/transfers/${transferId}`);
+            if (res.statusCode !== 200) {
+                const { statusCode, data, error } = res;
+                const errMessage = 'SDKClient get transfer failed';
+                this.logger.warn(errMessage, { statusCode, data, error });
+                throw SDKClientError.getTransfersError(errMessage, { httpCode: statusCode });
+            }
+            return res.data;
+        } catch (error: unknown) {
+            if (error instanceof SDKClientError) throw error;
+            let errMessage = `SDKClient get transfers error: ${(error as Error)?.message}`;
+            this.logger.error(errMessage, { error });
+            if (error instanceof AxiosError) {
+                this.logger.error("Error from SDK", error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
+            throw SDKClientError.getTransfersError(errMessage, { httpCode: 500, mlCode: "2000" });
+        }
+    }
+
+    async postAccounts(accounts: TAccountCreationRequest): Promise<TAccountCreationResponse> {
+        this.logger.debug(`SDK Client post accounts`,accounts);
+        try{
+            const res = await this.httpClient.post<TAccountCreationRequest,TAccountCreationResponse>(`${this.SDK_SCHEME_ADAPTER_BASE_URL}/accounts`,accounts);
+            if(res.statusCode !== 200){
+                const { statusCode, data, error } = res;
+                const errMessage = 'SDKClient create accounts failed';
+                this.logger.warn(errMessage, { statusCode, data, error });
+                throw SDKClientError.postAccountsError(errMessage, { httpCode: statusCode });
+            }
+            return res.data;
+        }catch(error: unknown){
+            if(error instanceof SDKClientError) throw error;
+            let errMessage = `SDKClient create accounts error: ${(error as Error)?.message}`;
+            this.logger.error(errMessage,{error});
+            if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
+            throw SDKClientError.postAccountsError(errMessage, { httpCode: 500, mlCode: "2000" });
+        }
+    }
+
+    async deleteAccounts(id: string, idType: string): Promise<void> {
+        this.logger.debug(`SDK Client delete accounts`,{"Type":idType,"Id":id});
+        try{
+            const res = await this.httpClient.send<unknown>({
+                url: `${this.SDK_SCHEME_ADAPTER_BASE_URL}/accounts/${idType}/${id}`,
+                method:"DELETE",
+                headers:{
+                    "Content-Type":"application/json"
+                }
+            });
+            if (res.statusCode !== 200) {
+                const { statusCode, data, error } = res;
+                const errMessage = 'SDKClient delete account failed';
+                this.logger.warn(errMessage, { statusCode, data, error });
+                throw SDKClientError.deleteAccountsError(errMessage, { httpCode: statusCode });
+            }
+        }catch(error: unknown){
+            if(error instanceof SDKClientError) throw error;
+            let errMessage = `SDKClient delete account error: ${(error as Error)?.message}`;
+            this.logger.error(errMessage,{error});
+            if(error instanceof AxiosError){
+                this.logger.error("Error from SDK",error.response?.data);
+                errMessage = JSON.stringify(error.response?.data);
+            }
+            throw SDKClientError.deleteAccountsError(errMessage, { httpCode: 500, mlCode: "2000" });
         }
     }
 }

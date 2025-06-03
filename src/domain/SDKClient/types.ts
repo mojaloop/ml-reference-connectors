@@ -106,6 +106,12 @@ export type TSDKTransferContinuationRequest =
 
 export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
 
+export type TGetTransfersResponse = SDKSchemeAdapter.V2_0_0.Outbound.openapi.components["schemas"]["transferStatusResponse"];
+
+export type TAccountCreationRequest = components["schemas"]["accountsRequest"];
+
+export type TAccountCreationResponse = components["responses"]["accountsCreationCompleted"]["content"]["application/json"]["postAccountsResponse"];
+
 export type TSDKClientDeps = {
     logger: ILogger;
     httpClient: IHTTPClient;
@@ -118,4 +124,7 @@ export interface ISDKClient {
         transferAccept: TSDKTransferContinuationRequest,
         id: string,
     ): Promise<THttpResponse<TtransferContinuationResponse>>;
+    getTransfers(transferId: string): Promise<TGetTransfersResponse>;
+    postAccounts(accounts: TAccountCreationRequest):Promise<TAccountCreationResponse>;
+    deleteAccounts(id: string, idType: string):Promise<void>;
 }
