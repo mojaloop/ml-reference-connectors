@@ -5,7 +5,7 @@ orbs:
 
 jobs:
   npm-build:
-    executor: build/machine
+    executor: build/docker
     steps:
       - checkout
       - run:
