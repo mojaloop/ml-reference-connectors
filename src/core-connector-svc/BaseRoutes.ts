@@ -40,6 +40,15 @@ type ErrorResponseDetails = {
     details?: TJson;
 };
 const getErrorDetails = (error: unknown): ErrorResponseDetails => {
+    if(error instanceof TypeError){
+        const {message, cause} = error;
+        return {
+            message: cause ? `${message}: ${cause}` : message,
+            status: "2000",
+            httpCode: 500,
+            details: cause ? `${cause}` : message,
+        }
+    }
     if (error instanceof BasicError) {
         const { message, mlCode = '2000', httpCode = 500, details } = error;
         return {

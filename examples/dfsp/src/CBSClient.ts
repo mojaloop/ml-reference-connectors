@@ -12,7 +12,7 @@ import {
     TtransferPatchNotificationRequest,
     TtransferRequest,
     TtransferResponse,
-} from '@elijahokello/core-connector-lib';
+} from '@mojaloop/core-connector-lib';
 
 export class MockCBSClient<D> implements ICbsClient<D> {
     cbsConfig: TCBSConfig<D>;

@@ -36,7 +36,7 @@
     ]
   },
   "dependencies": {
-    "@elijahokello/core-connector-lib": "^1.1.12"
+    "@mojaloop/core-connector-lib": "latest"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
