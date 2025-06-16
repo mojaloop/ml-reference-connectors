@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.1.1...v2.2.0) (2025-06-03)
+
+
+### Features
+
+* added api specs for post and delete accounts ([173d023](https://github.com/mojaloop/ml-reference-connectors/commit/173d023af3131f0329ceb70fbbaa97fd824af98f))
+* added route handlers for post and delete accounts ([c802c5f](https://github.com/mojaloop/ml-reference-connectors/commit/c802c5fc227fe5a342f2e4e6cf32efb64365076c))
+* added SDK Client implementation for post and delete accounts ([b3e1e71](https://github.com/mojaloop/ml-reference-connectors/commit/b3e1e71d69a4bf730805c56d1cd982e78d8f2971))
+* implemented business logic for post, delete accounts and get transfers ([c8da996](https://github.com/mojaloop/ml-reference-connectors/commit/c8da9969cf1446409a39b2ba70e0b9db68cf5f27))
+
 ### [2.1.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.1.0...v2.1.1) (2025-06-02)
 
 
