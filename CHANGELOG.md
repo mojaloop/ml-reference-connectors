@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.2](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.0...v2.2.2) (2025-06-16)
+
+
+### Bug Fixes
+
+* add npm run build step ([6d7e032](https://github.com/mojaloop/ml-reference-connectors/commit/6d7e032b47816cbe4dbf591854dcd8832c3210c1))
+* add npm run build step ([#146](https://github.com/mojaloop/ml-reference-connectors/issues/146)) ([519e98b](https://github.com/mojaloop/ml-reference-connectors/commit/519e98b0d4e0e5db39e4562d57b1a243ec80f503))
+* added setup job ([db1a057](https://github.com/mojaloop/ml-reference-connectors/commit/db1a05705dd8ff2f82f2b35dce81fa3db62e4049))
+* executer to docker ([baf0a3c](https://github.com/mojaloop/ml-reference-connectors/commit/baf0a3c8e7f204cf3d0df0229f7046dc8cd24d46))
+* fix syntax error ([d965a5e](https://github.com/mojaloop/ml-reference-connectors/commit/d965a5e2042aeb7347eeeee5a89d890c48ca9113))
+
 ## [2.2.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.1.1...v2.2.0) (2025-06-03)
 
 
