@@ -55,9 +55,7 @@ export type TBlueBankConfig = {
 If you are building a DFSP core connector you need to implement the ICbsClient interface.
 
 ```typescript
-export interface ICbsClient<C> {
-    cbsConfig: TCBSConfig<C>;
-    httpClient: IHTTPClient;
+export interface ICbsClient {
     logger: ILogger;
     getAccountInfo(deps: TGetKycArgs): Promise<Party>;
     getAccountDiscoveryExtensionLists(): TPayeeExtensionListEntry[];
@@ -67,7 +65,7 @@ export interface ICbsClient<C> {
     handleRefund(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<void>;
 }
 ```
-For an example implementation, please refer to this [file](./examples/abc-ug-dfsp-core-connector/src/CBSClient.ts).
+For an example implementation, please refer to this [file](./examples/dfsp/src/CBSClient.ts).
 
 Each of those method implementations will vary depending on the DFSP or FXP. So it is important that you implement functionality that is custom to the DFSP.
 
@@ -75,18 +73,15 @@ Each of those method implementations will vary depending on the DFSP or FXP. So 
 If you are implementing a core connector for an FXP, you will need to implement the IFXPClient interface
 
 ```typescript 
-export interface IFXPClient<C> {
-    httpClient: IHTTPClient;
+export interface IFXPClient {
     logger: ILogger;
-    fxpConfig: TFxpConfig<C>
-
     getFxQuote(deps: TFxQuoteRequest): Promise<TFxQuoteResponse>;
     confirmFxTransfer(deps: TConfirmFxTransferRequest): Promise<TConfirmFxTransferResponse>;
     notifyFxTransferState(deps: TNotifyFxTransferStateRequest): Promise<TNotifyFxTransferStateResponse>;
 }
 ```
 
-For an example implementation, please refer to this [file](./examples/abc-ug-fxp-core-connector/src/FXPClient.ts).
+For an example implementation, please refer to this [file](./examples/fxp/src/FXPClient.ts).
 
 Each of those method implementations will vary depending on the DFSP or FXP. So it is important that you implement functionality that is custom to the DFSP.
 
