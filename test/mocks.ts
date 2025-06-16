@@ -92,7 +92,7 @@ export class MockCBSClient<D> implements ICbsClient {
 
 }
 
-export class MockFXPClient<F> implements IFXPClient<F> {
+export class MockFXPClient<F> implements IFXPClient {
     constructor(
         public httpClient: IHTTPClient,
         public logger: ILogger,
