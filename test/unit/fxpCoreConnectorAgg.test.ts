@@ -41,7 +41,7 @@ if (!fxpConfig.fxpConfig) {
     throw new Error("FXP Config must be defined");
 }
 
-const fxpClient: IFXPClient<TBlueBankFXPConfig> = new MockFXPClient<TBlueBankFXPConfig>(httpClient, logger, fxpConfig.fxpConfig);
+const fxpClient: IFXPClient= new MockFXPClient<TBlueBankFXPConfig>(httpClient, logger, fxpConfig.fxpConfig);
 
 const coreconnector = coreConnectorServiceFactory({
     fxpClient: fxpClient,

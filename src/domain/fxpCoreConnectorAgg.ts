@@ -3,7 +3,7 @@ import { ILogger } from "./interfaces";
 
 export class FXPCoreConnectorAggregate<F> implements IFxpCoreConnectorAgg<F> {
     constructor(
-        public fxpClient: IFXPClient<F>,
+        public fxpClient: IFXPClient,
         public logger: ILogger,
         public fxpConfig: TFxpConfig<F>
     ){}

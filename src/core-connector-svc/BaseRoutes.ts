@@ -47,7 +47,7 @@ const getErrorDetails = (error: unknown): ErrorResponseDetails => {
             status: "2000",
             httpCode: 500,
             details: cause ? `${cause}` : message,
-        }
+        };
     }
     if (error instanceof BasicError) {
         const { message, mlCode = '2000', httpCode = 500, details } = error;

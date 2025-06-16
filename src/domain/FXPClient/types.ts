@@ -1,5 +1,5 @@
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/backend/openapi';
-import { IHTTPClient, ILogger } from '../interfaces';
+import { ILogger } from '../interfaces';
 
 export type TFxQuoteRequest = components["schemas"]["FxQuotesPostBackendRequest"];
 export  type TFxQuoteResponse = components["schemas"]["FxQuotesPostBackendResponse"];
@@ -13,18 +13,15 @@ export type TFxpConfig<C> = {
     config: C
 }
 
-export interface IFXPClient<C> {
-    httpClient: IHTTPClient;
+export interface IFXPClient {
     logger: ILogger;
-    fxpConfig: TFxpConfig<C>
-
     getFxQuote(deps: TFxQuoteRequest): Promise<TFxQuoteResponse>;
     confirmFxTransfer(deps: TConfirmFxTransferRequest): Promise<TConfirmFxTransferResponse>;
     notifyFxTransferState(deps: TNotifyFxTransferStateRequest): Promise<TNotifyFxTransferStateResponse>;
 }
 
 export interface IFxpCoreConnectorAgg<F> {
-    fxpClient: IFXPClient<F>
+    fxpClient: IFXPClient
     logger: ILogger
     fxpConfig: TFxpConfig<F>
 

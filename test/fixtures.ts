@@ -619,4 +619,4 @@ export const getTransfersResponseDTO = (currentState: "ERROR_OCCURRED" | "WAITIN
       "headers": {}
     }
   }
-)
+);

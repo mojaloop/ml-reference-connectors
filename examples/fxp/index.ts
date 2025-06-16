@@ -1,6 +1,6 @@
 'use strict';
 
-import { IHTTPClient, AxiosClientFactory, IFXPClient, logger, coreConnectorServiceFactory } from "@elijahokello/core-connector-lib";
+import { IHTTPClient, AxiosClientFactory, IFXPClient, logger, coreConnectorServiceFactory } from "@mojaloop/core-connector-lib";
 import { fxpConfig } from "./config";
 import { ConnectorError } from "./src/errors";
 import { MockFXPClient } from "./src/FXPClient";

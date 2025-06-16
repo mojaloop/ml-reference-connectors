@@ -53,7 +53,7 @@ export type TCoreConnectorServiceDeps<D,F> = {
     logger?: ILogger,
     cbsClient?: ICbsClient,
     fxpCoreConnectorAggregate?: IFxpCoreConnectorAgg<F> ;
-    fxpClient?: IFXPClient<F> ;
+    fxpClient?: IFXPClient ;
     sdkApiSpec?: string;
     dfspApiSpec?: string;
 }
@@ -72,7 +72,7 @@ export class CoreConnectorService<D,F> implements IService<D,F> {
     logger: ILogger | undefined;
     cbsClient: ICbsClient | undefined;
     fxpCoreConnectorAggregate: IFxpCoreConnectorAgg<F> | undefined;
-    fxpClient: IFXPClient<F> | undefined;
+    fxpClient: IFXPClient | undefined;
     sdkClient: ISDKClient | undefined;
     sdkApiSpec: string | undefined;
     dfspApiSpec: string | undefined;
@@ -117,7 +117,7 @@ export class CoreConnectorService<D,F> implements IService<D,F> {
         this.logger.info('Core Connector Server started');
     }
 
-    async startInFXPMode(fxpClient: IFXPClient<F>, logger: ILogger){
+    async startInFXPMode(fxpClient: IFXPClient, logger: ILogger){
         if(!this.fxpCoreConnectorAggregate && this.config.fxpConfig !== undefined){
             this.fxpCoreConnectorAggregate = new FXPCoreConnectorAggregate(fxpClient,logger,this.config.fxpConfig);
         }
