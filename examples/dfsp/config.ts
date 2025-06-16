@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import Convict from 'convict';
 import { TBlueBankConfig } from '.';
-import { IConnectorConfigSchema } from '@elijahokello/core-connector-lib';
+import { IConnectorConfigSchema } from '@mojaloop/core-connector-lib';
 
 export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
     server: {

@@ -14,7 +14,7 @@ import {
     TtransferResponse,
 } from '@mojaloop/core-connector-lib';
 
-export class MockCBSClient<D> implements ICbsClient<D> {
+export class MockCBSClient<D> implements ICbsClient {
     cbsConfig: TCBSConfig<D>;
     httpClient: IHTTPClient;
     logger: ILogger;

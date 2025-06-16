@@ -1,6 +1,6 @@
 'use strict';
 
-import { IHTTPClient, AxiosClientFactory, ICbsClient, logger, coreConnectorServiceFactory} from "@elijahokello/core-connector-lib";
+import { IHTTPClient, AxiosClientFactory, ICbsClient, logger, coreConnectorServiceFactory} from "@mojaloop/core-connector-lib";
 import { dfspConfig } from "./config";
 import { MockCBSClient } from "./src/CBSClient";
 import { ConnectorError } from "./src/errors";
@@ -18,7 +18,7 @@ if(!dfspConfig.cbs){
     throw ConnectorError.cbsConfigUndefined("CBS Config Not defined. Please fix the configuration in config.ts","0",0);
 }
 
-const cbsClient: ICbsClient<TBlueBankConfig> = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
+const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
 const coreConnector = coreConnectorServiceFactory({cbsClient: cbsClient, config: dfspConfig});
 
 // Start Core Connector

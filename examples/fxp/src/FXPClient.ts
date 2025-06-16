@@ -10,7 +10,7 @@ import {
     TConfirmFxTransferResponse,
     TNotifyFxTransferStateRequest,
     TNotifyFxTransferStateResponse,
-} from '@elijahokello/core-connector-lib';
+} from '@mojaloop/core-connector-lib';
 
 export class MockFXPClient<F> implements IFXPClient<F> {
     constructor(

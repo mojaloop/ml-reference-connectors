@@ -1,4 +1,4 @@
-import { IHTTPClient, AxiosClientFactory, IFXPClient, logger, coreConnectorServiceFactory} from "@elijahokello/core-connector-lib";
+import { IHTTPClient, AxiosClientFactory, IFXPClient, logger, coreConnectorServiceFactory} from "@mojaloop/core-connector-lib";
 import { fxpConfig } from "../config";
 import { TBlueBankConfig } from "..";
 import { ConnectorError } from "../src/errors";
