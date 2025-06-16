@@ -12,7 +12,7 @@ import {
     TNotifyFxTransferStateResponse,
 } from '@mojaloop/core-connector-lib';
 
-export class MockFXPClient<F> implements IFXPClient<F> {
+export class MockFXPClient<F> implements IFXPClient {
     constructor(
         public httpClient: IHTTPClient,
         public logger: ILogger,
