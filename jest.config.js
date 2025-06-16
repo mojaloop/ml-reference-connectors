@@ -10,6 +10,7 @@ module.exports = {
     transform: {
         '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.test.json' }],
     },
+    testPathIgnorePatterns: ['/examples/'],
     coveragePathIgnorePatterns: ['dist'],
     coverageReporters: ['text', ['json', { file: 'integration-final.json' }]],
     coverageDirectory: './coverage/',

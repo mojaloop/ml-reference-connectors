@@ -17,7 +17,7 @@ if(!fxpConfig.fxpConfig){
     throw ConnectorError.cbsConfigUndefined("FXP Config Not defined. Please fix the configuration in config.ts","0",0);
 }
 
-const fxpClient: IFXPClient<TBlueBankConfig> = new MockFXPClient<TBlueBankConfig>(httpClient,logger,fxpConfig.fxpConfig);
+const fxpClient: IFXPClient = new MockFXPClient<TBlueBankConfig>(httpClient,logger,fxpConfig.fxpConfig);
 const coreConnector = coreConnectorServiceFactory({fxpClient: fxpClient, config: fxpConfig});
 
 coreConnector.start()
