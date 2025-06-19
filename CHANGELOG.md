@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.7](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.6...v2.2.7) (2025-06-19)
+
+
+### Bug Fixes
+
+* change response status code to 200 for transfers reserve ([3c3cc4d](https://github.com/mojaloop/ml-reference-connectors/commit/3c3cc4d459ab0359d3e9d924785278cb7548f26d))
+* fixed failing prepare script ([c649e0d](https://github.com/mojaloop/ml-reference-connectors/commit/c649e0db503e20c760d76764571cef60777921a7))
+* fixed failing test runs in jest.config.js ([6ff0d17](https://github.com/mojaloop/ml-reference-connectors/commit/6ff0d176631a488fd1166e417ca80d7f14675486))
+
 ### [2.2.6](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.5...v2.2.6) (2025-06-16)
 
 ### [2.2.5](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.4...v2.2.5) (2025-06-16)
