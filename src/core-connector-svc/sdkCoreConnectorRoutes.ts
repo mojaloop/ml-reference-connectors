@@ -83,7 +83,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         try {
             this.logger.info(`Transfer Payload ${transfer}`);
             const result = await this.aggregate.receiveAndReserveTransfer(transfer);
-            return this.handleResponse(result, h, 201);
+            return this.handleResponse(result, h, 200);
         } catch (error: unknown) {
             return this.handleError(error, h);
         }
