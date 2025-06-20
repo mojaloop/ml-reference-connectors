@@ -92,6 +92,11 @@ export class MockCBSClient<D> implements ICbsClient {
         });
     }
 
+    async unreserveFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void> {
+        this.logger.info(`Unreserving funds for request `, transferUpdate);
+        return Promise.resolve();
+    }
+
     async commitReservedFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void> {
         this.logger.info(`Committing funds for request `, transferUpdate);
         return Promise.resolve();

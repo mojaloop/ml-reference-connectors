@@ -245,8 +245,10 @@ export const reserveTransferDTO = (amount: string): TtransferRequest => ({
   "note": "Transfer Quote Request"
 });
 
-export const transferNotificationDTO = (): TtransferPatchNotificationRequest => ({
-  "currentState": "COMPLETED",
+export const transferNotificationDTO = (
+  currentSate: "COMPLETED" | "ERROR_OCCURRED" | "WAITING_FOR_PARTY_ACCEPTANCE" | "WAITING_FOR_QUOTE_ACCEPTANCE" | "WAITING_FOR_CONVERSION_ACCEPTANCE"
+): TtransferPatchNotificationRequest => ({
+  "currentState": currentSate,
   "direction": "INBOUND",
   "finalNotification": {
     "completedTimestamp": "2024-02-29T23:59:59.123Z",

@@ -24,7 +24,7 @@
 'use strict';
 
 import { randomUUID } from "crypto";
-import { coreConnectorServiceFactory, ICbsClient, IHTTPClient} from "../../src";
+import { BasicError, coreConnectorServiceFactory, ICbsClient, IHTTPClient} from "../../src";
 import { AxiosClientFactory, logger } from "../../src/infra";
 import { confirmSendMoneyDTO, dfspConfig, getTransfersResponseDTO, postAccountsReqDTO, quoteRequestDTO, reserveTransferDTO, sdkInitiateTransferResponseDto, sendMoneyReqDTO, transferNotificationDTO } from "../fixtures";
 import { MockCBSClient } from "../mocks";
@@ -90,11 +90,26 @@ describe("DFSP Core Connector Tests", () => {
     
         test("Test Transfers Commit", async ()=>{
             // Arrange
-            const transferNotification = transferNotificationDTO();
+            const transferNotification = transferNotificationDTO("COMPLETED");
             // Act
             const res = coreConnector.dfspCoreConnectorAggregate?.updateAndCommitTransferOnPatchNotification(transferNotification,randomUUID());
             // Assert
             expect(await res).resolves;
+        });
+
+        test("Test Transfers Commit with status not COMPLETED", async ()=>{
+            // Arrange
+            const transferNotification = transferNotificationDTO("ERROR_OCCURRED");
+            const cbsClientSpy = jest.spyOn(cbsClient,"unreserveFunds");
+            // Act
+            const res = coreConnector.dfspCoreConnectorAggregate?.updateAndCommitTransferOnPatchNotification(transferNotification,randomUUID());
+            // Assert
+            try{
+                expect(await res).rejects;
+            }catch(error: unknown){
+                expect(error instanceof BasicError).toEqual(true);
+            }
+            expect(cbsClientSpy).toHaveBeenCalled();
         });
     });
 

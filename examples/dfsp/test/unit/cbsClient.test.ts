@@ -36,6 +36,11 @@ describe("CBS Client Tests", ()=>{
         await expect(commitRes).resolves;
     });
 
+    // test("Transfers Unreserve", async ()=>{
+    //     const unreserveRes = cbsClient.unReserveFunds(transferNotificationDTO());
+    //     await expect(unreserveRes).resolves;
+    // });
+
     test("Refund", async ()=>{
         const refundRes = cbsClient.handleRefund(confirmSendMoneyDTO(),crypto.randomUUID());
         await expect(refundRes).resolves;

@@ -39,7 +39,7 @@
     ]
   },
   "dependencies": {
-    "@mojaloop/core-connector-lib": "^2.2.5"
+    "@mojaloop/core-connector-lib": "latest"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
