@@ -858,7 +858,6 @@ components:
       required:
         - payeeId
         - payeeIdType
-        - sendAmount
         - sendCurrency
         - receiveCurrency
         - transactionType

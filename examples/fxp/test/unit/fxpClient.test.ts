@@ -1,5 +1,5 @@
 import { AxiosClientFactory, IFXPClient, IHTTPClient, logger, TConfirmFxTransferResponse, TFxQuoteResponse, TNotifyFxTransferStateResponse } from "@mojaloop/core-connector-lib";
-import { fxpConfig } from "../../config";
+import { fxpConfig } from "../../src/config";
 import { ConnectorError } from "../../src/errors";
 import { MockFXPClient } from "../../src/FXPClient";
 import { fxQuotesReqDTO, fxTransferDTO, fxTransferNotificationDTO } from "../../test/fixtures";

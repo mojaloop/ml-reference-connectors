@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import Convict from 'convict';
 import { TBlueBankConfig } from '.';
-import { IConnectorConfigSchema, TFxpConfig } from '@mojaloop/core-connector-lib';
+import { IConnectorConfigSchema } from '@mojaloop/core-connector-lib';
 
 export const config = Convict<IConnectorConfigSchema<never, TBlueBankConfig>>({
     server: {
@@ -77,14 +77,13 @@ export const config = Convict<IConnectorConfigSchema<never, TBlueBankConfig>>({
                 env: 'BLUE_BANK_CLIENT_SECRET',
             },
         },
-    }
-
-})
+    },
+});
 
 config.validate({ allowed: 'strict' });
 
 export type TConfig = Convict.Config<IConnectorConfigSchema<never, TBlueBankConfig>>;
 
-export const fxpConfig: IConnectorConfigSchema<never,TBlueBankConfig> = config.getProperties();
+export const fxpConfig: IConnectorConfigSchema<never, TBlueBankConfig> = config.getProperties();
 
 export default config;

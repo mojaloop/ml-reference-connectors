@@ -17,7 +17,7 @@
       "resolveJsonModule": true,                    // Allow importing JSON files
       "types": ["node", "jest"]                     // Include Node and Jest typings
     },
-    "include": ["src", "test", "index.ts", "config.ts"],
+    "include": ["src", "test", "index.ts", "src/config.ts"],
     "exclude": ["node_modules", "dist"]
   }
   

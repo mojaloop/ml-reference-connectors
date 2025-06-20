@@ -1,28 +1,37 @@
 'use strict';
 
-import { IHTTPClient, AxiosClientFactory, ICbsClient, logger, coreConnectorServiceFactory} from "@mojaloop/core-connector-lib";
-import { dfspConfig } from "./config";
-import { MockCBSClient } from "./src/CBSClient";
-import { ConnectorError } from "./src/errors";
+import {
+    IHTTPClient,
+    AxiosClientFactory,
+    ICbsClient,
+    logger,
+    coreConnectorServiceFactory,
+} from '@mojaloop/core-connector-lib';
+import { dfspConfig } from './src/config';
+import { MockCBSClient } from './src/CBSClient';
+import { ConnectorError } from './src/errors';
 
 export type TBlueBankConfig = {
-    BLUE_BANK_URL : string;
+    BLUE_BANK_URL: string;
     BLUE_BANK_CLIENT_ID: string;
     BLUE_BANK_CLIENT_SECRET: string;
-}
+};
 
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
 
-
-if(!dfspConfig.cbs){
-    throw ConnectorError.cbsConfigUndefined("CBS Config Not defined. Please fix the configuration in config.ts","0",0);
+if (!dfspConfig.cbs) {
+    throw ConnectorError.cbsConfigUndefined(
+        'CBS Config Not defined. Please fix the configuration in config.ts',
+        '0',
+        0,
+    );
 }
 
-const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs,httpClient,logger);
-const coreConnector = coreConnectorServiceFactory({cbsClient: cbsClient, config: dfspConfig});
+const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs, httpClient, logger);
+const coreConnector = coreConnectorServiceFactory({ cbsClient: cbsClient, config: dfspConfig });
 
 // Start Core Connector
-coreConnector.start()
+coreConnector.start();
 
 async function _handle_int_and_term_signals(signal: NodeJS.Signals): Promise<void> {
     logger.warn(`Service - ${signal} received - cleaning up...`);
