@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.8...v2.3.0) (2025-06-20)
+
+
+### Features
+
+* handle transfer not COMPLETED unreserve ([94d3cb6](https://github.com/mojaloop/ml-reference-connectors/commit/94d3cb6c7abb327d59b0af0aabe0281e94b97add))
+* implemented transfer unreserve ([cf242e9](https://github.com/mojaloop/ml-reference-connectors/commit/cf242e9d172fb1bde7e3a8355f23853062ce1824))
+
 ### [2.2.8](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.7...v2.2.8) (2025-06-20)
 
 
