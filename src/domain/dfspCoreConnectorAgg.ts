@@ -213,6 +213,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
     async updateAndCommitTransferOnPatchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void> {
         this.logger.info(`Committing transfer on patch notification for ${updateTransferPayload.quoteRequest?.body.payee.partyIdInfo.partyIdentifier} and transfer id ${transferId}`);
         if (updateTransferPayload.currentState !== 'COMPLETED') {
+            await this.cbsClient.unreserveFunds(updateTransferPayload);
             throw AggregateError.transferNotCompletedError();
         }
         return await this.cbsClient.commitReservedFunds(updateTransferPayload);

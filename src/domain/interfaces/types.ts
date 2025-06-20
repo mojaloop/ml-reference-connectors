@@ -188,7 +188,7 @@ export interface IDFSPCoreConnectorAggregate<D> {
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveAndReserveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateAndCommitTransferOnPatchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;
-    sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse>
+    sendMoney(transfer: TCbsSendMoneyRequest, amountType: "SEND" | "RECEIVE"): Promise<TCbsSendMoneyResponse>;
     updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCBSUpdateSendMoneyResponse>
     getTransfers(transferId: string): Promise<TGetTransfersResponse>;
     postAccounts(accounts: TAccountCreationRequest):Promise<TAccountCreationResponse>;

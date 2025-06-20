@@ -110,6 +110,7 @@ export interface ICbsClient {
     getAccountDiscoveryExtensionLists(): TPayeeExtensionListEntry[];
     getQuote(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     reserveFunds(transfer: TtransferRequest): Promise<TtransferResponse>;
+    unreserveFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>
     commitReservedFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>;
     handleRefund(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<void>;
 }
