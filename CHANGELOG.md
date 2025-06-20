@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.8](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.7...v2.2.8) (2025-06-20)
+
+
+### Bug Fixes
+
+* fixed connector templates ([77a75d5](https://github.com/mojaloop/ml-reference-connectors/commit/77a75d5be989ef14bc52b08de741f9277f191b7a))
+
 ### [2.2.7](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.6...v2.2.7) (2025-06-19)
 
 
