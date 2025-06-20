@@ -1,5 +1,5 @@
-import { IHTTPClient, AxiosClientFactory, ICbsClient, logger, coreConnectorServiceFactory, Party } from "@mojaloop/core-connector-lib";
-import { dfspConfig } from "../../config";
+import { IHTTPClient, AxiosClientFactory, ICbsClient, logger, coreConnectorServiceFactory } from "@mojaloop/core-connector-lib";
+import { dfspConfig } from "../../src/config";
 import { MockCBSClient } from "../../src/CBSClient";
 import { ConnectorError } from "../../src/errors";
 
@@ -19,8 +19,8 @@ if (!dfspConfig.cbs) {
 const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs, httpClient, logger);
 const coreConnector = coreConnectorServiceFactory({ cbsClient: cbsClient, config: dfspConfig });
 
-const SDK_URL = 'http://localhost:3003';
-const IDVALUE = 'http://localhost:3004';
+// const SDK_URL = 'http://localhost:3003';
+// const IDVALUE = 'http://localhost:3004';
 
 describe("Core Connector Tests", () => {
     beforeAll(async () => {

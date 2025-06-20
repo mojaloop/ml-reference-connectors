@@ -96,16 +96,15 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
                 env: 'BLUE_BANK_CLIENT_SECRET',
             },
         },
-    }
-
-})
+    },
+});
 
 config.validate({ allowed: 'strict' });
 
 export type TConfig = Convict.Config<IConnectorConfigSchema<TBlueBankConfig, never>>;
 
-export const getDFSPConfig = ():IConnectorConfigSchema<TBlueBankConfig,never> =>{
+export const getDFSPConfig = (): IConnectorConfigSchema<TBlueBankConfig, never> => {
     return config.getProperties();
-}
+};
 
-export const dfspConfig : IConnectorConfigSchema<TBlueBankConfig,never> = getDFSPConfig();
+export const dfspConfig: IConnectorConfigSchema<TBlueBankConfig, never> = getDFSPConfig();

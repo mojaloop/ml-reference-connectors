@@ -28,9 +28,10 @@ RUN npm ci --production
 
 ## Copy of dist directory from builder
 COPY --from=builder /opt/app/dist/ ./dist/
-COPY --from=builder /opt/app/src/api-spec ./src/api-spec
+#uncomment if you are adding custom apis
+# COPY --from=builder /opt/app/src/api-spec ./src/api-spec 
 
 ## Expose any application ports
-# EXPOSE <PORT>
+EXPOSE 3003 3004
 
 CMD [ "npm" , "start" ]

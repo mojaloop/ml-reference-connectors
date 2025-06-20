@@ -1,6 +1,6 @@
 import { IHTTPClient, AxiosClientFactory, IFXPClient, logger, coreConnectorServiceFactory } from "@mojaloop/core-connector-lib";
-import { fxpConfig } from "../../config";
-import { TBlueBankConfig } from "../..";
+import { fxpConfig } from "../../src/config";
+import { TBlueBankConfig } from "../../src";
 import { ConnectorError } from "../../src/errors";
 import { MockFXPClient } from "../../src/FXPClient";
 

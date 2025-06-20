@@ -1,6 +1,6 @@
 import { AxiosClientFactory, ICbsClient, IHTTPClient, logger, Party, TQuoteResponse, TtransferResponse } from "@mojaloop/core-connector-lib";
 import { MockCBSClient } from "../../src/CBSClient";
-import { dfspConfig } from "../../config";
+import { dfspConfig } from "../../src/config";
 import { ConnectorError } from "../../src/errors";
 import { confirmSendMoneyDTO, quoteRequestDTO, reserveTransferDTO, transferNotificationDTO } from "../fixtures";
 
@@ -37,7 +37,7 @@ describe("CBS Client Tests", ()=>{
     });
 
     test("Refund", async ()=>{
-        const refundRes = cbsClient.handleRefund(confirmSendMoneyDTO(),crypto.randomUUID())
+        const refundRes = cbsClient.handleRefund(confirmSendMoneyDTO(),crypto.randomUUID());
         await expect(refundRes).resolves;
     });
 });
