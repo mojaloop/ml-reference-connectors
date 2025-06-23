@@ -1,3 +1,6 @@
 import { loggerFactory } from '@mojaloop/central-services-logger/src/contextLogger';
 
-export const logger = loggerFactory('CC');
+const logger = loggerFactory('CC');
+logger.setLevel("debug");
+
+export default logger;
