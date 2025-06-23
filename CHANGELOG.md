@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.3.0...v2.3.1) (2025-06-23)
+
+
+### Bug Fixes
+
+* deleteAccounts and add private: true to templates ([07ddd8e](https://github.com/mojaloop/ml-reference-connectors/commit/07ddd8e1a28407929859d5613ba497d8e1b64838))
+* fix logger log level and export ([0d4f04c](https://github.com/mojaloop/ml-reference-connectors/commit/0d4f04c0cafb3d7a93c5583d27c5feb833eed85c))
+
 ## [2.3.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.2.8...v2.3.0) (2025-06-20)
 
 
