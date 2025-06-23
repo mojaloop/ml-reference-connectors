@@ -511,6 +511,9 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
 
     async deleteAccounts(id: string, idType: string): Promise<void> {
         this.logger.debug(`Deleting account`,{"Type":idType,"Id":id});
+        if(!idType || !id){
+            throw AggregateError.idAndIdTypeUndefinedError("Id Type and ID not defined at DELETE /accounts","2000",500);
+        }
         const res = await this.sdkClient.deleteAccounts(id,idType);
         return res;
     }

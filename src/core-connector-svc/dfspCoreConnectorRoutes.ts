@@ -135,14 +135,16 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
     }
 
     private async deleteAccounts(context: Context, request: Request, h: ResponseToolkit ){
-        const {Type ,Id} = request.params;
-        this.logger.debug(`Deleting account ...`, {"Type": Type, "Id": Id});
+        const { params } = context.request;
+        const type: string = params["Type"] as string;
+        const id: string = params["ID"] as string;
+        this.logger.debug(`Deleting account ...`, {"Type": type , "Id": id});
         try{
-            const deleteAccountRes = await this.aggregate.deleteAccounts(Id,Type);
+            const deleteAccountRes = await this.aggregate.deleteAccounts(id,type);
             return this.handleResponse(deleteAccountRes,h);
         }catch(error: unknown){
             return this.handleError(error,h);
-        }
+        } 
     }
 }
 7;
