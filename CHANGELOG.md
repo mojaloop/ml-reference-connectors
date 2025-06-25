@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.3.1...v2.4.0) (2025-06-25)
+
+
+### Features
+
+* pass transfer response to refund function ([8b93eab](https://github.com/mojaloop/ml-reference-connectors/commit/8b93eabc855c90d22fae44878d638df88cb8ba2b))
+
 ### [2.3.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.3.0...v2.3.1) (2025-06-23)
 
 
