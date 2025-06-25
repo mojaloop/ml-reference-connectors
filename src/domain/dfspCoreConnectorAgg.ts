@@ -479,19 +479,20 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
 
     async updateSendMoney(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<TCBSUpdateSendMoneyResponse> {
         this.logger.info(`Updating transfer for transfer id ${transferId}`);
+        let transferRes: THttpResponse<TtransferContinuationResponse> | undefined = undefined;
 
         if (!(updateSendMoneyDeps.acceptQuote)) {
-            await this.sdkClient.updateTransfer({acceptQuoteOrConversion: false},transferId);
+            transferRes = await this.sdkClient.updateTransfer({acceptQuoteOrConversion: false},transferId);
             throw AggregateError.quoteNotAcceptedError();
         }
         try{
-            await this.sdkClient.updateTransfer({acceptQuoteOrConversion: true},transferId);
+            transferRes = await this.sdkClient.updateTransfer({acceptQuoteOrConversion: true},transferId);
             return {
                 transferId: transferId
             };
         }catch(error: unknown){
-            if(error instanceof SDKClientError && updateSendMoneyDeps.acceptQuote){
-                await this.cbsClient.handleRefund(updateSendMoneyDeps, transferId);
+            if(error instanceof SDKClientError && updateSendMoneyDeps.acceptQuote && transferRes ){
+                await this.cbsClient.handleRefund(updateSendMoneyDeps, transferId, transferRes.data);
             }
             throw AggregateError.updateSendMoneyFailedError(`Committing Payment with homeTransactionId ${updateSendMoneyDeps.homeTransactionId} failed. Message ${error instanceof BasicError ? error.message : ""}`,'2000',500);
         }

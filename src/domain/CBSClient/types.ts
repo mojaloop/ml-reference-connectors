@@ -1,5 +1,6 @@
 import { IHTTPClient, ILogger, Party, TPayeeExtensionListEntry, TQuoteRequest, TQuoteResponse, TtransferPatchNotificationRequest, TtransferRequest, TtransferResponse } from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
+import { TtransferContinuationResponse } from '../SDKClient';
 
 export enum IdType {
     MSISDN = 'MSISDN',
@@ -112,5 +113,5 @@ export interface ICbsClient {
     reserveFunds(transfer: TtransferRequest): Promise<TtransferResponse>;
     unreserveFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>
     commitReservedFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>;
-    handleRefund(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string): Promise<void>;
+    handleRefund(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string, transferRes:TtransferContinuationResponse): Promise<void>;
 }

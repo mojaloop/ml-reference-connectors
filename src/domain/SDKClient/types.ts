@@ -123,7 +123,7 @@ export interface ISDKClient {
     updateTransfer(
         transferAccept: TSDKTransferContinuationRequest,
         id: string,
-    ): Promise<THttpResponse<TtransferContinuationResponse>>;
+    ): Promise<THttpResponse<TtransferContinuationResponse >>;
     getTransfers(transferId: string): Promise<TGetTransfersResponse>;
     postAccounts(accounts: TAccountCreationRequest):Promise<TAccountCreationResponse>;
     deleteAccounts(id: string, idType: string):Promise<void>;
