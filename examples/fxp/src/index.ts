@@ -7,7 +7,7 @@ import {
     logger,
     coreConnectorServiceFactory,
 } from '@mojaloop/core-connector-lib';
-import { fxpConfig } from '../config';
+import { fxpConfig } from './config';
 import { ConnectorError } from './errors';
 import { MockFXPClient } from './FXPClient';
 
