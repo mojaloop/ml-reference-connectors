@@ -2,7 +2,7 @@
   "name": "<%= projectName %>",
   "version": "1.0.0",
   "description": "<%= projectName %> Core Connector",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "private": true,
   "scripts": {
     "test": "npm run test:unit",
@@ -20,7 +20,7 @@
     "start:docker": "npm run build:docker && docker run -p 127.0.0.1:3000:3000/tcp mtn-ug-core-connector:local",
     "watch": "tsc -w",
     "start": "npm run start:no-build",
-    "start:no-build": "node dist/index.js",
+    "start:no-build": "node dist/src/index.js",
     "start:build": "npm run build && npm run start:no-build",
     "start:dev": "ts-node -r tsconfig-paths/register -P ./tsconfig.json -r dotenv/config src/index.ts dotenv_config_path=.env.example",
     "start:watch": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",

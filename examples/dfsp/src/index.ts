@@ -7,9 +7,9 @@ import {
     logger,
     coreConnectorServiceFactory,
 } from '@mojaloop/core-connector-lib';
-import { dfspConfig } from './src/config';
-import { MockCBSClient } from './src/CBSClient';
-import { ConnectorError } from './src/errors';
+import { dfspConfig } from './config';
+import { MockCBSClient } from './CBSClient';
+import { ConnectorError } from './errors';
 
 export type TBlueBankConfig = {
     BLUE_BANK_URL: string;
