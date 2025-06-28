@@ -9,18 +9,18 @@ import {
     ICbsClient,
     SDKClientFactory,
 } from '../../src';
-import { dfspConfig } from '../fixtures';
 import { MockCBSClient } from '../mocks';
 import { TBlueBankConfig } from './dfspCoreConnectorAgg.test';
+import { customDfspConfig } from '../fixtures';
 
-if (!dfspConfig.cbs) {
+if (!customDfspConfig.cbs) {
     throw new Error('CBS Config must be defined');
 }
 
 const httpClient = AxiosClientFactory.createAxiosClientInstance();
 const sdkClient = SDKClientFactory.getSDKClientInstance(logger, httpClient, 'http://localhost:4001');
-const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(dfspConfig.cbs, httpClient, logger);
-const dfspAggregate = new DFSPCoreConnectorAggregate(sdkClient, cbsClient, dfspConfig.cbs, logger);
+const cbsClient: ICbsClient = new MockCBSClient<TBlueBankConfig>(customDfspConfig.cbs, httpClient, logger);
+const dfspAggregate = new DFSPCoreConnectorAggregate(sdkClient, cbsClient, customDfspConfig.cbs, logger);
 
 async function getServer(): Promise<Server> {
     const dfspServer = new Server({
@@ -40,11 +40,12 @@ async function getServer(): Promise<Server> {
 }
 let coreConnector: CoreConnectorService<TBlueBankConfig, never> | undefined = undefined;
 
+
 describe('Test passing in a custom server', () => {
     beforeAll(async () => {
         coreConnector = coreConnectorServiceFactory({
             cbsClient: cbsClient,
-            config: dfspConfig,
+            config: customDfspConfig,
             dfspServer: await getServer(),
         });
     });
