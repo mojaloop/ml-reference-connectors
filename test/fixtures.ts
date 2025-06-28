@@ -53,6 +53,31 @@ export const fxpConfig: IConnectorConfigSchema<never, TBlueBankFXPConfig> = {
   }
 };
 
+export const customDfspConfig: IConnectorConfigSchema<TBlueBankConfig, never> = {
+  server: {
+    SDK_SERVER_HOST: "0.0.0.0",
+    CBS_NAME: "BlueBank",
+    SDK_SERVER_PORT: 3007,
+    DFSP_SERVER_HOST: "0.0.0.0",
+    DFSP_SERVER_PORT: 3009,
+    MODE: "dfsp"
+  },
+  sdkSchemeAdapter: {
+    SDK_BASE_URL: "http://0.0.0.0:4001"
+  },
+  cbs: {
+    FSP_ID: "bluebank",
+    LEI: "984500A4F93C0EC01455",
+    CURRENCY: "UGX",
+    SUPPORTED_ID_TYPE: "MSISDN",
+    config: {
+      BLUE_BANK_URL: "https://payments-api.bluebank.com",
+      BLUE_BANK_CLIENT_ID: "88349002",
+      BLUE_BANK_CLIENT_SECRET: "XSWXWX334344KJKAE"
+    }
+  }
+};
+
 export const quoteRequestDTO = (IdValue: string): TQuoteRequest => ({
   "homeR2PTransactionId": randomUUID(),
   "amount": "1000",
