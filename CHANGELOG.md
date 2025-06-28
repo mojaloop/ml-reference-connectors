@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.4.2...v2.5.0) (2025-06-28)
+
+
+### Features
+
+* add support for a custom server ([e6df9e9](https://github.com/mojaloop/ml-reference-connectors/commit/e6df9e916a1a29e2715b35a36454f34428a32ce4))
+
+
+### Bug Fixes
+
+* fixed failing tests ([072829d](https://github.com/mojaloop/ml-reference-connectors/commit/072829dcf8b70037625c55c05a5233460ec39ef6))
+
 ### [2.4.2](https://github.com/mojaloop/ml-reference-connectors/compare/v2.4.1...v2.4.2) (2025-06-27)
 
 
