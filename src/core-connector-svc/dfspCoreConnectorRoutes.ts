@@ -60,6 +60,10 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         await this.init(this.handlers);
     }
 
+    getHandlers(){
+        return this.handlers;
+    }
+
     private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest ;
         this.logger.debug(`Transfer request ${transfer}`);

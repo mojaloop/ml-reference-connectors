@@ -54,6 +54,10 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         await this.init(this.handlers);
     }
 
+    getHandlers(){
+        return this.handlers;
+    }
+
     private async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;

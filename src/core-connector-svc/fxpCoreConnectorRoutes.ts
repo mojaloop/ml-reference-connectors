@@ -55,6 +55,10 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         await this.init(this.handlers);
     }
 
+    getHandlers(){
+        return this.handlers;
+    }
+
     private async fxQuote(context: Context, request: Request, h: ResponseToolkit){
         const fxQuoteReq = request.payload as TFxQuoteRequest;
         try{
