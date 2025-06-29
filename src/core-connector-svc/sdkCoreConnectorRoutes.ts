@@ -31,10 +31,10 @@ import { IDFSPCoreConnectorAggregate, ILogger, TQuoteRequest, TtransferPatchNoti
 import { BaseRoutes } from './BaseRoutes';
 
 export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
-    private readonly aggregate: IDFSPCoreConnectorAggregate<D>;
-    private readonly logger: ILogger;
+    protected readonly aggregate: IDFSPCoreConnectorAggregate<D>;
+    protected readonly logger: ILogger;
 
-    private readonly handlers = {
+    protected readonly handlers = {
         BackendPartiesGetByTypeAndID: this.getParties.bind(this),
         BackendQuoteRequest: this.quoteRequests.bind(this),
         BackendTransfersPost: this.transfers.bind(this),
@@ -58,7 +58,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         return this.handlers;
     }
 
-    private async getParties(context: Context, request: Request, h: ResponseToolkit) {
+    protected async getParties(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const { params } = context.request;
             const Id = params['idValue'] as string;
@@ -71,7 +71,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async quoteRequests(context: Context, request: Request, h: ResponseToolkit) {
+    protected async quoteRequests(context: Context, request: Request, h: ResponseToolkit) {
         try {
             const quoteRequest = request.payload as TQuoteRequest;
             this.logger.info(`Quote request ${quoteRequest}`);
@@ -82,7 +82,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async transfers(context: Context, request: Request, h: ResponseToolkit) {
+    protected async transfers(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TtransferRequest;
         try {
             this.logger.info(`Transfer Payload ${transfer}`);
@@ -93,7 +93,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async transferNotification(context: Context, request: Request, h: ResponseToolkit){
+    protected async transferNotification(context: Context, request: Request, h: ResponseToolkit){
         const transferNotificatioPayload = request.payload as TtransferPatchNotificationRequest;
         const { params } = context.request;
         const transferId = params['transferId'] as string;

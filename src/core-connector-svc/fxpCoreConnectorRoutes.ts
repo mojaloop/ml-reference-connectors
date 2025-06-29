@@ -33,10 +33,10 @@ import { IFxpCoreConnectorAgg, TConfirmFxTransferRequest, TFxQuoteRequest, TNoti
 
 
 export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
-    private readonly aggregate: IFxpCoreConnectorAgg<F>;
-    private readonly logger: ILogger;
+    protected readonly aggregate: IFxpCoreConnectorAgg<F>;
+    protected readonly logger: ILogger;
 
-    private readonly handlers = {
+    protected readonly handlers = {
         FxQuotesPost: this.fxQuote.bind(this),
         FxTransfersPost: this.confirmFxTransfer.bind(this),
         FxTransfersById: this.notifyFxTransferState.bind(this),
@@ -59,7 +59,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         return this.handlers;
     }
 
-    private async fxQuote(context: Context, request: Request, h: ResponseToolkit){
+    protected async fxQuote(context: Context, request: Request, h: ResponseToolkit){
         const fxQuoteReq = request.payload as TFxQuoteRequest;
         try{
             this.logger.info(`fxQuote request ${fxQuoteReq}`);
@@ -70,7 +70,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         }
     }
 
-    private async confirmFxTransfer(context: Context, request: Request, h: ResponseToolkit){
+    protected async confirmFxTransfer(context: Context, request: Request, h: ResponseToolkit){
         const fxTransferConfirmReq = request.payload as TConfirmFxTransferRequest;
         try{
             this.logger.info(`fxTransfer request ${fxTransferConfirmReq}`);
@@ -81,7 +81,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         }
     }
 
-    private async notifyFxTransferState(context: Context, request: Request, h: ResponseToolkit){
+    protected async notifyFxTransferState(context: Context, request: Request, h: ResponseToolkit){
         const fxNotifyTransferStateReq = request.payload as TNotifyFxTransferStateRequest;
         try{
             this.logger.info(`fxTransfer Notification request ${fxNotifyTransferStateReq}`);
