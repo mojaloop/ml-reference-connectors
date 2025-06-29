@@ -33,11 +33,11 @@ import { BaseRoutes } from './BaseRoutes';
 import { TCbsSendMoneyRequest, TCBSUpdateSendMoneyRequest } from 'src/domain/CBSClient';
 
 export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
-    private readonly aggregate: IDFSPCoreConnectorAggregate<D>;
-    private readonly logger: ILogger;
+    protected readonly aggregate: IDFSPCoreConnectorAggregate<D>;
+    protected readonly logger: ILogger;
 
     // Register openapi spec operationIds and route handler functions here
-    private readonly handlers = {
+    protected readonly handlers = {
         sendMoney: this.initiateTransfer.bind(this),
         sendMoneyUpdate: this.updateInitiatedTransfer.bind(this),
         initiateMerchantPayment: this.initiateMerchantPayment.bind(this),
@@ -60,7 +60,11 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         await this.init(this.handlers);
     }
 
-    private async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
+    getHandlers(){
+        return this.handlers;
+    }
+
+    protected async initiateTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest ;
         this.logger.debug(`Transfer request ${transfer}`);
         try {
@@ -71,7 +75,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
+    protected async updateInitiatedTransfer(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest ;
         this.logger.debug(`Transfer request ${transferAccept} with id ${params.transferId}`);
@@ -86,7 +90,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+    protected async initiateMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
         const transfer = request.payload as TCbsSendMoneyRequest;
         this.logger.debug(`Transfer request ${transfer}`);
         try {
@@ -97,7 +101,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
+    protected async updateInitiatedMerchantPayment(context: Context, request: Request, h: ResponseToolkit) {
         const { params } = context.request;
         const transferAccept = request.payload as TCBSUpdateSendMoneyRequest;
         this.logger.debug(`Transfer request ${transferAccept} with id ${params.transferId}`);
@@ -112,7 +116,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async getTransfers(context: Context, request: Request, h: ResponseToolkit){
+    protected async getTransfers(context: Context, request: Request, h: ResponseToolkit){
         const { params } = context.request;
         this.logger.debug(`Get transfer request with id ${params.transferId}`);
         try{
@@ -123,7 +127,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async postAccounts(context: Context, request: Request, h: ResponseToolkit ){
+    protected async postAccounts(context: Context, request: Request, h: ResponseToolkit ){
         const account = request.payload as TAccountCreationRequest;
         this.logger.debug(`Creation account ...`,account);
         try{
@@ -134,7 +138,7 @@ export class DFSPCoreConnectorRoutes<D> extends BaseRoutes {
         }
     }
 
-    private async deleteAccounts(context: Context, request: Request, h: ResponseToolkit ){
+    protected async deleteAccounts(context: Context, request: Request, h: ResponseToolkit ){
         const { params } = context.request;
         const type: string = params["Type"] as string;
         const id: string = params["ID"] as string;
