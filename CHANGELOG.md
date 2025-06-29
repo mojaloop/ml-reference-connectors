@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.5.0...v2.5.1) (2025-06-29)
+
+
+### Bug Fixes
+
+* allow subclasses to access members change from private to protectec ([b185b85](https://github.com/mojaloop/ml-reference-connectors/commit/b185b854fa7de5c76996264ed57a41d843b4f017))
+
 ## [2.5.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.4.2...v2.5.0) (2025-06-28)
 
 
