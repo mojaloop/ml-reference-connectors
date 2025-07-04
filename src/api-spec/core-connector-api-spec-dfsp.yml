@@ -971,9 +971,6 @@ components:
         sendCurrency:
           type: string
           example: "UGX"
-        receiveCurrency:
-          type: string
-          example: "KES"
         purposeCode:
           type: string 
           example: "MP2P"
@@ -1016,7 +1013,6 @@ components:
         - payeeIdType
         - sendAmount
         - sendCurrency
-        - receiveCurrency
         - transactionType
         - payer
 
