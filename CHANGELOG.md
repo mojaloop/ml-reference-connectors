@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.8.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.7.1...v2.8.0) (2025-07-18)
+
+
+### Features
+
+* pass through commit requestId for notifyFxTransfers ([7c6e3cc](https://github.com/mojaloop/ml-reference-connectors/commit/7c6e3ccdac8142a508097618f5edaf1a462d11ff))
+
 ### [2.7.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.7.0...v2.7.1) (2025-07-04)
 
 
