@@ -22,9 +22,9 @@ export class FXPCoreConnectorAggregate<F> implements IFxpCoreConnectorAgg<F> {
         return transferConfirmation;
     }
 
-   async notifyFxTransferState(deps: TNotifyFxTransferStateRequest): Promise<TNotifyFxTransferStateResponse> {
+   async notifyFxTransferState(deps: TNotifyFxTransferStateRequest, commitRequestId: string): Promise<TNotifyFxTransferStateResponse> {
         this.logger.info(`Recieved fxTransfer Notification ${deps}`);
-        await this.fxpClient.notifyFxTransferState(deps);
+        await this.fxpClient.notifyFxTransferState(deps, commitRequestId);
         this.logger.info(`fxTransfer notification passed to fxpBackend ${deps}`);
     }
 
