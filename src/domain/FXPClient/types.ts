@@ -17,7 +17,7 @@ export interface IFXPClient {
     logger: ILogger;
     getFxQuote(deps: TFxQuoteRequest): Promise<TFxQuoteResponse>;
     confirmFxTransfer(deps: TConfirmFxTransferRequest): Promise<TConfirmFxTransferResponse>;
-    notifyFxTransferState(deps: TNotifyFxTransferStateRequest): Promise<TNotifyFxTransferStateResponse>;
+    notifyFxTransferState(deps: TNotifyFxTransferStateRequest, commitRequestId: string): Promise<TNotifyFxTransferStateResponse>;
 }
 
 export interface IFxpCoreConnectorAgg<F> {
@@ -27,5 +27,5 @@ export interface IFxpCoreConnectorAgg<F> {
 
     getFxQuote(deps: TFxQuoteRequest): Promise<TFxQuoteResponse>;
     confirmFxTransfer(deps: TConfirmFxTransferRequest): Promise<TConfirmFxTransferResponse>;
-    notifyFxTransferState(deps: TNotifyFxTransferStateRequest): Promise<TNotifyFxTransferStateResponse>;
+    notifyFxTransferState(deps: TNotifyFxTransferStateRequest, commitRequestId: string): Promise<TNotifyFxTransferStateResponse>;
 }

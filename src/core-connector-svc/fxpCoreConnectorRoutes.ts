@@ -83,9 +83,10 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
 
     protected async notifyFxTransferState(context: Context, request: Request, h: ResponseToolkit){
         const fxNotifyTransferStateReq = request.payload as TNotifyFxTransferStateRequest;
+        const commitRequestId = context.request.params.commitRequestId as string;
         try{
             this.logger.info(`fxTransfer Notification request ${fxNotifyTransferStateReq}`);
-            const result = this.aggregate.notifyFxTransferState(fxNotifyTransferStateReq);
+            const result = this.aggregate.notifyFxTransferState(fxNotifyTransferStateReq, commitRequestId);
             return this.handleResponse(result,h,200);
         }catch(error: unknown){
             return this.handleError(error, h);

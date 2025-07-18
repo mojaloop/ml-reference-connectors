@@ -79,7 +79,7 @@ describe("FXP Core Connector Tests", () => {
         // Arrange 
         const fxTransferNotification = fxTransferNotificationDTO();
         // Act
-        const res = coreconnector.fxpCoreConnectorAggregate?.notifyFxTransferState(fxTransferNotification);
+        const res = coreconnector.fxpCoreConnectorAggregate?.notifyFxTransferState(fxTransferNotification, crypto.randomUUID());
         // Assert
         expect(await res).resolves;
     });
