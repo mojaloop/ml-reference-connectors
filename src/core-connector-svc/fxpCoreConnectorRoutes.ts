@@ -63,7 +63,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         const fxQuoteReq = request.payload as TFxQuoteRequest;
         try{
             this.logger.info(`fxQuote request ${fxQuoteReq}`);
-            const result = this.aggregate.getFxQuote(fxQuoteReq);
+            const result = await this.aggregate.getFxQuote(fxQuoteReq);
             return this.handleResponse(result,h,200);
         }catch(error: unknown){
             return this.handleError(error, h);
@@ -74,7 +74,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         const fxTransferConfirmReq = request.payload as TConfirmFxTransferRequest;
         try{
             this.logger.info(`fxTransfer request ${fxTransferConfirmReq}`);
-            const result = this.aggregate.confirmFxTransfer(fxTransferConfirmReq);
+            const result = await this.aggregate.confirmFxTransfer(fxTransferConfirmReq);
             return this.handleResponse(result,h,200);
         }catch(error: unknown){
             return this.handleError(error, h);
@@ -86,7 +86,7 @@ export class FXPCoreConnectorRoutes<F> extends BaseRoutes {
         const commitRequestId = context.request.params.commitRequestId as string;
         try{
             this.logger.info(`fxTransfer Notification request ${fxNotifyTransferStateReq}`);
-            const result = this.aggregate.notifyFxTransferState(fxNotifyTransferStateReq, commitRequestId);
+            const result = await this.aggregate.notifyFxTransferState(fxNotifyTransferStateReq, commitRequestId);
             return this.handleResponse(result,h,200);
         }catch(error: unknown){
             return this.handleError(error, h);
