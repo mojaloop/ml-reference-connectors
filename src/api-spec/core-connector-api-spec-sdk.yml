@@ -433,6 +433,13 @@ paths:
       tags:
         - Fx
       operationId: FxTransfersById
+      parameters:
+        - name: commitRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the FX commit request.
       requestBody:
         description: Status of the FX transfer.
         required: true
