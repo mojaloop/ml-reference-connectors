@@ -7,7 +7,7 @@ const sdkClient: ISDKClient = SDKClientFactory.getSDKClientInstance(
     logger,
     httpClient,
     "http://localhost:14040"
-)
+);
 jest.setTimeout(60000);
 describe("SDK Client Tests", ()=>{
     test("test successful transfer initiation", async ()=>{
