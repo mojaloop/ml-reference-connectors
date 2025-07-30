@@ -1,5 +1,5 @@
 import { IFXPClient, IFxpCoreConnectorAgg, TConfirmFxTransferRequest, TConfirmFxTransferResponse, TFxpConfig, TFxQuoteResponse, TFxQuoteRequest, TNotifyFxTransferStateRequest, TNotifyFxTransferStateResponse } from "./FXPClient";
-import { ILogger } from "./interfaces";
+import { AggregateError, ILogger } from "./interfaces";
 
 export class FXPCoreConnectorAggregate<F> implements IFxpCoreConnectorAgg<F> {
     constructor(
@@ -9,10 +9,23 @@ export class FXPCoreConnectorAggregate<F> implements IFxpCoreConnectorAgg<F> {
     ){}
 
     async getFxQuote(deps: TFxQuoteRequest): Promise<TFxQuoteResponse> {
-        this.logger.info(`Calculating quote for fxQuote ${deps}`);  
+        this.logger.info(`Calculating quote for fxQuote ${deps}`); 
+        this.checkQuoteAndAmountType(deps); 
         const fxQuote = await this.fxpClient.getFxQuote(deps);
         this.logger.info(`fxQuote response ${fxQuote}`);
         return fxQuote;
+    }
+
+    private checkQuoteAndAmountType(deps:TFxQuoteRequest ){
+        if(deps.conversionTerms.amountType === "SEND"){
+            if(!deps.conversionTerms.sourceAmount.amount){
+                throw AggregateError.genericQuoteError("Source Amount undefined with amountType SEND","2000",400);
+            }
+        }else{
+            if(!deps.conversionTerms.targetAmount.amount){
+                throw AggregateError.genericQuoteError("Target Amount undefined with amountType RECEIVE","2000",400);
+            }
+        }
     }
 
     async confirmFxTransfer(deps: TConfirmFxTransferRequest): Promise<TConfirmFxTransferResponse> {
