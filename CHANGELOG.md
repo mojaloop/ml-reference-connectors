@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.8.1...v2.9.0) (2025-07-30)
+
+
+### Features
+
+* add transcation retries for SDK Client ([e2cc275](https://github.com/mojaloop/ml-reference-connectors/commit/e2cc2751bf04df7a82235912427dd14b6abbd1d5))
+
 ### [2.8.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.8.0...v2.8.1) (2025-07-25)
 
 
