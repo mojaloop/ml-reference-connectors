@@ -64,6 +64,7 @@ alt if WAITING_FOR_QUOTE_ACCEPTANCE
     Core ->> Core: Validate Normal Quote
 
     alt if Invalid Quote Terms
+        Core ->> ML: PUT /transfers/{id}[acceptQuote: false]
         Core -->> App: Response 500
     end
 end

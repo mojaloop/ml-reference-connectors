@@ -47,6 +47,9 @@ export interface IConnectorConfigSchema<D, F> {
     };
     sdkSchemeAdapter: {
         SDK_BASE_URL: string;
+        HTTP_TIMEOUT?: number;
+        WAIT_TIME?: number;
+        TRANSACTION_EXECUTION_RETRIES?: number;
     }
     cbs?: TCBSConfig<D>;
     fxpConfig?: TFxpConfig<F>

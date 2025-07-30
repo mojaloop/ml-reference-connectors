@@ -116,6 +116,9 @@ export type TSDKClientDeps = {
     logger: ILogger;
     httpClient: IHTTPClient;
     schemeAdapterUrl: string;
+    waitTime?: number;
+    retries?: number;
+    httpTimeout?: number;
 };
 
 export interface ISDKClient {

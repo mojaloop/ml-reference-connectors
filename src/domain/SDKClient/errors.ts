@@ -42,6 +42,13 @@ export class SDKClientError extends BasicError {
         });
     }
 
+    static genericTransferError(message = 'InitiateTransferError') {
+        return new SDKClientError(message, {
+            httpCode: 500,
+            mlCode: '2000',
+        });
+    }
+
     static noQuoteReturnedError() {
         return new SDKClientError('Quote response is not defined', {
             httpCode: 500,
