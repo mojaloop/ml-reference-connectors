@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.10.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.9.1...v2.10.0) (2025-07-30)
+
+
+### Features
+
+* add amount checks in fxp aggregate ([53052f8](https://github.com/mojaloop/ml-reference-connectors/commit/53052f82629048dd356f99119a0a9dafb440ee20))
+
 ### [2.9.1](https://github.com/mojaloop/ml-reference-connectors/compare/v2.9.0...v2.9.1) (2025-07-30)
 
 
