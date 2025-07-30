@@ -132,6 +132,9 @@ export class CoreConnectorService<D, F> implements IService<D, F> {
                 logger,
                 httpClient,
                 this.config.sdkSchemeAdapter.SDK_BASE_URL,
+                this.config.sdkSchemeAdapter.WAIT_TIME,
+                this.config.sdkSchemeAdapter.TRANSACTION_EXECUTION_RETRIES,
+                this.config.sdkSchemeAdapter.HTTP_TIMEOUT
             );
             this.sdkClient = sdkClient;
         }

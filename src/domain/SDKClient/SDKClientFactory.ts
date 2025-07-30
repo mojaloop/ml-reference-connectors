@@ -29,11 +29,14 @@ import { SDKClient } from './SDKClient';
 import { IHTTPClient, ILogger } from '../interfaces';
 
 export class SDKClientFactory {
-    static getSDKClientInstance(logger: ILogger, httpClient: IHTTPClient, sdk_url: string) {
+    static getSDKClientInstance(logger: ILogger, httpClient: IHTTPClient, sdk_url: string, waitTime?: number, retries?: number, httpTimeout?: number ) {
         return new SDKClient({
             logger,
             httpClient,
             schemeAdapterUrl: sdk_url,
+            waitTime: waitTime,
+            retries: retries,
+            httpTimeout: httpTimeout
         });
     }
 }
