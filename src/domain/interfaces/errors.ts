@@ -158,4 +158,8 @@ export class AggregateError extends BasicError {
             httpCode: httpCode,
         });    
     }
+
+    static genericQuoteError(message: string, mlCode: string, httpCode: number){
+        return new AggregateError(message, { mlCode, httpCode });
+    }
 }
