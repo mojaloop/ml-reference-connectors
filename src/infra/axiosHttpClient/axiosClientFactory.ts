@@ -27,25 +27,22 @@
 'use strict';
 
 import { AxiosHTTPClient } from './axiosClient';
-import { CreateAxiosDefaults } from 'axios';
 import { logger } from '../logger';
 
-export const defaultHttpOptions: CreateAxiosDefaults = Object.freeze({
-    timeout: 3000,
-    headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    },
-    transitional: {
-        clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
-    },
-});
-
 export class AxiosClientFactory {
-    static createAxiosClientInstance() {
+    static createAxiosClientInstance(httpTimeout: number = 5000) {
         return new AxiosHTTPClient({
-            options: defaultHttpOptions,
-            logger: logger.child({component: 'http'}),
+            options: {
+                timeout: httpTimeout,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                transitional: {
+                    clarifyTimeoutError: true, // to throw ETIMEDOUT error instead of generic ECONNABORTED on request timeouts
+                },
+            },
+            logger: logger.child({ component: 'http' }),
         });
     }
 }
