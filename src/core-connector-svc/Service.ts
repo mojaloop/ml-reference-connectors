@@ -95,7 +95,7 @@ export class CoreConnectorService<D, F> implements IService<D, F> {
 
     async start() {
         if (!this.httpClient) {
-            this.httpClient = AxiosClientFactory.createAxiosClientInstance();
+            this.httpClient = AxiosClientFactory.createAxiosClientInstance(this.config.sdkSchemeAdapter.HTTP_TIMEOUT);
         }
         if (!this.logger) {
             this.logger = logger.child({ component: this.config.server.CBS_NAME });
