@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.11.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.10.0...v2.11.0) (2025-08-08)
+
+
+### Features
+
+* set httpClient timeout from config ([02a0335](https://github.com/mojaloop/ml-reference-connectors/commit/02a03351b12fb7deb36c130dfe8c7851ba3de354))
+
 ## [2.10.0](https://github.com/mojaloop/ml-reference-connectors/compare/v2.9.1...v2.10.0) (2025-07-30)
 
 
