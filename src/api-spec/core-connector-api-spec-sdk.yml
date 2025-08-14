@@ -1950,7 +1950,7 @@ components:
           items:
             $ref: '#/components/schemas/Extension_v2_1_0'
           minItems: 1
-          maxItems: 16
+          maxItems: 32
           description: Number of Extension elements.
       required:
         - extension
