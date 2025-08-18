@@ -123,6 +123,12 @@ export class SDKClient implements ISDKClient {
                         continue_loop = true;
                         errorsOccured.push('Gateway timedout 504');
                     }
+                    
+                    if(error.response?.status === 500 || error.response?.status === 400 ){
+                        continue_loop = false;
+                        errorsOccured.push(JSON.stringify(error.response.data));
+                    }
+
                     this.logger.error('Error from SDK', error.response?.data);
                     errMessage = JSON.stringify(error.response?.data);
                 }
