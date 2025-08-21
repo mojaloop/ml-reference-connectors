@@ -69,7 +69,7 @@ export class SDKClient implements ISDKClient {
         const res = await this.makeRequestWithRetries<TSDKOutboundTransferRequest, TSDKOutboundTransferResponse>(
             `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}`,
             transfer,
-            "POST"
+            'POST',
         );
         return res;
     }
@@ -83,7 +83,7 @@ export class SDKClient implements ISDKClient {
         const res = await this.makeRequestWithRetries<TSDKTransferContinuationRequest, TtransferContinuationResponse>(
             `${this.SDK_SCHEME_ADAPTER_BASE_URL}/${SDK_ROUTES.transfers}/${id}`,
             transferAccept,
-            "PUT"
+            'PUT',
         );
         return res;
     }
@@ -91,7 +91,7 @@ export class SDKClient implements ISDKClient {
     private async makeRequestWithRetries<Req extends TJson, Res extends TJson>(
         url: string,
         data: Req,
-        method: "POST" | "PUT" | "GET" | "PATCH" | "DELETE",
+        method: 'POST' | 'PUT' | 'GET' | 'PATCH' | 'DELETE',
     ): Promise<THttpResponse<Res>> {
         let continue_loop: boolean = false;
         let attempts: number = 0;
@@ -124,14 +124,15 @@ export class SDKClient implements ISDKClient {
                         errorsOccured.push('Gateway timedout 504');
                     }
 
-                    if(error.code === "ECONNABORTED"){
+                    if (error.code === 'ECONNABORTED') {
                         continue_loop = true;
-                        errorsOccured.push("Http Timeout waiting for response");
+                        errorsOccured.push('Http Timeout waiting for response');
                     }
 
-                    if(error.response?.status !==200 ){
+                    if (error.response?.status !== 200) {
                         continue_loop = false;
                         errorsOccured.push(JSON.stringify(error.response ? error.response.data : error.message));
+                        throw error;
                     }
 
                     this.logger.error('Error from SDK', error.response?.data);

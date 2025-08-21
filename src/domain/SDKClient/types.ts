@@ -47,70 +47,72 @@ export type TSDKOutboundTransferRequest = {
 };
 
 export type TSDKOutboundTransferResponse = {
-    transferId?: components["schemas"]["CorrelationId"];
+    transferId?: components['schemas']['CorrelationId'];
     /** @description Transaction ID from the DFSP backend, used to reconcile transactions between the Switch and DFSP backend systems. */
     homeTransactionId: string;
-    from: components["schemas"]["transferParty"];
-    to: components["schemas"]["transferParty"];
-    amountType: components["schemas"]["AmountType"];
-    currency: components["schemas"]["Currency"];
-    amount: components["schemas"]["Amount"];
-    transactionType: components["schemas"]["transferTransactionType"];
-    subScenario?: components["schemas"]["TransactionSubScenario"];
-    note?: components["schemas"]["Note"];
-    currentState?: components["schemas"]["transferStatus"];
-    quoteId?: components["schemas"]["CorrelationId"];
+    from: components['schemas']['transferParty'];
+    to: components['schemas']['transferParty'];
+    amountType: components['schemas']['AmountType'];
+    currency: components['schemas']['Currency'];
+    amount: components['schemas']['Amount'];
+    transactionType: components['schemas']['transferTransactionType'];
+    subScenario?: components['schemas']['TransactionSubScenario'];
+    note?: components['schemas']['Note'];
+    currentState?: components['schemas']['transferStatus'];
+    quoteId?: components['schemas']['CorrelationId'];
     getPartiesResponse?: {
         body: {
             party: {
                 partyIdInfo: {
-                    partyIdType: string,
-                    partyIdentifier: string,
-                    fspId: string
-                },
-                name: string,
-                supportedCurrencies: string[],
-            }
+                    partyIdType: string;
+                    partyIdentifier: string;
+                    fspId: string;
+                };
+                name: string;
+                supportedCurrencies: string[];
+            };
         };
         headers?: Record<string, never>;
     };
     quoteResponse?: {
-        body: components["schemas"]["QuotesIDPutResponse"];
+        body: components['schemas']['QuotesIDPutResponse'];
         headers?: Record<string, never>;
     };
     /** @description FSPID of the entity that supplied the quote response. This may not be the same as the FSPID of the entity which owns the end user account in the case of a FOREX transfer. i.e. it may be a FOREX gateway. */
     quoteResponseSource?: string;
-    conversionRequestId?: components["schemas"]["CorrelationId"];
+    conversionRequestId?: components['schemas']['CorrelationId'];
     fxQuoteResponse?: {
-        body: components["schemas"]["FxQuotesPostOutboundResponse"];
+        body: components['schemas']['FxQuotesPostOutboundResponse'];
         headers?: Record<string, never>;
     };
     /** @description FXPID of the entity that supplied the fxQuotes response. */
     fxQuoteResponseSource?: string;
     fulfil?: {
-        body: components["schemas"]["TransfersIDPutResponse"];
+        body: components['schemas']['TransfersIDPutResponse'];
         headers?: Record<string, never>;
     };
-    lastError?: components["schemas"]["transferError"];
+    lastError?: components['schemas']['transferError'];
     /** @description Set to true if supplying an FSPID for the payee party and no party resolution is needed. This may be useful is a previous party resolution has been performed. */
     skipPartyLookup?: boolean;
 };
 
-
 export type TSDKTransferContinuationRequest =
-     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
-     | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
-     | components['schemas']['transferContinuationAcceptConversion']
-     | components['schemas']['transferContinuationAcceptQuoteOrConversion']
-
+    | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptParty
+    | SDKSchemeAdapter.V2_0_0.Outbound.Types.transferContinuationAcceptQuote
+    | components['schemas']['transferContinuationAcceptConversion']
+    | components['schemas']['transferContinuationAcceptQuoteOrConversion'];
 
 export type TtransferContinuationResponse = TSDKOutboundTransferResponse;
 
-export type TGetTransfersResponse = SDKSchemeAdapter.V2_0_0.Outbound.openapi.components["schemas"]["transferStatusResponse"];
+export type TtransferErrorResponse = components['schemas']['errorTransferResponse'];
 
-export type TAccountCreationRequest = components["schemas"]["accountsRequest"];
+export type TGetTransfersResponse =
+    SDKSchemeAdapter.V2_0_0.Outbound.openapi.components['schemas']['transferStatusResponse'];
 
-export type TAccountCreationResponse = components["responses"]["accountsCreationCompleted"]["content"]["application/json"]["postAccountsResponse"];
+export type TAccountCreationRequest = components['schemas']['accountsRequest'];
+
+export type TAccountCreationResponse =
+    components['responses']['accountsCreationCompleted']['content']['application/json']['postAccountsResponse'];
 
 export type TSDKClientDeps = {
     logger: ILogger;
@@ -126,8 +128,8 @@ export interface ISDKClient {
     updateTransfer(
         transferAccept: TSDKTransferContinuationRequest,
         id: string,
-    ): Promise<THttpResponse<TtransferContinuationResponse >>;
+    ): Promise<THttpResponse<TtransferContinuationResponse>>;
     getTransfers(transferId: string): Promise<TGetTransfersResponse>;
-    postAccounts(accounts: TAccountCreationRequest):Promise<TAccountCreationResponse>;
-    deleteAccounts(id: string, idType: string):Promise<void>;
+    postAccounts(accounts: TAccountCreationRequest): Promise<TAccountCreationResponse>;
+    deleteAccounts(id: string, idType: string): Promise<void>;
 }
