@@ -123,10 +123,15 @@ export class SDKClient implements ISDKClient {
                         continue_loop = true;
                         errorsOccured.push('Gateway timedout 504');
                     }
-                    
-                    if(error.response?.status === 500 || error.response?.status === 400 ){
+
+                    if(error.code === "ECONNABORTED"){
+                        continue_loop = true;
+                        errorsOccured.push("Http Timeout waiting for response");
+                    }
+
+                    if(error.response?.status !==200 ){
                         continue_loop = false;
-                        errorsOccured.push(JSON.stringify(error.response.data));
+                        errorsOccured.push(JSON.stringify(error.response ? error.response.data : error.message));
                     }
 
                     this.logger.error('Error from SDK', error.response?.data);
