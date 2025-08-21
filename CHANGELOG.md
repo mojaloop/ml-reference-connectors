@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.11.4](https://github.com/mojaloop/ml-reference-connectors/compare/v2.11.3...v2.11.4) (2025-08-21)
+
+
+### Bug Fixes
+
+* execute refund when http like error returned ([18fac47](https://github.com/mojaloop/ml-reference-connectors/commit/18fac47eedad8ef748684a80b94391c7bb428040))
+
 ### [2.11.3](https://github.com/mojaloop/ml-reference-connectors/compare/v2.11.2...v2.11.3) (2025-08-21)
 
 ### [2.11.2](https://github.com/mojaloop/ml-reference-connectors/compare/v2.11.1...v2.11.2) (2025-08-18)
