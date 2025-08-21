@@ -1,6 +1,16 @@
-import { IHTTPClient, ILogger, Party, TPayeeExtensionListEntry, TQuoteRequest, TQuoteResponse, TtransferPatchNotificationRequest, TtransferRequest, TtransferResponse } from '../interfaces';
+import {
+    IHTTPClient,
+    ILogger,
+    Party,
+    TPayeeExtensionListEntry,
+    TQuoteRequest,
+    TQuoteResponse,
+    TtransferPatchNotificationRequest,
+    TtransferRequest,
+    TtransferResponse,
+} from '../interfaces';
 import { components } from '@mojaloop/api-snippets/lib/sdk-scheme-adapter/v2_1_0/outbound/openapi';
-import { TtransferContinuationResponse } from '../SDKClient';
+import { TtransferErrorResponse } from '../SDKClient';
 
 export enum IdType {
     MSISDN = 'MSISDN',
@@ -18,21 +28,20 @@ export type TCBSClientFactoryDeps<C> = {
     cbsConfig: TCBSConfig<C>;
     httpClient: IHTTPClient;
     logger: ILogger;
-}
+};
 
 export type TCBSConfig<C> = {
-    FSP_ID: string
+    FSP_ID: string;
     LEI: string;
-    CURRENCY: components["schemas"]["Currency"];
-    SUPPORTED_ID_TYPE: components["schemas"]["PartyIdType"];
-    config: C
-}
-
+    CURRENCY: components['schemas']['Currency'];
+    SUPPORTED_ID_TYPE: components['schemas']['PartyIdType'];
+    config: C;
+};
 
 export type TCbsSendMoneyRequest = {
     homeTransactionId?: string;
     payeeId: string;
-    payeeIdType: components["schemas"]["PartyIdType"];
+    payeeIdType: components['schemas']['PartyIdType'];
     sendAmount: string;
     sendCurrency: components['schemas']['Currency'];
     receiveCurrency: components['schemas']['Currency'];
@@ -48,12 +57,12 @@ export type TCbsSendMoneyRequest = {
             CtryOfBirth: string;
         };
     };
-}
+};
 
 export type TCbsMerchantPaymentRequest = {
     homeTransactionId?: string;
     payeeId: string;
-    payeeIdType: components["schemas"]["PartyIdType"];
+    payeeIdType: components['schemas']['PartyIdType'];
     sendCurrency: components['schemas']['Currency'];
     receiveAmount: string;
     receiveCurrency: components['schemas']['Currency'];
@@ -67,43 +76,42 @@ export type TCbsMerchantPaymentRequest = {
             PrvcOfBirth: string;
             CityOfBirth: string;
             CtryOfBirth: string;
-        }
-    }
-}
+        };
+    };
+};
 
 export type TCbsSendMoneyResponse = {
-    "payeeDetails": {
-        "idType": string;
-        "idValue": string;
-        "fspId": string;
-        "fspLEI": string;
-        "name": string;
+    payeeDetails: {
+        idType: string;
+        idValue: string;
+        fspId: string;
+        fspLEI: string;
+        name: string;
     };
-    "sendAmount": string,
-    "sendCurrency": string,
-    "receiveAmount": string,
-    "receiveCurrency": string,
-    "targetFees": string,
-    "sourceFees": string,
-    "transactionId": string;
-    "homeTransactionId": string;
-}
+    sendAmount: string;
+    sendCurrency: string;
+    receiveAmount: string;
+    receiveCurrency: string;
+    targetFees: string;
+    sourceFees: string;
+    transactionId: string;
+    homeTransactionId: string;
+};
 
 export type TMerchantPaymentResponse = TCbsSendMoneyResponse;
 
 export type TCBSUpdateSendMoneyRequest = {
-    "acceptQuote": boolean;
-    "homeTransactionId": string;
-}
+    acceptQuote: boolean;
+    homeTransactionId: string;
+};
 
 export type TCBSUpdateSendMoneyResponse = {
-    "transferId": string;
-}
+    transferId: string;
+};
 
 export type TGetKycArgs = {
     accountId: string;
-
-}
+};
 
 export interface ICbsClient {
     logger: ILogger;
@@ -111,7 +119,11 @@ export interface ICbsClient {
     getAccountDiscoveryExtensionLists(): TPayeeExtensionListEntry[];
     getQuote(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     reserveFunds(transfer: TtransferRequest): Promise<TtransferResponse>;
-    unreserveFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>
+    unreserveFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>;
     commitReservedFunds(transferUpdate: TtransferPatchNotificationRequest): Promise<void>;
-    handleRefund(updateSendMoneyDeps: TCBSUpdateSendMoneyRequest, transferId: string, transferRes:TtransferContinuationResponse): Promise<void>;
+    handleRefund(
+        updateSendMoneyDeps: TCBSUpdateSendMoneyRequest,
+        transferId: string,
+        transferRes: TtransferErrorResponse,
+    ): Promise<void>;
 }
