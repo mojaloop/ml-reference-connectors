@@ -629,7 +629,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             };
         } catch (error: unknown) {
             if (isAxiosLikeError(error)) {
-                await this.cbsClient.handleRefund(updateSendMoneyDeps, transferId, error.response);
+                await this.cbsClient.handleRefund(updateSendMoneyDeps, transferId, error.response.data);
             }
             throw AggregateError.updateSendMoneyFailedError(
                 `Committing Payment with homeTransactionId ${updateSendMoneyDeps.homeTransactionId} failed. Message ${error instanceof BasicError ? error.message : ''}`,
