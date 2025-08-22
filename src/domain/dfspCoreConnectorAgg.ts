@@ -47,8 +47,7 @@ import {
     AggregateError,
     Party,
     TPayerExtensionListEntry,
-    TValidationResponse,
-    BasicError,
+    TValidationResponse
 } from './interfaces';
 import {
     ISDKClient,
@@ -632,7 +631,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
                 await this.cbsClient.handleRefund(updateSendMoneyDeps, transferId, error.response.data);
             }
             throw AggregateError.updateSendMoneyFailedError(
-                `Committing Payment with homeTransactionId ${updateSendMoneyDeps.homeTransactionId} failed. Message ${error instanceof BasicError ? error.message : ''}`,
+                `Committing Payment with homeTransactionId ${updateSendMoneyDeps.homeTransactionId} failed. Message ${JSON.stringify(error)}. If payment failed in the switch, a refund was triggered.`,
                 '2000',
                 500,
             );
