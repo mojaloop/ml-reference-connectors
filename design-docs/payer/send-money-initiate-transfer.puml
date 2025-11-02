@@ -42,53 +42,76 @@ end
 
 
 Core ->> ML: POST /transfers /{amountType: SEND} 
-ML -->> Core: Response 200 [FXP Quote]
+ML -->> Core: Response 200 [Quote]
 Core ->> Core: Check response
 
-alt if WAITING_FOR_CONVERSION_ACCEPTANCE
-    Core ->> Core: Validate FXP Quote
+alt if CURRENCY_MODE is multiple
+    alt if WAITING_FOR_CONVERSION_ACCEPTANCE
+        Core ->> Core: Validate FXP Quote
 
-    alt Conversion terms are invalid
-        Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
-        Core -->> App: Response 500
+        alt Conversion terms are invalid
+            Core ->> ML: PUT /transfers/{id}[acceptConversion: false]
+            Core -->> App: Response 500
+        end
+
+        Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
+        
     end
 
-    Core ->> ML: PUT /transfers/{id}[acceptConversion: true]
-    
-end
+    ML -->> Core: Response 200
+    Core ->> Core: Check Response
 
-ML -->> Core: Response 200
-Core ->> Core: Check Response
+    alt if WAITING_FOR_QUOTE_ACCEPTANCE
+        Core ->> Core: Validate Normal Quote
 
-alt if WAITING_FOR_QUOTE_ACCEPTANCE
-    Core ->> Core: Validate Normal Quote
-
-    alt if Invalid Quote Terms
-        Core ->> ML: PUT /transfers/{id}[acceptQuote: false]
-        Core -->> App: Response 500
+        alt if Invalid Quote Terms
+            Core ->> ML: PUT /transfers/{id}[acceptQuote: false]
+            Core -->> App: Response 500
+        end
     end
+    Core -->> App: Response 200 [Quote]
+    note right
+    {
+        "payeeDetails": {
+            "idType": "MSISDN",
+            "idValue": "990454454",
+            "fspId": "airtelzambia",
+            "fspLEI": "984500BA13DAVB8B6C61"
+            "name": "Niza"
+        },
+        "sendAmount": "150.00",
+        "sendCurrency": "MWK",
+        "receiveAmount": "140.00",
+        "receiveCurrency": "ZMW",
+        "targetFees": "10.00",
+        "sourceFees": "10.00",
+        "transactionId": "0GJGH201JGJ1J12324H",
+        "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
+    }
+    end note
+else if CURRENCY_MODE is single
+    Core ->> Core: Prepare Quote Details
+    Core -->> App: Response 200 [Quote]
+    note right
+    {
+        "payeeDetails": {
+            "idType": "MSISDN",
+            "idValue": "990454454",
+            "fspId": "airtelzambia",
+            "fspLEI": "984500BA13DAVB8B6C61"
+            "name": "Niza"
+        },
+        "sendAmount": "140.00",
+        "sendCurrency": "ZMW",
+        "receiveAmount": "140.00",
+        "receiveCurrency": "ZMW",
+        "targetFees": "10.00",
+        "sourceFees": "10.00",
+        "transactionId": "0GJGH201JGJ1J12324H",
+        "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
+    }
+    end note
 end
-
-Core -->> App: Response 200 [Quote]
-note right
-{
-    "payeeDetails": {
-        "idType": "MSISDN",
-        "idValue": "990454454",
-        "fspId": "airtelzambia",
-        "fspLEI": "984500BA13DAVB8B6C61"
-        "name": "Niza"
-    },
-    "sendAmount": "150.00",
-    "sendCurrency": "MWK",
-    "receiveAmount": "140.00",
-    "receiveCurrency": "ZMW",
-    "targetFees": "10.00",
-    "sourceFees": "10.00",
-    "transactionId": "0GJGH201JGJ1J12324H",
-    "homeTransactionId": "24dn186-sjhd-0293-44849-4724fhf",
-}
-end note
 
 App -->> Customer: Terms of transfer
 

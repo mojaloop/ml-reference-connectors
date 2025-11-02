@@ -75,8 +75,8 @@ export class AggregateError extends BasicError {
         });
     }
 
-    static unsupportedCurrencyError() {
-        return new AggregateError("Incorrect Currency", {
+    static unsupportedCurrencyError(message?:string) {
+        return new AggregateError(message ? message: "Incorrect Currency", {
             mlCode: '5106',
             httpCode: 400,
         });

@@ -245,6 +245,11 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
     // Payer
     async sendMoney(transfer: TCbsSendMoneyRequest, amountType: 'SEND' | 'RECEIVE'): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
+        if(this.cbsConfig.CURRENCY_MODE === "single"){
+            if(transfer.receiveCurrency !== transfer.sendCurrency){
+                throw AggregateError.unsupportedCurrencyError("Receive Currency and Send Currency are different.")
+            }
+        }
         const res = await this.sdkClient.initiateTransfer(
             await this.getTSDKOutboundTransferRequest(transfer, amountType),
         );
