@@ -36,6 +36,7 @@ export type TCBSConfig<C> = {
     CURRENCY: components['schemas']['Currency'];
     SUPPORTED_ID_TYPE: components['schemas']['PartyIdType'];
     config: C;
+    CURRENCY_MODE?: "multiple" | "single";
 };
 
 export type TCbsSendMoneyRequest = {

@@ -248,13 +248,26 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
         const res = await this.sdkClient.initiateTransfer(
             await this.getTSDKOutboundTransferRequest(transfer, amountType),
         );
-        if (res.data.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
-            return this.handleSendTransferRes(res.data, transfer.homeTransactionId);
-        } else if (res.data.currentState === 'WAITING_FOR_QUOTE_ACCEPTANCE') {
-            return this.handleReceiveTransferRes(res.data, transfer.homeTransactionId);
+        this.logger.info(`Handling Send Money in ${this.cbsConfig.CURRENCY_MODE} Currency`);
+        if(this.cbsConfig.CURRENCY_MODE === "multiple" || !this.cbsConfig.CURRENCY_MODE){
+            return this.handleMultiCurrency(res.data,transfer.homeTransactionId);
+        }else{
+            return this.handleSingleCurrency(res.data, transfer.homeTransactionId);
+        }
+    }
+
+    async handleSingleCurrency(res: TSDKOutboundTransferResponse, homeTransactionId?: string ): Promise<TCbsSendMoneyResponse> {
+        return this.getTCbsSendMoneyResponse(res,homeTransactionId);
+    }
+
+    async handleMultiCurrency(res: TSDKOutboundTransferResponse, homeTransactionId?: string): Promise<TCbsSendMoneyResponse> {
+        if (res.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
+            return this.handleSendTransferRes(res, homeTransactionId);
+        } else if (res.currentState === 'WAITING_FOR_QUOTE_ACCEPTANCE') {
+            return this.handleReceiveTransferRes(res, homeTransactionId);
         } else {
             throw SDKClientError.returnedCurrentStateUnsupported(
-                `Returned currentStateUnsupported. ${res.data.currentState}`,
+                `Returned currentStateUnsupported. ${res.currentState}`,
                 { httpCode: 500, mlCode: '2000' },
             );
         }
@@ -296,7 +309,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             throw AggregateError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
         return this.getTCbsSendMoneyResponse(acceptRes.data, homeTransactionId);
-    }
+    } 
 
     private async handleReceiveTransferRes(
         res: TSDKOutboundTransferResponse,
