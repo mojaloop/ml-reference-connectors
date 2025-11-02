@@ -45,7 +45,7 @@
     "@jest/globals": "^29.7.0",
     "@mojaloop/api-snippets": "^17.8.0",
     "@types/convict": "^6.1.6",
-    "@types/hapi": "^18.0.14",
+    "@types/hapi": "^18.0.15",
     "@types/hapi__vision": "^5.5.8",
     "@types/iban": "^0.0.35",
     "@types/jest": "^29.5.14",
@@ -73,7 +73,7 @@
   "dependencies": {
     "@hapi/hapi": "^21.3.12",
     "@mojaloop/api-snippets": "^17.8.0",
-    "@mojaloop/central-services-logger": "^11.9.0",
+    "@mojaloop/central-services-logger": "^11.9.3",
     "@types/convict": "^6.1.6",
     "axios": "^1.6.8",
     "commander": "^10.0.1",
