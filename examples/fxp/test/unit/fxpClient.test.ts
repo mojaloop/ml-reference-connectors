@@ -3,6 +3,7 @@ import { fxpConfig } from "../../src/config";
 import { ConnectorError } from "../../src/errors";
 import { MockFXPClient } from "../../src/FXPClient";
 import { fxQuotesReqDTO, fxTransferDTO, fxTransferNotificationDTO } from "../../test/fixtures";
+import { randomUUID } from "crypto";
 const httpClient: IHTTPClient = AxiosClientFactory.createAxiosClientInstance();
 
 
@@ -24,7 +25,7 @@ describe("FXP Client Tests", ()=>{
     });
 
     test("notify fxTransfers Test", async ()=>{
-        const fxNotificationRes: Promise<TNotifyFxTransferStateResponse> = fxpClient.notifyFxTransferState(fxTransferNotificationDTO());
+        const fxNotificationRes: Promise<TNotifyFxTransferStateResponse> = fxpClient.notifyFxTransferState(fxTransferNotificationDTO(), randomUUID());
         await expect(fxNotificationRes).resolves;
     });
 });

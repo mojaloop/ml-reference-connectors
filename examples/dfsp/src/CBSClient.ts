@@ -10,6 +10,7 @@ import {
     TQuoteRequest,
     TQuoteResponse,
     TtransferContinuationResponse,
+    TtransferErrorResponse,
     TtransferPatchNotificationRequest,
     TtransferRequest,
     TtransferResponse,
@@ -106,9 +107,8 @@ export class MockCBSClient<D> implements ICbsClient {
     async handleRefund(
         updateSendMoneyDeps: TCBSUpdateSendMoneyRequest,
         transferId: string,
-        transferRes: TtransferContinuationResponse,
+        transferRes: TtransferErrorResponse,
     ): Promise<void> {
         this.logger.info(`Processing refund for req ${updateSendMoneyDeps} and transferId ${transferId}`);
-        return Promise.resolve();
     }
 }
