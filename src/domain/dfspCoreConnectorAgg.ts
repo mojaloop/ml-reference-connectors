@@ -47,7 +47,7 @@ import {
     AggregateError,
     Party,
     TPayerExtensionListEntry,
-    TValidationResponse
+    TValidationResponse,
 } from './interfaces';
 import {
     ISDKClient,
@@ -245,27 +245,33 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
     // Payer
     async sendMoney(transfer: TCbsSendMoneyRequest, amountType: 'SEND' | 'RECEIVE'): Promise<TCbsSendMoneyResponse> {
         this.logger.info(`Received send money request for payer with ID ${transfer.payer.payerId}`);
-        if(this.cbsConfig.CURRENCY_MODE === "single"){
-            if(transfer.receiveCurrency !== transfer.sendCurrency){
-                throw AggregateError.unsupportedCurrencyError("Receive Currency and Send Currency are different.")
+        if (this.cbsConfig.CURRENCY_MODE === 'single') {
+            if (!!transfer.receiveCurrency && transfer.receiveCurrency !== transfer.sendCurrency) {
+                throw AggregateError.unsupportedCurrencyError('Receive Currency and Send Currency are different.');
             }
         }
         const res = await this.sdkClient.initiateTransfer(
             await this.getTSDKOutboundTransferRequest(transfer, amountType),
         );
         this.logger.info(`Handling Send Money in ${this.cbsConfig.CURRENCY_MODE} Currency`);
-        if(this.cbsConfig.CURRENCY_MODE === "multiple" || !this.cbsConfig.CURRENCY_MODE){
-            return this.handleMultiCurrency(res.data,transfer.homeTransactionId);
-        }else{
+        if (this.cbsConfig.CURRENCY_MODE === 'multiple' || !this.cbsConfig.CURRENCY_MODE) {
+            return this.handleMultiCurrency(res.data, transfer.homeTransactionId);
+        } else {
             return this.handleSingleCurrency(res.data, transfer.homeTransactionId);
         }
     }
 
-    async handleSingleCurrency(res: TSDKOutboundTransferResponse, homeTransactionId?: string ): Promise<TCbsSendMoneyResponse> {
-        return this.getTCbsSendMoneyResponse(res,homeTransactionId);
+    async handleSingleCurrency(
+        res: TSDKOutboundTransferResponse,
+        homeTransactionId?: string,
+    ): Promise<TCbsSendMoneyResponse> {
+        return this.getTCbsSendMoneyResponse(res, homeTransactionId);
     }
 
-    async handleMultiCurrency(res: TSDKOutboundTransferResponse, homeTransactionId?: string): Promise<TCbsSendMoneyResponse> {
+    async handleMultiCurrency(
+        res: TSDKOutboundTransferResponse,
+        homeTransactionId?: string,
+    ): Promise<TCbsSendMoneyResponse> {
         if (res.currentState === 'WAITING_FOR_CONVERSION_ACCEPTANCE') {
             return this.handleSendTransferRes(res, homeTransactionId);
         } else if (res.currentState === 'WAITING_FOR_QUOTE_ACCEPTANCE') {
@@ -314,7 +320,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             throw AggregateError.invalidReturnedQuoteError(validateQuoteRes.message.toString());
         }
         return this.getTCbsSendMoneyResponse(acceptRes.data, homeTransactionId);
-    } 
+    }
 
     private async handleReceiveTransferRes(
         res: TSDKOutboundTransferResponse,
@@ -530,11 +536,15 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             sendAmount:
                 transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.amount !== undefined
                     ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.amount
-                    : 'No send amount ',
+                    : transfer.amount !== undefined
+                      ? transfer.amount
+                      : 'No send amount ',
             sendCurrency:
                 transfer.fxQuoteResponse?.body.conversionTerms.sourceAmount.currency !== undefined
                     ? transfer.fxQuoteResponse.body.conversionTerms.sourceAmount.currency
-                    : 'No send currency ',
+                    : transfer.currency !== undefined
+                      ? transfer.currency
+                      : 'No send currency ',
             receiveAmount:
                 transfer.quoteResponse?.body.payeeReceiveAmount?.amount !== undefined
                     ? transfer.quoteResponse.body.payeeReceiveAmount.amount
@@ -542,7 +552,9 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             receiveCurrency:
                 transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency !== undefined
                     ? transfer.fxQuoteResponse?.body.conversionTerms.targetAmount.currency
-                    : 'No Currency returned from Mojaloop Connector',
+                    : this.cbsConfig.CURRENCY_MODE === 'single' && transfer.currency !== undefined
+                      ? transfer.currency
+                      : 'No Currency returned from Mojaloop Connector',
             targetFees: this.getQuoteCharges(transfer),
             sourceFees: this.getFxQuoteResponseCharges(transfer),
             transactionId: transfer.transferId !== undefined ? transfer.transferId : 'No transferId returned',

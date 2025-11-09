@@ -75,6 +75,12 @@ export const config = Convict<IConnectorConfigSchema<TBlueBankConfig, never>>({
             default: null, // required
             env: 'SUPPORTED_ID_TYPE',
         },
+        CURRENCY_MODE: {
+            doc: 'CURRENCY_MODE',
+            format: String,
+            default: null, // required
+            env: 'CURRENCY_MODE',
+        },
         config: {
             // Change this to your variables
             BLUE_BANK_URL: {
