@@ -1,0 +1,29 @@
+name: Docker
+run-name: Docker => ${{  github.event_name == 'pull_request' && github.event.pull_request.title || github.event.head_commit.message }}
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: Dockerfile
+            image: core-connector-template
+            context: .
+          - dockerfile: cbs-mock/Dockerfile
+            image: cbs-mock-template
+            context: ./cbs-mock
+    uses: infitx-org/actions/.github/workflows/docker.yaml@main
+    with:
+      dockerfile: ${{ matrix.dockerfile }}
+      image: ${{ matrix.image }}
+      context: ${{ matrix.context }}
+      owner: ${{ github.repository_owner }}
+    secrets:
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
