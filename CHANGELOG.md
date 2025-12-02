@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.1.2...v3.2.0) (2025-12-02)
+
+
+### Features
+
+* add github ci to core connector templates ([53ceb27](https://github.com/mojaloop/ml-reference-connectors/commit/53ceb27e76da1a993b8f253ffdbff52ed62ef46a))
+
 ### [3.1.2](https://github.com/mojaloop/ml-reference-connectors/compare/v3.1.1...v3.1.2) (2025-11-09)
 
 
