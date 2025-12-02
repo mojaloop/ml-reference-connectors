@@ -30,7 +30,12 @@
     "test:coverage-check": "true",
     "test:functional": "true",
     "test:integration": "true",
-    "audit:check": "true"
+    "audit:check": "true",
+    "ci-unit": "if [ ! -f .env ]; then cp .env.example .env; fi && JEST_JUNIT_OUTPUT_DIR=coverage npm run test:unit -- --ci --reporters=default --reporters=jest-junit --outputFile=./coverage/junit.xml",
+    "ci-coverage": "if [ ! -f .env ]; then cp .env.example .env; fi && npm run test:unit -- --silent --ci --coverage --testLocationInResults --json --outputFile=coverage/report.json",
+    "ci-lint": "npm run lint",
+    "ci-audit": "mkdir -p audit; npm run audit:check -- --report-type summary ; npm run --silent audit:check -- -o json > ./audit/auditResults.json",
+    "ci-deprecation": "MODE=error npx -y --package @mojaloop/ml-depcheck-utility check-deprecations-npm"
   },
   "author": "",
   "license": "ISC",
@@ -54,6 +59,7 @@
     "npm-check-updates": "^18.0.1",
     "ts-jest": "^29.3.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.34.1"
+    "typescript-eslint": "^8.34.1",
+    "jest-junit":"16.0.0"
   }
 }

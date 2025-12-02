@@ -1,0 +1,12 @@
+name: Node.js
+run-name: Node.js => ${{  github.event_name == 'pull_request' && github.event.pull_request.title || github.event.head_commit.message }}
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  node:
+    uses: infitx-org/actions/.github/workflows/node.yaml@main
