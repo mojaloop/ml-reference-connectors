@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.2.0...v3.3.0) (2025-12-16)
+
+
+### Features
+
+* add homeTransactionId to schema for patch notification type ([6243536](https://github.com/mojaloop/ml-reference-connectors/commit/62435368dd60f83c362a5c5bc4c0b259e117a67c))
+* configure ci and add template vars for pipeline ([b5f3a75](https://github.com/mojaloop/ml-reference-connectors/commit/b5f3a750cd20f64ac7f7da32bc00102797e13157))
+
 ## [3.2.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.1.2...v3.2.0) (2025-12-02)
 
 
