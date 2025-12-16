@@ -14,10 +14,10 @@ jobs:
       matrix:
         include:
           - dockerfile: Dockerfile
-            image: core-connector-template
+            image: <%= projectName %>
             context: .
           - dockerfile: cbs-mock/Dockerfile
-            image: cbs-mock-template
+            image: <%= projectName %>-cbs-mock
             context: ./cbs-mock
     uses: infitx-org/actions/.github/workflows/docker.yaml@main
     with:
