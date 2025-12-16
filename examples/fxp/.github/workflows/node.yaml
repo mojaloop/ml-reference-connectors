@@ -1,6 +1,12 @@
 name: Node.js
 run-name: Node.js => ${{  github.event_name == 'pull_request' && github.event.pull_request.title || github.event.head_commit.message }}
 
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
+  
 on:
   push:
     branches: [ "main" ]
