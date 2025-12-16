@@ -174,6 +174,7 @@ export type TtransferPatchNotificationRequest = {
         headers?: Record<string, never>;
     };
     transferId?: components['schemas']['transferId'];
+    homeTransactionId?: string
 };
 
 export type TValidationResponse = {
