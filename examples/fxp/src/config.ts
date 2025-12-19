@@ -49,6 +49,12 @@ export const config = Convict<IConnectorConfigSchema<never, TBlueBankConfig>>({
             default: null, // required
             env: 'SDK_BASE_URL',
         },
+        HTTP_TIMEOUT: {
+            doc: 'Http Timeout',
+            format: Number,
+            default: 10000,
+            env: 'HTTP_TIMEOUT',
+        },
     },
     fxpConfig: {
         FXP_BASE_URL: {
