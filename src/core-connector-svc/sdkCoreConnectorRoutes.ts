@@ -36,6 +36,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
 
     protected readonly handlers = {
         BackendPartiesGetByTypeAndID: this.getParties.bind(this),
+        BackendPartiesGetByTypeIdAndSubId: this.getParties.bind(this),
         BackendQuoteRequest: this.quoteRequests.bind(this),
         BackendTransfersPost: this.transfers.bind(this),
         BackendTransfersPut: this.transferNotification.bind(this),
