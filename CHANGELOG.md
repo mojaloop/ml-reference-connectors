@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.6.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.5.1...v3.6.0) (2025-12-28)
+
+
+### Features
+
+* add optional subId in getParties call ([ae213da](https://github.com/mojaloop/ml-reference-connectors/commit/ae213daba2139a9a141857ae3ef1e8ed7c83ec60))
+
 ### [3.5.1](https://github.com/mojaloop/ml-reference-connectors/compare/v3.5.0...v3.5.1) (2025-12-28)
 
 ## [3.5.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.4.0...v3.5.0) (2025-12-28)
