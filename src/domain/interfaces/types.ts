@@ -188,7 +188,7 @@ export interface IDFSPCoreConnectorAggregate<D> {
     cbsConfig: TCBSConfig<D>;
     IdType: string;
     logger: ILogger;
-    getParties(id: string, IdType: string): Promise<Party>;
+    getParties(id: string, IdType: string, idSubValue?: string): Promise<Party>;
     quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse>;
     receiveAndReserveTransfer(transfer: TtransferRequest): Promise<TtransferResponse>;
     updateAndCommitTransferOnPatchNotification(updateTransferPayload: TtransferPatchNotificationRequest, transferId: string): Promise<void>;

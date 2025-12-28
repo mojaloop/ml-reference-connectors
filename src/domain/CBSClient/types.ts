@@ -114,6 +114,7 @@ export type TCBSUpdateSendMoneyResponse = {
 
 export type TGetKycArgs = {
     accountId: string;
+    subId?: string;
 };
 
 export interface ICbsClient {

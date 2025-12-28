@@ -86,12 +86,12 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
     }
 
     //Payee
-    async getParties(id: string, IdType: string): Promise<Party> {
+    async getParties(id: string, IdType: string, idSubValue?: string): Promise<Party> {
         this.logger.info(`Getting party information for ${id}`);
         if (!(IdType === this.cbsConfig.SUPPORTED_ID_TYPE)) {
             throw AggregateError.unsupportedIdTypeError();
         }
-        return await this.cbsClient.getAccountInfo({ accountId: id });
+        return await this.cbsClient.getAccountInfo({ accountId: id, subId: idSubValue });
     }
 
     async quoteRequest(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
