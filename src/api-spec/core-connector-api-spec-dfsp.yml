@@ -113,13 +113,14 @@ paths:
                 $ref: "#/components/schemas/sendMoneyResponse"
         "400":
           description: >-
-            Response for a bad request.
-        "500":
-          description: >-
-            Response for an internal server error
-        "504":
-          description: >-
-            Response for a timed out transfer
+            Response for a bad request.    
+        '500':
+          description: An error occurred processing the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+
   /send-money/{transferId}:
     put:
       summary: Confirm send money
@@ -149,6 +150,12 @@ paths:
                 $ref: "#/components/schemas/ConfirmSendMoneyResponse"
         "400":
           description: Bad request
+        '500':
+          description: An error occurred processing the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
 
   /merchant-payment:
     post:
@@ -179,12 +186,12 @@ paths:
         "400":
           description: >-
             Response for bad request
-        "500":
-          description: >-
-            Internal Server error
-        "504":
-          description: >-
-            Transfer Timeout.
+        '500':
+          description: An error occurred processing the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
 
   /merchant-payment/{transferId}:
     put:
@@ -215,6 +222,12 @@ paths:
                 $ref: "#/components/schemas/ConfirmSendMoneyResponse"
         "400":
           description: Bad request
+        '500':
+          description: An error occurred processing the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
 
   /transfers/{transferId}:
     get:
@@ -803,6 +816,9 @@ components:
         homeTransactionId:
           type: string
           example: "HTX123456789"
+        subId:
+          type: string
+          example: "dfspa"
         payeeId:
           type: string
           example: "16135551212"
@@ -959,6 +975,9 @@ components:
         homeTransactionId:
           type: string
           example: "HTX123456789"
+        subId:
+          type: string
+          example: "dfspA"
         payeeId:
           type: string
           example: "16135551212"

@@ -41,6 +41,7 @@ export type TCBSConfig<C> = {
 
 export type TCbsSendMoneyRequest = {
     homeTransactionId?: string;
+    subId?: string;
     payeeId: string;
     payeeIdType: components['schemas']['PartyIdType'];
     sendAmount: string;
@@ -62,6 +63,7 @@ export type TCbsSendMoneyRequest = {
 
 export type TCbsMerchantPaymentRequest = {
     homeTransactionId?: string;
+    subId?: string;
     payeeId: string;
     payeeIdType: components['schemas']['PartyIdType'];
     sendCurrency: components['schemas']['Currency'];
