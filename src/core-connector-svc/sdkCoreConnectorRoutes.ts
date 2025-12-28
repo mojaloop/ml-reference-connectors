@@ -65,7 +65,7 @@ export class SDKCoreConnectorRoutes<D> extends BaseRoutes {
             const Id = params['idValue'] as string;
             const IdType = params['idType'] as string;
             const subIdValue = 'idSubValue' in params ? (params['idSubValue'] as string) : undefined;
-            this.logger.info(`Get party for ${IdType} ${Id}`);
+            this.logger.info(`Get party for ${IdType} ${Id} ${subIdValue}`);
             const result = await this.aggregate.getParties(Id,IdType, subIdValue);
             return this.handleResponse(result, h);
         } catch (error) {
