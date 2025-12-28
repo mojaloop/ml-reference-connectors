@@ -596,6 +596,7 @@ export class DFSPCoreConnectorAggregate<D> implements IDFSPCoreConnectorAggregat
             to: {
                 idType: transfer.payeeIdType,
                 idValue: transfer.payeeId,
+                idSubValue: transfer.subId
             },
             amountType: amountType,
             currency: amountType === 'SEND' ? transfer.sendCurrency : transfer.receiveCurrency,
