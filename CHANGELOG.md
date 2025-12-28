@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.3.1...v3.4.0) (2025-12-28)
+
+
+### Features
+
+* add subId functionality ([18929cd](https://github.com/mojaloop/ml-reference-connectors/commit/18929cdf6274a90b554ba06ab885b19a0b3fdda7))
+
 ### [3.3.1](https://github.com/mojaloop/ml-reference-connectors/compare/v3.3.0...v3.3.1) (2025-12-19)
 
 ## [3.3.0](https://github.com/mojaloop/ml-reference-connectors/compare/v3.2.0...v3.3.0) (2025-12-16)
