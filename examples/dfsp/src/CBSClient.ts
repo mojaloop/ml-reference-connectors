@@ -9,12 +9,12 @@ import {
     TPayeeExtensionListEntry,
     TQuoteRequest,
     TQuoteResponse,
-    TtransferContinuationResponse,
     TtransferErrorResponse,
     TtransferPatchNotificationRequest,
     TtransferRequest,
     TtransferResponse,
 } from '@mojaloop/core-connector-lib';
+import { ConnectorError } from './errors';
 
 export class MockCBSClient<D> implements ICbsClient {
     cbsConfig: TCBSConfig<D>;
@@ -28,23 +28,26 @@ export class MockCBSClient<D> implements ICbsClient {
     }
 
     async getAccountInfo(deps: TGetKycArgs): Promise<Party> {
-        this.logger.info(`Getting party account information`, deps.accountId);
+        this.logger.info(`Getting party account information`, deps);
+        if (deps.accountId === '46733123450') {
+            throw ConnectorError.cbsConfigUndefined('Party Not Found', '2000', 500);
+        }
         const party = {
             dateOfBirth: '1990-05-15',
             displayName: 'John Doe',
-            extensionList: this.getAccountDiscoveryExtensionLists(),
             firstName: 'John',
-            fspId: 'fsp-xyz123',
-            idSubValue: 'sub-id-456',
-            idType: 'nationalId',
+            fspId: 'yz123',
+            idSubValue: deps.subId,
+            idType: 'MSISDN',
             idValue: deps.accountId,
             lastName: 'Doe',
             merchantClassificationCode: '5311',
             middleName: 'Alexander',
             type: 'PERSON',
-            supportedCurrencies: 'USD,EUR',
+            supportedCurrencies: this.cbsConfig.CURRENCY,
             kycInformation: 'Verified with national ID and proof of address',
         };
+        this.logger.debug('Party', party);
         return Promise.resolve(party);
     }
 
@@ -60,36 +63,29 @@ export class MockCBSClient<D> implements ICbsClient {
     async getQuote(quoteRequest: TQuoteRequest): Promise<TQuoteResponse> {
         this.logger.info(`Processing quoteRequest`, quoteRequest);
         return Promise.resolve({
-            expiration: '2025-12-31T23:59:59.000Z',
-            extensionList: [
-                {
-                    key: 'promoCode',
-                    value: 'NEWYEAR2025',
-                },
-            ],
-            geoCode: {
-                latitude: '-13.9626',
-                longitude: '33.7741',
-            },
-            payeeFspCommissionAmount: '5.00',
-            payeeFspCommissionAmountCurrency: 'MWK',
-            payeeFspFeeAmount: '2.50',
-            payeeFspFeeAmountCurrency: 'MWK',
-            payeeReceiveAmount: '9200.00',
-            payeeReceiveAmountCurrency: 'MWK',
-            quoteId: 'c8b16a12-1a2b-4e30-b2a1-1f71234abcde',
-            transactionId: 'd7f816cd-2b47-43ed-99c2-e9f5b123abcd',
-            transferAmount: '10000.00',
-            transferAmountCurrency: 'MWK',
+            payeeFspCommissionAmountCurrency: this.cbsConfig.CURRENCY,
+            payeeFspFeeAmount: '0',
+            payeeFspFeeAmountCurrency: this.cbsConfig.CURRENCY,
+            payeeReceiveAmount: quoteRequest.amount,
+            payeeReceiveAmountCurrency: this.cbsConfig.CURRENCY,
+            quoteId: quoteRequest.quoteId,
+            transactionId: quoteRequest.transactionId,
+            transferAmount: quoteRequest.amount,
+            transferAmountCurrency: this.cbsConfig.CURRENCY,
         });
     }
 
     async reserveFunds(transfer: TtransferRequest): Promise<TtransferResponse> {
         this.logger.info(`Reserving funds for transfer request`, transfer);
+        if (transfer.to.idValue === '+2203628891') {
+            // timeout
+            await new Promise((resolve) => setTimeout(resolve, 300_000));
+        } else if (transfer.to.idValue === '+2203628890') {
+            // abort
+            throw ConnectorError.cbsConfigUndefined('Abort Transfer', '2000', 500);
+        }
         return Promise.resolve({
-            completedTimestamp: 'string',
-            fulfilment: 'WLctttbu2HvTsa1XWvUoGRcQozHsqeu9Ahl2JW9Bsu8',
-            homeTransactionId: 'string',
+            homeTransactionId: crypto.randomUUID(),
             transferState: 'RESERVED',
         });
     }
