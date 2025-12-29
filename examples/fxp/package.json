@@ -46,7 +46,7 @@
     ]
   },
   "dependencies": {
-    "@mojaloop/core-connector-lib": "^3.5.0"
+    "@mojaloop/core-connector-lib": "^3.6.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
